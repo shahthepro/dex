@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  timescaledb:
+    container_name: timescaledb
+    image: timescale/timescaledb:latest-pg10
+    ports:
+      - '5432:5432'
+    restart: always
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+    environment:
+      - POSTGRES_DB=cdexdb
+      - POSTGRES_PASSWORD
+  redis:
+    container_name: redis
+    image: redis:4-alpine
+    ports:
+      - '6379:6379'
+    restart: always
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:alpine
+    ports:
+      - '5672:5672'
+    restart: always
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+    networks:
+      default:
+        aliases:
+          - 'rabbitmq'
+  # orderbook:
+  #   container_name: orderbook
+  #   build:
+  #     context: .
+  #     dockerfile: builf/orderbook.dockerfile
+  #   depends_on:
+  #     - redis
+  #     - rabbitmq
+  #     - timescaledb

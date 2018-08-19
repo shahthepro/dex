@@ -1,0 +1,14 @@
+{
+  "name": "dex",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Shahul Hameed",
+  "license": "ISC",
+  "dependencies": {
+    "openzeppelin-solidity": "^1.12.0"
+  }
+}
