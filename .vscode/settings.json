@@ -8,9 +8,9 @@
         "**/.hg": true,
         "**/CVS": true,
         "**/.DS_Store": true,
-        "**/.tmp": true,
         "**/node_modules": true,
-        "**/keystore": true,
-        "**/.vscode": true
+        "**/.vscode": true,
+        "**/_tmp": true,
+        "**/_abi": true
     },
 }

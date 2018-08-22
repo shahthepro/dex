@@ -4,22 +4,33 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build"
+    "build": "vue-cli-service build",
+    "postinstall": "rm -f node_modules/web3/index.d.ts"
   },
   "dependencies": {
+    "@types/node": "^10.7.1",
+    "@types/web3": "^1.0.3",
     "vue": "^2.5.17",
     "vue-class-component": "^6.0.0",
     "vue-property-decorator": "^7.0.0",
     "vue-router": "^3.0.1",
-    "vuex": "^3.0.1"
+    "vuetify": "^1.0.19",
+    "vuex": "^3.0.1",
+    "web3": "^1.0.0-beta.35"
   },
   "devDependencies": {
+    "@babel/polyfill": "^7.0.0-beta.49",
     "@vue/cli-plugin-babel": "^3.0.1",
     "@vue/cli-plugin-typescript": "^3.0.1",
     "@vue/cli-service": "^3.0.1",
+    "babel-plugin-transform-imports": "^1.4.1",
+    "compression-webpack-plugin": "^1.1.11",
     "node-sass": "^4.9.0",
     "sass-loader": "^7.0.1",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.1",
     "typescript": "^3.0.0",
+    "vue-cli-plugin-vuetify": "^0.1.6",
     "vue-template-compiler": "^2.5.17"
   }
 }

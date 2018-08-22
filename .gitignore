@@ -1,3 +1,5 @@
 _abi
-.dist
+_tmp
+_dist
 node_modules
+configs/*.g.json

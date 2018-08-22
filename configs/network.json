@@ -1,0 +1,17 @@
+{
+    "home": {
+        "provider": "http://127.0.0.1:8501",
+        "wsProvider": "ws://127.0.0.1:8601",
+        "requiredSignatures": 2
+    },
+    "foreign": {
+        "provider": "http://127.0.0.1:8501",
+        "wsProvider": "ws://127.0.0.1:8601",
+        "requiredSignatures": 2
+    },
+    "authorities": [
+        "3e4df913dbc5dc68f664d2e91c7fe05df762c0db",
+        "bdc8933eb16db7ffe0c9f8151ed75e6d2e38b916",
+        "5f281f579d88777a8e63e9eca78c38501383f2aa"
+    ]
+}
