@@ -1,13 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 // const configFileName = path.resolve('./../app.json');
-// const configFile = require(configFileName);
+const configFile = require(path.resolve('./../../configs/network.json'));
 
 const Exchange = artifacts.require('./Exchange.sol');
 const HomeBridge = artifacts.require('./HomeBridge.sol');
 
 module.exports = function (deployer, network, accounts) {
-    let a = []; // configFile.authorities;
+    let a = configFile.authorities;
 
     switch (network) {
         case 'development':

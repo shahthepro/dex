@@ -60,6 +60,17 @@ function generateABIWithJSON (abi, pkg, out) {
     });
 }
 
+function getAllTopicsFromABI(abi) {
+    return abi
+    .filter(i => i.type == 'event')
+    .map((event) => {
+        return {
+            [event.name]: web3Utils.keccak256(`${event.name}(${event.inputs.map(p => p.type).join(',')})`)
+        }
+    })
+    .reduce((e1, e2) => Object.assign(e1, e2));
+}
+
 gulp.task('clean-generated-abi', (done) => {
     runCommand('rm', ['-rf', '_abi'], {}, (status) => {
         if (status != 0) {
@@ -79,7 +90,7 @@ gulp.task('clean-tmp-files', (done) => {
 });
 
 gulp.task('clean-config-files', (done) => {
-    runCommand('rm', [getConfigFilePath(GENERATED_CONFIG_FILE_NAME)]);
+    runCommand('rm', ['-f', getConfigFilePath(GENERATED_CONFIG_FILE_NAME)], {}, done);
 });
 
 gulp.task('clean', (done) => {
@@ -124,21 +135,6 @@ gulp.task('contracts-deploy', (done) => {
     }
 });
 
-gulp.task('build-go', (done) => {
-    done();
-});
-
-function getAllTopicsFromABI(abi) {
-    return abi
-    .filter(i => i.type == 'event')
-    .map((event) => {
-        return {
-            [event.name]: web3Utils.keccak256(`${event.name}(${event.inputs.map(p => p.type).join(',')})`)
-        }
-    })
-    .reduce((e1, e2) => Object.assign(e1, e2));
-}
-
 gulp.task('generate-config', (done) => {
     const HomeBridge = readTruffleJSON(HOMEBRIDGE_CONTRACT_NAME);
     const Exchange = readTruffleJSON(EXCHANGE_CONTRACT_NAME);
@@ -163,7 +159,9 @@ gulp.task('generate-config', (done) => {
     writeJSONFile(getABIPath(HOMEBRIDGE_CONTRACT_NAME), HomeBridge.abi);
     writeJSONFile(getABIPath(EXCHANGE_CONTRACT_NAME), Exchange.abi);
 
-    writeJSONFile(getConfigFilePath(GENERATED_CONFIG_FILE_NAME), {
+    const configFile = getConfigFilePath(GENERATED_CONFIG_FILE_NAME);
+
+    writeJSONFile(configFile, {
         home: {
             network: mainnetID,
             address: HomeBridgeAddress,
@@ -175,10 +173,17 @@ gulp.task('generate-config', (done) => {
             topics: getAllTopicsFromABI(Exchange.abi)
         }
     });
-    
+
+    // copy to public directory
+    return gulp.src([configFile])
+        .pipe(gulp.dest(`web/public`));
+
+});
+
+gulp.task('build-go', (done) => {
     done();
 });
 
 gulp.task('default', (done) => {
-    runSequence('clean', 'contracts-compile', 'contracts-deploy', 'generate-config', 'generate-abi', 'build-go', 'clean-tmp-files', done);
+    runSequence('clean', 'contracts-compile', 'contracts-deploy', 'generate-config', 'generate-abi', 'build-go', done);
 });
