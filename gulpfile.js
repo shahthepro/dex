@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const runSequence = require('run-sequence');
 const web3Utils = require('web3-utils');
+const watch = require('gulp-watch');
 
 const HOMEBRIDGE_CONTRACT_NAME = 'HomeBridge';
 const EXCHANGE_CONTRACT_NAME = 'Exchange';

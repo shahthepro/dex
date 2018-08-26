@@ -37,11 +37,11 @@ contract HomeBridge is Ownable {
     }
 
     function toggleDeposit(bool enable) public onlyOwner {
-        isDepositDisabled = enable;
+        isDepositDisabled = !enable;
     }
 
     function toggleWithdraw(bool enable) public onlyOwner {
-        isWithdrawDisabled = enable;
+        isWithdrawDisabled = !enable;
     }
 
     function updateAuthorities(
