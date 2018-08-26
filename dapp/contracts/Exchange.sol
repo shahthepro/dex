@@ -39,9 +39,13 @@ contract Exchange is Ownable {
     }
 
     function recoverFromEscrow(address token, address user, uint256 amount) private {
-        require(escrowBalances[token][user] >= amount, "ERR_INSUFFICIENT_BALANCE");
-        escrowBalances[token][user] = escrowBalances[token][user].sub(amount);
-        balances[token][user] = balances[token][user].add(amount);
+        releaseEscrow(token, user, user, amount);
+    }
+
+    function releaseEscrow(address token, address fromAddress, address toAddress, uint256 amount) private {
+        require(escrowBalances[token][fromAddress] >= amount, "ERR_INSUFFICIENT_BALANCE");
+        escrowBalances[token][fromAddress] = escrowBalances[token][fromAddress].sub(amount);
+        balances[token][toAddress] = balances[token][toAddress].add(amount);
     }
 
     struct SignaturesCollection {
