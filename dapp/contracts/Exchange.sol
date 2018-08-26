@@ -258,7 +258,7 @@ contract Exchange is Ownable {
         Order memory order = orders[h];
 
         // Order hash should be unique
-        require(!order.exists, "ERR_NONCE_NOT_UNIQUE");
+        require(order.exists == false, "ERR_NONCE_NOT_UNIQUE");
         order.exists = true;
 
         uint256 volume = price.mul(quantity);
