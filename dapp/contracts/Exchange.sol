@@ -228,7 +228,7 @@ contract Exchange is Ownable {
     event PlaceOrder(bytes32 orderHash, address token, address base, uint256 price, uint256 quantity, bool is_bid, address buyer);
     event CancelOrder(bytes32 orderHash);
     
-    // Makes an offer to trade msg.value wei for tokenAmount of token (an ERC20 token).
+    // To place an order and move funds to ecrow
     function placeOrder(address token, address base, uint256 price, uint256 quantity, bool is_bid, uint256 nonce) public {
         require(base < token, "ERR_INVALID_PAIR");
         require(quantity != 0, "ERR_ZERO_AMOUNT");
@@ -269,6 +269,7 @@ contract Exchange is Ownable {
         emit PlaceOrder(h, token, base, price, quantity, is_bid, msg.sender);
     }
 
+    // To cancel an order and recover funds from escrow
     function cancelOrder(bytes32 orderHash) public {
         Order memory order = orders[orderHash];
         require(order.exists, "ERR_NOT_FOUND");
