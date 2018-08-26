@@ -163,12 +163,12 @@ gulp.task('generate-config', (done) => {
     const configFile = getConfigFilePath(GENERATED_CONFIG_FILE_NAME);
 
     writeJSONFile(configFile, {
-        home: {
+        bridge: {
             network: mainnetID,
             address: HomeBridgeAddress,
             topics: getAllTopicsFromABI(HomeBridge.abi)
         },
-        foreign: {
+        exchange: {
             network: xnetID,
             address: ExchangeAddress,
             topics: getAllTopicsFromABI(Exchange.abi)

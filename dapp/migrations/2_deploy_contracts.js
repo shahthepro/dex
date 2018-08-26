@@ -7,19 +7,25 @@ const Exchange = artifacts.require('./Exchange.sol');
 const HomeBridge = artifacts.require('./HomeBridge.sol');
 
 module.exports = function (deployer, network, accounts) {
+    const requiredHomeSignatures = configFile.home.requiredSignatures;
+    const requiredForiegnSignatures = configFile.foreign.requiredSignatures;
+    const makeFee = configFile.foreign.makeFee;
+    const takeFee = configFile.foreign.takeFee;
+    const cancelFee = configFile.foreign.cancelFee;
+
     let a = configFile.authorities;
 
     switch (network) {
         case 'development':
-            a = [accounts[6], accounts[7], accounts[8]];
+            a = [accounts[5], accounts[6], accounts[7], accounts[8]];
 
         case 'privatenet':
-            deployer.deploy(Exchange, 3, a)
+            deployer.deploy(Exchange, requiredHomeSignatures, a, makeFee, takeFee, cancelFee)
                 // .then(() => {
                 //     configFile.foreign.contract = Exchange.address;
                 // });
             
-            deployer.deploy(HomeBridge, 3, a)
+            deployer.deploy(HomeBridge, requiredForiegnSignatures, a)
                 // .then(() => {
                 //     configFile.home.contract = HomeBridge.address;
                 // });

@@ -67,6 +67,9 @@ contract Exchange is Ownable {
     uint256 public takeFee; // percentage times (1 ether)
     uint256 public cancelFee; // percentage times (1 ether)
 
+    mapping (address => uint256) public userFeeDiscounts;
+    mapping (address => uint256) public tokenFeeDiscounts;
+
     address[] public authorities;
 
     // Pending deposits and authorities who confirmed them
@@ -106,6 +109,8 @@ contract Exchange is Ownable {
         makeFee = makeFee_;
         takeFee = takeFee_;
         cancelFee = cancelFee_;
+
+        userFeeDiscounts[msg.sender] = 1 ether;
     }
 
     modifier onlyAuthority() {
@@ -144,6 +149,14 @@ contract Exchange is Ownable {
         takeFee = takeFee_;
     }
 
+    function setTokenFeeDiscounts(address token, uint256 discount) public onlyAdmin {
+        tokenFeeDiscounts[token] = discount;
+    }
+
+    function setUserFeeDiscounts(address user, uint256 discount) public onlyAdmin {
+        userFeeDiscounts[user] = discount;
+    }
+
     function deposit(address recipient, address token, uint256 value, bytes32 transactionHash) public onlyAuthority {
         // Protection from misbehaving authority
         bytes32 hash = keccak256(abi.encodePacked(recipient, token, value, transactionHash));
@@ -158,7 +171,8 @@ contract Exchange is Ownable {
             return;
         }
 
-        balances[token][recipient] += value;
+        // balances[token][recipient] += value;
+        addToBalance(token, recipient, value);
         emit Deposit(recipient, token, value, transactionHash);
     }
 
@@ -185,7 +199,7 @@ contract Exchange is Ownable {
         signatures[messageHash].signatures.push(signature);
 
         // TODO: this may cause troubles if requiredSignatures len is changed
-        if (signatures[messageHash].signed.length >= requiredSignatures) {
+        if (signatures[messageHash].signed.length == requiredSignatures) {
             emit CollectedSignatures(msg.sender, messageHash);
         } else {
             emit WithdrawSignatureSubmitted(messageHash);
@@ -203,9 +217,15 @@ contract Exchange is Ownable {
     }
 
     // Calculate fee for trade
-    function calculateFee(uint256 cost, uint256 feeAmount) public constant returns (uint256) {
+    function calculateFee(uint256 cost, uint256 feeAmount) public pure returns (uint256) {
         uint256 fee = (cost.mul(feeAmount)).div(1 ether);
         return fee;
+    }
+
+    function computeFeeForTokenAndUser(address token, address user, uint256 cost, uint256 feeAmount) public view returns (uint256) {
+        uint256 discount = tokenFeeDiscounts[token].add(userFeeDiscounts[user]);
+        uint256 discountedFeeAmount = feeAmount.sub(feeAmount.mul(discount));
+        return calculateFee(cost, discountedFeeAmount);
     }
 
     // Order data structure
@@ -234,7 +254,7 @@ contract Exchange is Ownable {
         require(quantity != 0, "ERR_ZERO_AMOUNT");
         require(price != 0, "ERR_ZERO_PRICE");
 
-        bytes32 h = sha256(msg.sender, token, base, price, quantity, is_bid, nonce);
+        bytes32 h = keccak256(abi.encodePacked(msg.sender, token, base, price, quantity, is_bid, nonce));
         Order memory order = orders[h];
 
         // Order hash should be unique
