@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import {
   Vuetify,
+  VAutocomplete,
   VApp,
   VNavigationDrawer,
   VFooter,
@@ -9,12 +10,16 @@ import {
   VIcon,
   VGrid,
   VToolbar,
+  VMenu,
+  VCard,
+  VTextField,
   transitions
 } from 'vuetify'
 import 'vuetify/src/stylus/app.styl'
 
 Vue.use(Vuetify, {
   components: {
+    VAutocomplete,
     VApp,
     VNavigationDrawer,
     VFooter,
@@ -23,15 +28,12 @@ Vue.use(Vuetify, {
     VIcon,
     VGrid,
     VToolbar,
+    VMenu,
+    VCard,
+    VTextField,
     transitions
   },
   theme: {
-    primary: '#ee44aa',
-    secondary: '#424242',
-    accent: '#82B1FF',
-    error: '#FF5252',
-    info: '#2196F3',
-    success: '#4CAF50',
-    warning: '#FFC107'
+    accent: '#ee7f00'
   },
 })
