@@ -15,6 +15,7 @@ import {
   VTabs,
   VForm,
   VTextField,
+  VDataTable,
   transitions
 } from 'vuetify'
 import 'vuetify/src/stylus/app.styl'
@@ -35,6 +36,7 @@ Vue.use(Vuetify, {
     VTabs,
     VForm,
     VTextField,
+    VDataTable,
     transitions
   },
   theme: {
