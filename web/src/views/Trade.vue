@@ -13,7 +13,7 @@
                 <v-card-title>Open Orders</v-card-title>
                 <div class="widget-content-wrapper">
                   <div class="widget-content">
-                    Open Orders
+                    <OpenOrders/>
                   </div>
                 </div>
             </v-card>
@@ -91,13 +91,15 @@
 import TradeForm from '@/components/TradeForm.vue';
 import TradeHistory from '@/components/TradeHistory.vue';
 import Orderbook from '@/components/Orderbook.vue';
+import OpenOrders from '@/components/OpenOrders.vue';
 
 export default {
   name: 'Trade',
   components: {
     TradeForm,
     TradeHistory,
-    Orderbook
+    Orderbook,
+    OpenOrders
   },
   data () {
     return {

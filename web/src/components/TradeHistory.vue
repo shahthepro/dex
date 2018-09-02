@@ -107,26 +107,9 @@
 <script>
 export default {
   name: 'TradeHistory',
-  props: {
-    token: String,
-    base: String
-  },
   data () {
     return {
-      side: null,
-      valid: null,
-      price: null,
-      amount: null,
-      volume: null
     }
-  },
-  watch: {
-    price: function (newPrice, _) {
-      this.volume = newPrice * this.amount;
-    },
-    amount:  function(newAmount, _) {
-      this.volume = newAmount * this.price;
-    },
   }
 }
 </script>
