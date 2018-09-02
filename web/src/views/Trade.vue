@@ -5,7 +5,9 @@
         <v-layout column wrap>
           <v-flex d-flex class="top-widget">
             <v-card class="ma-2 widget-container">
-              Chart
+              <div class="widget-content">
+                <PriceChart/>
+              </div>
             </v-card>
           </v-flex>
           <v-flex d-flex class="bottom-widget">
@@ -92,6 +94,7 @@ import TradeForm from '@/components/TradeForm.vue';
 import TradeHistory from '@/components/TradeHistory.vue';
 import Orderbook from '@/components/Orderbook.vue';
 import OpenOrders from '@/components/OpenOrders.vue';
+import PriceChart from '@/components/PriceChart.vue';
 
 export default {
   name: 'Trade',
@@ -99,11 +102,11 @@ export default {
     TradeForm,
     TradeHistory,
     Orderbook,
-    OpenOrders
+    OpenOrders,
+    PriceChart
   },
   data () {
     return {
-      lorem: `Lorem ipsum dolor sit amet, mel at clita quando. Te sit oratio vituperatoribus, nam ad ipsum posidonium mediocritatem, explicari dissentiunt cu mea. Repudiare disputationi vim in, mollis iriure nec cu, alienum argumentum ius ad. Pri eu justo aeque torquatos.Lorem ipsum dolor sit amet, mel at clita quando. Te sit oratio vituperatoribus, nam ad ipsum posidonium mediocritatem, explicari dissentiunt cu mea. Repudiare disputationi vim in, mollis iriure nec cu, alienum argumentum ius ad. Pri eu justo aeque torquatos.Lorem ipsum dolor sit amet, mel at clita quando. Te sit oratio vituperatoribus, nam ad ipsum posidonium mediocritatem, explicari dissentiunt cu mea. Repudiare disputationi vim in, mollis iriure nec cu, alienum argumentum ius ad. Pri eu justo aeque torquatos.`
     }
   }
 }
