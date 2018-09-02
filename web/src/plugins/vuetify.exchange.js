@@ -12,6 +12,8 @@ import {
   VToolbar,
   VMenu,
   VCard,
+  VTabs,
+  VForm,
   VTextField,
   transitions
 } from 'vuetify'
@@ -30,6 +32,8 @@ Vue.use(Vuetify, {
     VToolbar,
     VMenu,
     VCard,
+    VTabs,
+    VForm,
     VTextField,
     transitions
   },

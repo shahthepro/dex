@@ -1,6 +1,6 @@
 <template>
   <v-app dark>
-    <v-navigation-drawer fixed :clipped="$vuetify.breakpoint.mdAndUp" v-model="marketsDrawer" app>
+    <v-navigation-drawer fixed temporary v-model="marketsDrawer" app>
       <v-list dense>
         <v-list-tile class="cdex-token-search-input">
             <v-text-field type="text" placeholder="Search pairs..."></v-text-field>
@@ -12,7 +12,7 @@
         </v-list-tile>
       </v-list>
     </v-navigation-drawer>
-    <v-toolbar fixed :clipped-left="$vuetify.breakpoint.mdAndUp" app>
+    <v-toolbar fixed app>
       <v-toolbar-title v-text="title"></v-toolbar-title>
       <v-toolbar-items>
           <v-btn @click.stop="marketsDrawer = !marketsDrawer" flat>
