@@ -20,7 +20,7 @@
           <td class="text-xs-right">0.000043323</td>
           <td class="text-xs-right">0.000002323</td>
           <td class="text-xs-right">0.0023323</td>
-          <td class="text-xs-center"><v-btn flat color="error">Cancel</v-btn></td>
+          <td class="text-xs-center"><v-btn small flat color="error">Cancel</v-btn></td>
         </tr>
       </tbody>
     </table>
