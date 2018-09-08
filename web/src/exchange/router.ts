@@ -16,7 +16,7 @@ export default new Router({
       component: Home
     },
     {
-      path: '/trade',
+      path: '/trade/:token/:base',
       name: 'trade',
       component: Trade
     },

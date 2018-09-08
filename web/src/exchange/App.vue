@@ -22,7 +22,7 @@
       </v-toolbar-items>
       <v-spacer></v-spacer>
       <v-toolbar-items>
-          <v-btn flat :to="{ name: `trade` }">Trade</v-btn>
+          <v-btn flat :to="{ name: `trade`, params: { token:'CDX', base: 'ETH' } }">Trade</v-btn>
           <v-btn flat :to="{ name: `orders` }">Orders</v-btn>
           <v-btn flat :to="{ name: `balances` }">Balances</v-btn>
           <v-btn flat :to="{ name: `help` }"><v-icon>help</v-icon></v-btn>
@@ -41,6 +41,7 @@
 </template>
 
 <script>
+import $router from '@/exchange/router'
 export default {
   name: 'App',
   data () {
@@ -63,6 +64,8 @@ export default {
   methods: {
     changeTradePair (pair) {
       this.tokenpair = pair;
+      let s = pair.split('/');
+      $router.push({ name: 'trade', params: { token: s[0], base: s[1] }})
     }
   }
 }

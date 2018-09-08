@@ -8,6 +8,8 @@
     "postinstall": "rm -f node_modules/web3/index.d.ts"
   },
   "dependencies": {
+    "@types/amcharts": "^3.21.2",
+    "@types/bn.js": "^4.11.1",
     "@types/node": "^10.7.1",
     "@types/web3": "^1.0.3",
     "vue": "^2.5.17",
