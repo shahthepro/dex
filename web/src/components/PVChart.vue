@@ -46,12 +46,12 @@ export default {
 
 
         chartData[ i ] = ( {
-          "date": newDate,
-          "open": open,
-          "close": close,
-          "high": high,
-          "low": low,
-          "volume": volume
+          date: newDate,
+          open: open,
+          close: close,
+          high: high,
+          low: low,
+          volume: volume
         } );
       }
       return chartData;
@@ -86,108 +86,104 @@ export default {
       } ],
       dataDateFormat: "YYYY-MM-DDTHH:mm:ss",
 
-      "panels": [ {
-          "title": "Value",
-          "percentHeight": 70,
-          "stockGraphs": [ {
-            "balloonText": "O:<b>[[open]]</b><br>H:<b>[[high]]</b><br>L:<b>[[low]]</b><br>C:<b>[[close]]</b>",
-            "type": "candlestick",
-            "id": "g1",
-            "openField": "open",
-            "closeField": "close",
-            "highField": "high",
-            "lowField": "low",
-            "valueField": "close",
-            "lineColor": "#fff",
-            "fillColors": "#fff",
-            "negativeLineColor": "#db4c3c",
-            "negativeFillColors": "#db4c3c",
-            "fillAlphas": 1,
-            "comparedGraphLineThickness": 2,
-            "columnWidth": 0.7,
-            "useDataSetColors": false,
-            "comparable": false,
-            "showBalloon": true,
-            "proCandlesticks": true
+      panels: [ {
+          title: "Value",
+          percentHeight: 70,
+          stockGraphs: [ {
+            balloonText: "O:<b>[[open]]</b><br>H:<b>[[high]]</b><br>L:<b>[[low]]</b><br>C:<b>[[close]]</b>",
+            type: "candlestick",
+            id: "g1",
+            openField: "open",
+            closeField: "close",
+            highField: "high",
+            lowField: "low",
+            valueField: "close",
+            lineColor: "#fff",
+            fillColors: "#fff",
+            negativeLineColor: "#db4c3c",
+            negativeFillColors: "#db4c3c",
+            fillAlphas: 1,
+            comparedGraphLineThickness: 2,
+            columnWidth: 0.7,
+            useDataSetColors: false,
+            comparable: false,
+            showBalloon: true,
+            proCandlesticks: true
           } ],
         },
 
         {
-          "title": "Volume",
-          "percentHeight": 30,
-          "marginTop": 1,
-          "columnWidth": 0.6,
-          "showCategoryAxis": false,
+          title: "Volume",
+          percentHeight: 30,
+          marginTop: 1,
+          columnWidth: 0.6,
+          showCategoryAxis: false,
 
-          "stockGraphs": [ {
-            "valueField": "volume",
-            "openField": "open",
-            "type": "column",
-            "showBalloon": false,
-            "fillAlphas": 1,
-            "lineColor": "#fff",
-            "fillColors": "#fff",
-            "negativeLineColor": "#db4c3c",
-            "negativeFillColors": "#db4c3c",
-            "useDataSetColors": false
+          stockGraphs: [ {
+            valueField: "volume",
+            openField: "open",
+            type: "column",
+            showBalloon: false,
+            fillAlphas: 1,
+            lineColor: "#fff",
+            fillColors: "#fff",
+            negativeLineColor: "#db4c3c",
+            negativeFillColors: "#db4c3c",
+            useDataSetColors: false
           } ],
 
-          "stockLegend": {
-            "markerType": "none",
-            "markerSize": 0,
-            "labelText": "",
-            "periodValueTextRegular": "[[value.close]]"
+          stockLegend: {
+            markerType: "none",
+            markerSize: 0,
+            labelText: "",
+            periodValueTextRegular: "[[value.close]]"
           },
 
-          "valueAxes": [ {
-            "usePrefixes": true
+          valueAxes: [ {
+            usePrefixes: true
           } ]
         }
       ],
 
-      "panelsSettings": {
-        //    "color": "#fff",
-        "plotAreaFillColors": "#333",
-        "plotAreaFillAlphas": 1,
-        "marginLeft": 60,
-        "marginTop": 5,
-        "marginBottom": 5
+      panelsSettings: {
+        plotAreaFillColors: "#333",
+        plotAreaFillAlphas: 1,
+        marginLeft: 40,
+        marginRight: 5,
+        marginTop: 5,
+        marginBottom: 5
       },
 
-      "chartScrollbarSettings": {
-        "graph": "g1",
-        "graphType": "line",
-        "usePeriod": "WW",
-        "backgroundColor": "#333",
-        "graphFillColor": "#666",
-        "graphFillAlpha": 0.5,
-        "gridColor": "#555",
-        "gridAlpha": 1,
-        "selectedBackgroundColor": "#444",
-        "selectedGraphFillAlpha": 1
+      chartScrollbarSettings: {
+        graph: "g1",
+        graphType: "line",
+        usePeriod: "DD",
+        backgroundColor: "#333",
+        graphFillColor: "#666",
+        graphFillAlpha: 0.5,
+        gridColor: "#555",
+        gridAlpha: 1,
+        selectedBackgroundColor: "#444",
+        selectedGraphFillAlpha: 1
       },
 
-      "categoryAxesSettings": {
-        "equalSpacing": true,
-        "gridColor": "#555",
-        "gridAlpha": 1
+      categoryAxesSettings: {
+        equalSpacing: true,
+        gridColor: "#555",
+        gridAlpha: 1
       },
 
-      "valueAxesSettings": {
-        "gridColor": "#555",
-        "gridAlpha": 1,
-        "inside": false,
-        "showLastLabel": true
+      valueAxesSettings: {
+        gridColor: "#555",
+        gridAlpha: 1,
+        inside: false,
+        showLastLabel: true
       },
 
-      "chartCursorSettings": {
-        "pan": true,
-        "valueLineEnabled": true,
-        "valueLineBalloonEnabled": true
-      },
-
-      "legendSettings": {
-        //"color": "#fff"
+      chartCursorSettings: {
+        pan: true,
+        valueLineEnabled: true,
+        valueLineBalloonEnabled: true
       },
 
       stockEventsSettings: {
@@ -204,11 +200,11 @@ export default {
         position: "top",
         inputFieldsEnabled: false,
         periods: [ 
-          {
-            period: "mm",
-            count: 1,
-            label: "1m"
-          },
+          // {
+          //   period: "mm",
+          //   count: 1,
+          //   label: "1m"
+          // },
           {
             period: "mm",
             count: 5,
