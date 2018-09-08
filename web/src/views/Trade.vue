@@ -3,7 +3,7 @@
     <v-layout row wrap>
       <v-flex d-flex class="left-widget-area">
         <v-layout column wrap>
-          <v-flex d-flex class="top-widget">
+          <v-flex d-flex class="top-widget expanded">
             <v-card class="ma-2 widget-container">
               <div class="widget-content">
                 <PriceChart/>
@@ -124,7 +124,15 @@ export default {
   }
   .top-widget {
     height: calc(100% - 325px);
+    &.expanded {
+      height: calc(100% - 220px);
+
+      & + .bottom-widget {
+        height: 220px;
+      }
+    }
   }
+
 
   .widget-container {
     display: flex;

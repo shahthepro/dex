@@ -205,21 +205,21 @@ export default {
           //   count: 1,
           //   label: "1m"
           // },
-          {
-            period: "mm",
-            count: 5,
-            label: "5m"
-          },
-          {
-            period: "mm",
-            count: 15,
-            label: "15m"
-          },
-          {
-            period: "mm",
-            count: 30,
-            label: "30m"
-          },
+          // {
+          //   period: "mm",
+          //   count: 5,
+          //   label: "5m"
+          // },
+          // {
+          //   period: "mm",
+          //   count: 15,
+          //   label: "15m"
+          // },
+          // {
+          //   period: "mm",
+          //   count: 30,
+          //   label: "30m"
+          // },
           {
             period: "hh",
             count: 1,
@@ -239,6 +239,11 @@ export default {
             period: "DD",
             count: 1,
             label: "1d"
+          },
+          {
+            period: "MAX",
+            count: 1,
+            label: "MAX"
           }
         ]
       }
@@ -254,5 +259,13 @@ export default {
       height: 100%;
       width: 100%;
     }
+  }
+</style>
+
+<style lang="scss">
+
+  .amChartsButton.amcharts-period-input, .amChartsButtonSelected.amcharts-period-input-selected {
+    font-size: 0.8rem;
+    padding: 1px 3px;
   }
 </style>
