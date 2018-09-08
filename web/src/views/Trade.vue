@@ -94,7 +94,7 @@ import TradeForm from '@/components/TradeForm.vue';
 import TradeHistory from '@/components/TradeHistory.vue';
 import Orderbook from '@/components/Orderbook.vue';
 import OpenOrders from '@/components/OpenOrders.vue';
-import PriceChart from '@/components/PriceChart.vue';
+import PriceChart from '@/components/PVChart.vue';
 
 export default {
   name: 'Trade',
