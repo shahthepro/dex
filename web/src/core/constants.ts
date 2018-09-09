@@ -1,0 +1,1 @@
+export const TOKENS = 'CDEX_SUPPORTED_TOKENS'

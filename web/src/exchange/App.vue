@@ -3,9 +3,9 @@
     <v-navigation-drawer fixed temporary v-model="marketsDrawer" app>
       <v-list dense>
         <v-list-tile class="cdex-token-search-input">
-            <v-text-field type="text" placeholder="Search pairs..."></v-text-field>
+            <v-text-field type="text" placeholder="Search pairs..." v-model="searchText"></v-text-field>
         </v-list-tile>
-        <v-list-tile v-for="pair in pairs" :key="pair" @click="changeTradePair(pair)">
+        <v-list-tile v-for="pair in pairs" v-show="shouldShowPair(pair)" :key="pair" @click="changeTradePair(pair)">
           <v-list-tile-content>
             <v-list-tile-title>{{ pair }}</v-list-tile-title>
           </v-list-tile-content>
@@ -26,10 +26,8 @@
           <v-btn flat :to="{ name: `orders` }">Orders</v-btn>
           <v-btn flat :to="{ name: `balances` }">Balances</v-btn>
           <v-btn flat :to="{ name: `help` }"><v-icon>help</v-icon></v-btn>
+          <v-btn class="error" flat @click.stop="accountDrawer = !accountDrawer">Unlock Account</v-btn>
       </v-toolbar-items>
-      <v-btn icon @click.stop="accountDrawer = !accountDrawer">
-        <v-icon>account_circle</v-icon>
-      </v-btn>
     </v-toolbar>
     <v-content>
       <router-view></router-view>
@@ -42,6 +40,10 @@
 
 <script>
 import $router from '@/exchange/router'
+// import { LOAD_TOKENS } from '@/store/action-types'
+import { mapState } from 'vuex'
+import TOKENS from '@/core/tokens'
+
 export default {
   name: 'App',
   data () {
@@ -50,23 +52,29 @@ export default {
       title: 'ChilraDEX',
       tokenpair: 'CDX/ETH',
       marketsDrawer: false,
-      pairs: [
-        'CDX/ETH',
-        'VEN/ETH',
-        'BNB/ETH',
-        'GNT/ETH',
-        'NEO/ETH',
-        'BTC/ETH',
-        'XMR/ETH'
-      ]
+      pairs: TOKENS.getPairs('ETH'),
+      searchText: ''
     }
   },
+  // computed: {
+  //   pairs () {
+  //     return TOKENS.getPairs()
+  //   }
+  // },
   methods: {
     changeTradePair (pair) {
       this.tokenpair = pair;
       let s = pair.split('/');
       $router.push({ name: 'trade', params: { token: s[0], base: s[1] }})
+    },
+    shouldShowPair (pair) {
+      return this.searchText.length == 0 || pair.includes(this.searchText.toUpperCase())
     }
+  },
+  async beforeCreate () {
+    // await this.$store.dispatch(LOAD_TOKENS);
+  },
+  created () {
   }
 }
 </script>
