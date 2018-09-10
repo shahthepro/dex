@@ -1,8 +1,9 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import About from '@/views/About.vue';
-import Trade from '@/views/Trade.vue';
-import TOKENS from '@/core/tokens';
+import About from '@/views/About.vue'
+import Trade from '@/views/Trade.vue'
+import TOKENS from '@/core/tokens'
+import store from '@/store'
 
 Vue.use(Router)
 

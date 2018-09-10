@@ -108,7 +108,16 @@ export default {
   data () {
     return {
     }
+  },
+  beforeRouteEnter (to, from, next) {
+    console.log("Enter")
+    next()
+  },
+  beforeRouteUpdate (to, from, next) {
+    console.log("Update")
+    next()
   }
+  
 }
 </script>
 
