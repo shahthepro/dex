@@ -67,8 +67,7 @@ const TOKENS = {
     }
 
     // TODO: compare base.address and token.address
-
-    return true
+    return (base.address < token.address)
   }
 }
 

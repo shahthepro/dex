@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from '@/views/Home.vue'
 import About from '@/views/About.vue';
 import Trade from '@/views/Trade.vue';
 import TOKENS from '@/core/tokens';
@@ -14,7 +13,6 @@ export default new Router({
     {
       path: '/',
       name: 'home',
-      // component: Home,
       beforeEnter (to, from, next) {
         next({
           name: 'trade',
