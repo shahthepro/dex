@@ -90,11 +90,19 @@
 </template>
 
 <script lang="ts">
-import TradeForm from '@/components/TradeForm.vue';
-import TradeHistory from '@/components/TradeHistory.vue';
-import Orderbook from '@/components/Orderbook.vue';
-import OpenOrders from '@/components/OpenOrders.vue';
-import PriceChart from '@/components/PVChart.vue';
+import TradeForm from '@/components/TradeForm.vue'
+import TradeHistory from '@/components/TradeHistory.vue'
+import Orderbook from '@/components/Orderbook.vue'
+import OpenOrders from '@/components/OpenOrders.vue'
+import PriceChart from '@/components/PVChart.vue'
+import store from '@/store'
+import { TOKEN_PAIR_INFO } from '@/core/constants'
+import TOKEN_PAIR_INFO_MODULE from '@/store/modules/pair-info'
+import { SET_TOKEN_PAIR } from '@/store/action-types'
+
+if (!store.state[TOKEN_PAIR_INFO]) {
+  store.registerModule(TOKEN_PAIR_INFO, TOKEN_PAIR_INFO_MODULE)
+}
 
 export default {
   name: 'Trade',
@@ -110,12 +118,17 @@ export default {
     }
   },
   beforeRouteEnter (to, from, next) {
-    console.log("Enter")
+    store.dispatch(SET_TOKEN_PAIR, to.params)
     next()
   },
   beforeRouteUpdate (to, from, next) {
-    console.log("Update")
+    store.dispatch(SET_TOKEN_PAIR, to.params)
     next()
+  },
+  methods: {
+    setTokenPair (token, base) {
+      console.log(token, base)
+    }
   }
   
 }

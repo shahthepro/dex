@@ -1,5 +1,8 @@
 import BigNumber from 'bn.js'
 
+import { TOKEN_PAIR_SETTER } from '@/store/action-types'
+import { COMMIT_TOKEN_PAIR } from '@/store/mutation-types'
+
 interface IStockChartData {
   time: Date
   open: BigNumber
@@ -58,9 +61,18 @@ const state: ITradePairInfo = {
   lastPrice: new BigNumber(0)
 }
 
-const actions = {}
+const actions = {
+  [TOKEN_PAIR_SETTER] ({ commit }, args) {
+    commit(COMMIT_TOKEN_PAIR, args)
+  }
+}
 
-const mutations = {}
+const mutations = {
+  [COMMIT_TOKEN_PAIR] (state, args) {
+    state.base = args.base
+    state.token = args.token
+  }
+}
 
 const getters = {}
 

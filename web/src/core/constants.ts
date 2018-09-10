@@ -1,1 +1,3 @@
 export const TOKENS = 'CDEX_SUPPORTED_TOKENS'
+
+export const TOKEN_PAIR_INFO = 'CDEX_TOKEN_PAIR_INFO'
