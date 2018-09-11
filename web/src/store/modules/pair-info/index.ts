@@ -1,35 +1,33 @@
-import BigNumber from 'bn.js'
-
 import { TOKEN_PAIR_SETTER, TRADEFORM_PRICE_SETTER, TRADEFORM_SIDE_SETTER, TRADEFORM_AMOUNT_SETTER } from '@/store/action-types'
 import { COMMIT_TOKEN_PAIR, COMMIT_TRADEFORM_PRICE, COMMIT_TRADEFORM_SIDE, COMMIT_TRADEFORM_AMOUNT } from '@/store/mutation-types'
 
 interface IStockChartData {
   time: Date
-  open: BigNumber
-  high: BigNumber
-  low: BigNumber
-  close: BigNumber
-  volume: BigNumber
+  open: string
+  high: string
+  low: string
+  close: string
+  volume: string
 }
 
 interface IOrderMinimal {
   hash: String
-  price: BigNumber
-  amount: BigNumber
+  price: string
+  amount: string
 }
 
 interface IOrder extends IOrderMinimal {
   time: Date
   isBid: Boolean
-  filled: BigNumber
-  total: BigNumber
+  filled: string
+  total: string
   createdBy: String
 }
 
 interface ITradeHistoryData {
   time: Date
-  price: BigNumber
-  quantity: BigNumber
+  price: string
+  quantity: string
   isBuy: Boolean
 }
 
@@ -51,7 +49,7 @@ interface ITradePairInfo {
   openOrders: IOrder[]
   orderbook: IOrderbook
   tradeHistory: ITradeHistoryData[]
-  lastPrice: BigNumber,
+  lastPrice: string,
   tradeForm: ITradeForm
 }
 
@@ -65,7 +63,7 @@ const state: ITradePairInfo = {
     sellOrders: []
   },
   tradeHistory: [],
-  lastPrice: new BigNumber(0, 10),
+  lastPrice: '',
   tradeForm: {
     side: 0,
     price: '',
@@ -77,6 +75,8 @@ const actions = {
   [TOKEN_PAIR_SETTER] ({ commit }, args) {
     commit(COMMIT_TOKEN_PAIR, args)
   },
+
+  // Trade form two-way binding
   [TRADEFORM_PRICE_SETTER] ({ commit }, value) {
     commit(COMMIT_TRADEFORM_PRICE, value)
   },
@@ -93,6 +93,8 @@ const mutations = {
     state.base = args.base
     state.token = args.token
   },
+
+  // Trade form two-way binding
   [COMMIT_TRADEFORM_PRICE] (state, value) {
     state.tradeForm.price = value
   },
