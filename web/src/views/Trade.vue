@@ -97,7 +97,7 @@ import OpenOrders from '@/components/OpenOrders.vue'
 import PriceChart from '@/components/PVChart.vue'
 import store from '@/store'
 import { TOKEN_PAIR_INFO } from '@/core/constants'
-import TOKEN_PAIR_INFO_MODULE from '@/store/modules/pair-info'
+import TOKEN_PAIR_INFO_MODULE from '@/store/modules/pair-info/index'
 import { SET_TOKEN_PAIR } from '@/store/action-types'
 
 if (!store.state[TOKEN_PAIR_INFO]) {

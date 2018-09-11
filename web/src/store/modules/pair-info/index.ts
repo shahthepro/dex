@@ -38,6 +38,12 @@ interface IOrderbook {
   sellOrders: IOrderMinimal[]
 }
 
+interface ITradeForm {
+  side: number,
+  price: BigNumber,
+  amount: BigNumber
+}
+
 interface ITradePairInfo {
   token: string
   base: string
@@ -45,7 +51,8 @@ interface ITradePairInfo {
   openOrders: IOrder[]
   orderbook: IOrderbook
   tradeHistory: ITradeHistoryData[]
-  lastPrice: BigNumber
+  lastPrice: BigNumber,
+  tradeForm: ITradeForm
 }
 
 const state: ITradePairInfo = {
@@ -58,7 +65,12 @@ const state: ITradePairInfo = {
     sellOrders: []
   },
   tradeHistory: [],
-  lastPrice: new BigNumber(0)
+  lastPrice: new BigNumber(0),
+  tradeForm: {
+    side: 0,
+    price: new BigNumber(0),
+    amount: new BigNumber(0)
+  }
 }
 
 const actions = {
