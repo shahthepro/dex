@@ -78,7 +78,7 @@
             <v-card class="ma-2 widget-container">
               <div class="widget-content-wrapper">
                 <div class="widget-content">
-                  <TradeForm base="ETH" token="CDX" />
+                  <TradeForm />
                 </div>
               </div>
             </v-card>
@@ -115,6 +115,11 @@ export default {
   },
   data () {
     return {
+    }
+  },
+  computed: {
+    pairInfo () {
+      return store.state[TOKEN_PAIR_INFO]
     }
   },
   beforeRouteEnter (to, from, next) {

@@ -1,6 +1,6 @@
 <template>
   <v-app dark>
-    <v-navigation-drawer fixed temporary v-model="marketsDrawer" app>
+    <v-navigation-drawer v-if="$route.name == 'trade'" fixed temporary v-model="marketsDrawer" app>
       <v-list dense>
         <v-list-tile class="cdex-token-search-input">
             <v-text-field type="text" placeholder="Search pairs..." v-model="searchText"></v-text-field>
@@ -14,15 +14,15 @@
     </v-navigation-drawer>
     <v-toolbar fixed app>
       <v-toolbar-title v-text="title"></v-toolbar-title>
-      <v-toolbar-items>
+      <v-toolbar-items v-if="$route.name == 'trade'">
           <v-btn @click.stop="marketsDrawer = !marketsDrawer" flat>
-            {{ tokenpair }}
+            {{ `${$route.params.token}/${$route.params.base}` }}
             <v-icon>arrow_drop_down</v-icon>
           </v-btn>
       </v-toolbar-items>
       <v-spacer></v-spacer>
       <v-toolbar-items>
-          <v-btn flat :to="{ name: `trade`, params: { token:'CDX', base: 'ETH' } }">Trade</v-btn>
+          <v-btn flat :to="{ name: `trade`, params: { token: ($route.params.token || 'CDX'), base: ($route.params.base || 'ETH') } }">Trade</v-btn>
           <v-btn flat :to="{ name: `orders` }">Orders</v-btn>
           <v-btn flat :to="{ name: `balances` }">Balances</v-btn>
           <v-btn flat :to="{ name: `help` }"><v-icon>help</v-icon></v-btn>
@@ -50,20 +50,19 @@ export default {
     return {
       accountDrawer: false,
       title: 'ChilraDEX',
-      tokenpair: 'CDX/ETH',
+      // tokenpair: 'CDX/ETH',
       marketsDrawer: false,
       pairs: TOKENS.getPairs('ETH'),
       searchText: ''
     }
   },
-  // computed: {
-  //   pairs () {
-  //     return TOKENS.getPairs()
-  //   }
-  // },
+  computed: {
+    // pairs () {
+    //   return TOKENS.getPairs('ETH')
+    // }
+  },
   methods: {
     changeTradePair (pair) {
-      this.tokenpair = pair;
       let s = pair.split('/');
       $router.push({ name: 'trade', params: { token: s[0], base: s[1] }})
     },
