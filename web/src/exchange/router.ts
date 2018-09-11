@@ -7,13 +7,16 @@ import store from '@/store'
 
 Vue.use(Router)
 
-export default new Router({
+let router = new Router({
   mode: 'history',
   base: process.env.BASE_URL,
   routes: [
     {
       path: '/',
       name: 'home',
+      meta: {
+        title: _ => 'ChilraDEX'
+      },
       beforeEnter (to, from, next) {
         next({
           name: 'trade',
@@ -25,6 +28,9 @@ export default new Router({
       path: '/trade/:token/:base',
       name: 'trade',
       component: Trade,
+      meta: {
+        title: route => `${route.params.token}/${route.params.base} - ChilraDEX`
+      },
       beforeEnter (to, from, next) {
         if (TOKENS.isPairValid(to.params.token, to.params.base)) {
           next()
@@ -44,17 +50,33 @@ export default new Router({
     {
       path: '/orders',
       name: 'orders',
-      component: About
+      component: About,
+      meta: {
+        title: _ => 'My Orders - ChilraDEX'
+      }
     },
     {
       path: '/balances',
       name: 'balances',
-      component: About
+      component: About,
+      meta: {
+        title: _ => 'Balances - ChilraDEX'
+      }
     },
     {
       path: '/help',
       name: 'help',
-      component: About
+      component: About,
+      meta: {
+        title: _ => 'Help - ChilraDEX'
+      }
     }
   ]
 })
+
+router.beforeEach((to, from, next) => {
+  document.title = to.meta.title(to)
+  next()
+})
+
+export default router
