@@ -22,3 +22,5 @@ yarn-error.log*
 
 public/abi
 *.g.json
+public/network.json
+public/tokens.json

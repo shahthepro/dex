@@ -5,11 +5,15 @@
         <v-list-tile class="cdex-token-search-input">
             <v-text-field type="text" placeholder="Search pairs..." v-model="searchText"></v-text-field>
         </v-list-tile>
-        <v-list-tile v-for="pair in pairs" v-show="shouldShowPair(pair)" :key="pair" @click="changeTradePair(pair)">
-          <v-list-tile-content>
-            <v-list-tile-title>{{ pair }}</v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
+        <virtual-scroller :items="pairs" item-height="40" buffer="100">
+          <template slot-scope="props">
+            <v-list-tile v-show="shouldShowPair(props.item)" :key="props.itemKey" @click="changeTradePair(props.item)">
+              <v-list-tile-content>
+                <v-list-tile-title>{{ props.item }}</v-list-tile-title>
+              </v-list-tile-content>
+            </v-list-tile>
+          </template>
+        </virtual-scroller>
       </v-list>
     </v-navigation-drawer>
     <v-toolbar fixed app>
@@ -26,7 +30,7 @@
           <v-btn flat :to="{ name: `orders` }">Orders</v-btn>
           <v-btn flat :to="{ name: `balances` }">Balances</v-btn>
           <v-btn flat :to="{ name: `help` }"><v-icon>help</v-icon></v-btn>
-          <v-btn class="error" flat @click.stop="accountDrawer = !accountDrawer">Unlock Account</v-btn>
+          <v-btn class="error" flat @click.stop="accountDrawer = !accountDrawer">Unlock Wallet</v-btn>
       </v-toolbar-items>
     </v-toolbar>
     <v-content>
@@ -52,6 +56,7 @@ export default {
       title: 'ChilraDEX',
       // tokenpair: 'CDX/ETH',
       marketsDrawer: false,
+      // pairs: [],
       pairs: TOKENS.getPairs('ETH'),
       searchText: ''
     }

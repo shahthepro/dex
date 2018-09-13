@@ -96,12 +96,12 @@ import Orderbook from '@/components/Orderbook.vue'
 import OpenOrders from '@/components/OpenOrders.vue'
 import PriceChart from '@/components/PVChart.vue'
 import store from '@/store'
-import { TOKEN_PAIR_INFO } from '@/core/constants'
-import TOKEN_PAIR_INFO_MODULE from '@/store/modules/pair-info/index'
+import { TOKEN_PAIR_NAMESPACE } from '@/core/constants'
+import TOKEN_PAIR_INFO_MODULE from '@/store/modules/pair-info/pair-info'
 import { SET_TOKEN_PAIR } from '@/store/action-types'
 
-if (!store.state[TOKEN_PAIR_INFO]) {
-  store.registerModule(TOKEN_PAIR_INFO, TOKEN_PAIR_INFO_MODULE)
+if (!store.state[TOKEN_PAIR_NAMESPACE]) {
+  store.registerModule(TOKEN_PAIR_NAMESPACE, TOKEN_PAIR_INFO_MODULE)
 }
 
 export default {
@@ -119,7 +119,7 @@ export default {
   },
   computed: {
     pairInfo () {
-      return store.state[TOKEN_PAIR_INFO]
+      return store.state[TOKEN_PAIR_NAMESPACE]
     }
   },
   beforeRouteEnter (to, from, next) {

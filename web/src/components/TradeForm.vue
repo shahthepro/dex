@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import { TOKEN_PAIR_INFO } from '@/core/constants'
+import { TOKEN_PAIR_NAMESPACE } from '@/core/constants'
 import { SET_TRADEFORM_PRICE, SET_TRADEFORM_SIDE, SET_TRADEFORM_AMOUNT } from '@/store/action-types'
 export default {
   name: 'TradeForm',
@@ -34,11 +34,11 @@ export default {
   },
   computed: {
     pairInfo () {
-      return this.$store.state[TOKEN_PAIR_INFO]
+      return this.$store.state[TOKEN_PAIR_NAMESPACE]
     },
     price: {
       get () {
-        return this.$store.state[TOKEN_PAIR_INFO].tradeForm.price
+        return this.$store.state[TOKEN_PAIR_NAMESPACE].tradeForm.price
       },
       set (value) {
         if (this.rules.number(value) === true) {
@@ -48,7 +48,7 @@ export default {
     },
     amount: {
       get () {
-        return this.$store.state[TOKEN_PAIR_INFO].tradeForm.amount
+        return this.$store.state[TOKEN_PAIR_NAMESPACE].tradeForm.amount
       },
       set (value) {
         if (this.rules.number(value) === true) {
@@ -58,7 +58,7 @@ export default {
     },
     side: {
       get () {
-        return this.$store.state[TOKEN_PAIR_INFO].tradeForm.side
+        return this.$store.state[TOKEN_PAIR_NAMESPACE].tradeForm.side
       },
       set (value) {
         this.$store.dispatch(SET_TRADEFORM_SIDE, value);

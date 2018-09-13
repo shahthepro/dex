@@ -4,37 +4,23 @@ import router from '@/exchange/router'
 import '@/plugins/vuetify.exchange'
 import store from '@/store'
 import TOKENS from '@/core/tokens'
+import BLOCKCHAIN_INFO from '@/core/blockchain';
+import VueVirtualScroller from 'vue-virtual-scroller'
+
 // import Web3 from 'web3'
 
 // Web3.givenProvider
 
 Vue.config.productionTip = false
+Vue.config.devtools = process.env.NODE_ENV == "development"
+Vue.config.performance = process.env.NODE_ENV == "development"
+Vue.use(VueVirtualScroller)
 
-TOKENS.load().then(_ => {
-  new Vue({
-    router,
-    store,
-    render: h => h(App)
-  }).$mount('#app')
-})
-
-// let p1 = fetch('/tokens.json')
-//   .then(resp => resp.json())
-//   .then(tokens => {
-//     window[TOKENS] = tokens.map(token => {
-//       return {
-//         symbol: token.s,
-//         address: token.a,
-//         decimal: token.d
-//       }
-//     })
-//   })
-
-// p1
-//   .then(_ => {
-//     new Vue({
-//       router,
-//       store,
-//       render: h => h(App)
-//     }).$mount('#app')
-//   })
+Promise.all([TOKENS.load(), BLOCKCHAIN_INFO.load()])
+  .then(_ => {
+    new Vue({
+      router,
+      store,
+      render: h => h(App)
+    }).$mount('#app')
+  })

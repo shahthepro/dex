@@ -29,7 +29,7 @@ let router = new Router({
       name: 'trade',
       component: Trade,
       meta: {
-        title: route => `${route.params.token}/${route.params.base} - ChilraDEX`
+        title: route => `${route.params.token}/${route.params.base}`
       },
       beforeEnter (to, from, next) {
         if (TOKENS.isPairValid(to.params.token, to.params.base)) {
@@ -43,7 +43,7 @@ let router = new Router({
             }
           })
         } else {
-          next('/404')
+          // next('/404')
         }
       }
     },
@@ -52,7 +52,7 @@ let router = new Router({
       name: 'orders',
       component: About,
       meta: {
-        title: _ => 'My Orders - ChilraDEX'
+        title: _ => 'My Orders'
       }
     },
     {
@@ -60,7 +60,7 @@ let router = new Router({
       name: 'balances',
       component: About,
       meta: {
-        title: _ => 'Balances - ChilraDEX'
+        title: _ => 'Balances'
       }
     },
     {
@@ -68,14 +68,33 @@ let router = new Router({
       name: 'help',
       component: About,
       meta: {
-        title: _ => 'Help - ChilraDEX'
+        title: _ => 'Help'
       }
     }
   ]
 })
 
 router.beforeEach((to, from, next) => {
-  document.title = to.meta.title(to)
+  let SITE_NAME = 'ChilraDEX'
+
+  if (to.meta) {
+    switch (typeof to.meta.title) {
+      case 'function':
+        document.title = `${to.meta.title(to)} - ${SITE_NAME}`
+        break
+        
+      case 'string':
+        document.title = `${to.meta.title} - ${SITE_NAME}`
+        break
+
+      default:
+        document.title = SITE_NAME
+        break
+    }
+  } else {
+    document.title = SITE_NAME
+  }
+
   next()
 })
 

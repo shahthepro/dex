@@ -1,5 +1,7 @@
-import { TOKENS as TOKENS_NAMESPACE } from '@/core/constants'
+import { TOKENS_NAMESPACE } from '@/core/constants'
 import IToken from '@/interfaces/itoken'
+
+let tokenIndexMap = {};
 
 const TOKENS = {
   defaultPair: {
@@ -10,8 +12,10 @@ const TOKENS = {
     return fetch('/tokens.json')
       .then(resp => resp.json())
       .then(tokens => {
+        tokenIndexMap = {}
         // @ts-ignore
-        window[TOKENS_NAMESPACE] = tokens.map(token => {
+        window[TOKENS_NAMESPACE] = tokens.map((token, index) => {
+          tokenIndexMap[token.s] = index
           return <IToken> {
             symbol: token.s,
             address: token.a,
@@ -40,26 +44,29 @@ const TOKENS = {
     return pairs
   },
   isPairValid (tokenSymbol: string, baseSymbol: string) {
-    let token: IToken
-    let base: IToken
-    let temp: IToken
-    // @ts-ignore
-    for (let i = 0; i < window[TOKENS_NAMESPACE].length; i++) {
-      // @ts-ignore
-      temp = window[TOKENS_NAMESPACE][i]
-      if (temp.symbol == baseSymbol) {
-        base = temp
-      } else if (temp.symbol == tokenSymbol) {
-        token = temp
-      } else {
-        continue
-      }
+    // let token: IToken
+    // let base: IToken
+    // let temp: IToken
+    // // @ts-ignore
+    // for (let i = 0; i < window[TOKENS_NAMESPACE].length; i++) {
+    //   // @ts-ignore
+    //   temp = window[TOKENS_NAMESPACE][i]
+    //   if (temp.symbol == baseSymbol) {
+    //     base = temp
+    //   } else if (temp.symbol == tokenSymbol) {
+    //     token = temp
+    //   } else {
+    //     continue
+    //   }
 
-      // @ts-ignore
-      if (base != null && token != null) {
-        break
-      }
-    }
+    //   // @ts-ignore
+    //   if (base != null && token != null) {
+    //     break
+    //   }
+    // }
+
+    let token: IToken = window[TOKENS_NAMESPACE][tokenIndexMap[tokenSymbol]];
+    let base: IToken = window[TOKENS_NAMESPACE][tokenIndexMap[baseSymbol]];
 
     // @ts-ignore
     if (base == null || token == null) {
