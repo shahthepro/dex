@@ -10,6 +10,8 @@ const HOMEBRIDGE_CONTRACT_NAME = 'HomeBridge';
 const EXCHANGE_CONTRACT_NAME = 'Exchange';
 
 const GENERATED_CONFIG_FILE_NAME = 'contracts.g';
+const NETWORKS_CONFIG_FILE_NAME = 'network';
+const TOKENS_CONFIG_FILE_NAME = 'tokens';
 
 const MAINNET_NETWORK_ID = 1;
 const SIDECHAIN_NETWORK_ID = 6454;
@@ -161,6 +163,8 @@ gulp.task('generate-config', (done) => {
     writeJSONFile(getABIPath(EXCHANGE_CONTRACT_NAME), Exchange.abi);
 
     const configFile = getConfigFilePath(GENERATED_CONFIG_FILE_NAME);
+    const networksFile = getConfigFilePath(NETWORKS_CONFIG_FILE_NAME);
+    const tokensFile = getConfigFilePath(TOKENS_CONFIG_FILE_NAME);
 
     writeJSONFile(configFile, {
         bridge: {
@@ -176,7 +180,7 @@ gulp.task('generate-config', (done) => {
     });
 
     // copy to public directory
-    return gulp.src([configFile])
+    return gulp.src([configFile, networksFile, tokensFile])
         .pipe(gulp.dest(`web/public`));
 
 });

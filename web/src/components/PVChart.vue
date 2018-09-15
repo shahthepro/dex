@@ -18,7 +18,7 @@ export default {
     generateChartData () {
       setTimeout(() => {
 
-        let chartData = [];
+        // let chartData = [];
         var firstDate = new Date();
         firstDate.setHours( 0, 0, 0, 0 );
         firstDate.setDate( firstDate.getDate() - 30 );
@@ -48,7 +48,7 @@ export default {
           var volume = Math.round( Math.random() * ( 1000 + i ) ) + 100 + i;
   
   
-          chartData[ i ] = ( {
+          this.chartData[ i ] = ( {
             date: newDate,
             open: open,
             close: close,
@@ -57,7 +57,7 @@ export default {
             volume: volume
           } );
         }
-        this.chartData = chartData
+        // this.chartData = chartData
 
         this.chart.validateData()
         // console.log(this.chartData, this.chart.validateData)
@@ -257,9 +257,6 @@ export default {
         }
       } );
     }
-  },
-  created () {
-    // this.initializeChart()
   },
   mounted () {
     this.initializeChart()
