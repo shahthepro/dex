@@ -1,18 +1,46 @@
 import IWallet from '@/interfaces/iwallet';
+import connectWallet from '@/utils/connect-wallet';
+import { CONNECT, DISCONNECT } from '@/store/action-types';
+import { COMMIT_CONNECT_WALLET, COMMIT_DISCONNECT_WALLET } from '@/store/mutation-types';
 
 interface IWalletState {
   current: IWallet | null
-  isWalletConnected: boolean
+  isConnected: boolean
 }
 
 const state: IWalletState = {
-  isWalletConnected: false,
+  isConnected: false,
   current: null
 }
 
-const actions = {}
+const actions = {
+  async [CONNECT]({ commit }, args) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const wallet = await connectWallet(args);
+        commit(COMMIT_CONNECT_WALLET, wallet);
+        resolve(wallet);
+      } catch (err) {
+        commit(COMMIT_DISCONNECT_WALLET);
+        reject(err);
+      }
+    });
+  },
+  [DISCONNECT]({ commit }) {
+    commit(COMMIT_DISCONNECT_WALLET);
+  },
+}
 
-const mutations = {}
+const mutations = {
+  [COMMIT_CONNECT_WALLET] (state: IWalletState, wallet: IWallet) {
+    state.isConnected = true;
+    state.current = wallet;
+  },
+  [COMMIT_DISCONNECT_WALLET] (state: IWalletState) {
+    state.isConnected = false;
+    state.current = null;
+  },
+}
 
 const getters = {}
 

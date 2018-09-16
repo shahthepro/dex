@@ -27,6 +27,7 @@ interface INetworkInfo {
 const BLOCKCHAIN_INFO = {
   CONTRACTS_INFO: <IContractsInfo|null> null,
   NETWORK_INFO: <INetworkInfo|null> null,
+  isExchange: <boolean> false,
   load () {
     let contracts = fetch('/contracts.g.json')
       .then(resp => resp.json())
@@ -42,17 +43,17 @@ const BLOCKCHAIN_INFO = {
       
     return [contracts, network]
   },
-  getHomeNetworkInfo(): INetwork {
+  getNetworkInfo(): INetwork {
+    if (this.isExchange) {
+      return this.NETWORK_INFO!.foreign
+    }
     return this.NETWORK_INFO!.home
   },
-  getHomeContractInfo(): IContract {
+  getContractInfo(): IContract {
+    if (this.isExchange) {
+      return this.CONTRACTS_INFO!.foreign
+    }
     return this.CONTRACTS_INFO!.home
-  },
-  getExchangeNetworkInfo(): INetwork {
-    return this.NETWORK_INFO!.foreign
-  },
-  getExchangeContractInfo(): IContract {
-    return this.CONTRACTS_INFO!.foreign
   },
   getAuthorities(): string[] {
     return this.NETWORK_INFO!.authorities

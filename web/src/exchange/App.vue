@@ -36,8 +36,8 @@
     <v-content>
       <router-view></router-view>
     </v-content>
-    <v-navigation-drawer temporary right v-model="accountDrawer" fixed app>
-      <div>HelloWorld</div>
+    <v-navigation-drawer temporary right v-model="accountDrawer" width="500" fixed app>
+      <UnlockWallet/>
     </v-navigation-drawer>
   </v-app>
 </template>
@@ -47,11 +47,16 @@ import $router from '@/exchange/router'
 // import { LOAD_TOKENS } from '@/store/action-types'
 import { mapState } from 'vuex'
 import TOKENS from '@/core/tokens'
+import UnlockWallet from '@/components/UnlockWallet.vue';
 
 export default {
   name: 'App',
+  components: {
+    UnlockWallet
+  },
   data () {
     return {
+      walletDialog: false,
       accountDrawer: false,
       title: 'ChilraDEX',
       // tokenpair: 'CDX/ETH',

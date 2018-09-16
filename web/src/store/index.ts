@@ -13,7 +13,7 @@ export default new Vuex.Store({
     },
     wallet (state) {
       return state[WALLET_NAMESPACE]
-    }
+    },
   },
   modules: {
     [WALLET_NAMESPACE]: wallet

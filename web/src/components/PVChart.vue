@@ -19,6 +19,7 @@ export default {
       setTimeout(() => {
 
         // let chartData = [];
+        this.chartData.length = 0;
         var firstDate = new Date();
         firstDate.setHours( 0, 0, 0, 0 );
         firstDate.setDate( firstDate.getDate() - 30 );
@@ -260,7 +261,7 @@ export default {
   },
   mounted () {
     this.initializeChart()
-    this.generateChartData()
+    // this.generateChartData()
   }
 }
 </script>
