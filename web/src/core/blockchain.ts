@@ -5,8 +5,8 @@ interface IContract {
 }
 
 interface IContractsInfo {
-  home: IContract,
-  foreign: IContract
+  bridge: IContract,
+  exchange: IContract
 }
 
 interface INetwork {
@@ -27,21 +27,37 @@ interface INetworkInfo {
 const BLOCKCHAIN_INFO = {
   CONTRACTS_INFO: <IContractsInfo|null> null,
   NETWORK_INFO: <INetworkInfo|null> null,
+  CONTRACT_ABI: <any> null,
   isExchange: <boolean> false,
-  load () {
+  load (forExchange) {
     let contracts = fetch('/contracts.g.json')
       .then(resp => resp.json())
       .then(contracts => {
-        this.CONTRACTS_INFO = contracts; 
+        this.CONTRACTS_INFO = Object.freeze(contracts)
       });
       
     let network = fetch('/network.json')
       .then(resp => resp.json())
-      .then(contracts => {
-        this.NETWORK_INFO = contracts; 
+      .then(networks => {
+        this.NETWORK_INFO = Object.freeze(networks)
       });
       
-    return [contracts, network]
+    let abi
+    if (forExchange === true) {
+      this.isExchange = true
+      abi = fetch('/abi/Exchange.json')
+    } else {
+      this.isExchange = false
+      abi = fetch('/abi/HomeBridge.json')
+    }
+
+    abi
+      .then(resp => resp.json())
+      .then(contractABI => {
+        this.CONTRACT_ABI = Object.freeze(contractABI)
+      })
+
+    return [contracts, network, abi]
   },
   getNetworkInfo(): INetwork {
     if (this.isExchange) {
@@ -51,9 +67,12 @@ const BLOCKCHAIN_INFO = {
   },
   getContractInfo(): IContract {
     if (this.isExchange) {
-      return this.CONTRACTS_INFO!.foreign
+      return this.CONTRACTS_INFO!.exchange
     }
-    return this.CONTRACTS_INFO!.home
+    return this.CONTRACTS_INFO!.bridge
+  },
+  getABI() {
+    return this.CONTRACT_ABI
   },
   getAuthorities(): string[] {
     return this.NETWORK_INFO!.authorities

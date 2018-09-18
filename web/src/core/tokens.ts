@@ -1,7 +1,7 @@
-import { TOKENS_NAMESPACE } from '@/core/constants'
 import IToken from '@/interfaces/itoken'
 
 let tokenIndexMap = {};
+let tokensList = [];
 
 const TOKENS = {
   defaultPair: {
@@ -13,8 +13,7 @@ const TOKENS = {
       .then(resp => resp.json())
       .then(tokens => {
         tokenIndexMap = {}
-        // @ts-ignore
-        window[TOKENS_NAMESPACE] = tokens.map((token, index) => {
+        tokensList = tokens.map((token, index) => {
           tokenIndexMap[token.s] = index
           return <IToken> {
             symbol: token.s,
@@ -24,17 +23,17 @@ const TOKENS = {
         })
       })
   },
-  get () {
-    // @ts-ignore
-    return window[TOKENS_NAMESPACE]
+  getBySymbol (symbol): IToken {
+    return tokensList[tokenIndexMap[symbol]]
+  },
+  get (): IToken[] {
+    return tokensList
   },
   getPairs (base: string) {
     let token: IToken
     let pairs: string[] = []
-    // @ts-ignore
-    for (let i = 0; i < window[TOKENS_NAMESPACE].length; i++) {
-      // @ts-ignore
-      token = window[TOKENS_NAMESPACE][i]
+    for (let i = 0; i < tokensList.length; i++) {
+      token = tokensList[i]
       if (token.symbol == base) {
         continue
       } else {
@@ -44,31 +43,9 @@ const TOKENS = {
     return pairs
   },
   isPairValid (tokenSymbol: string, baseSymbol: string) {
-    // let token: IToken
-    // let base: IToken
-    // let temp: IToken
-    // // @ts-ignore
-    // for (let i = 0; i < window[TOKENS_NAMESPACE].length; i++) {
-    //   // @ts-ignore
-    //   temp = window[TOKENS_NAMESPACE][i]
-    //   if (temp.symbol == baseSymbol) {
-    //     base = temp
-    //   } else if (temp.symbol == tokenSymbol) {
-    //     token = temp
-    //   } else {
-    //     continue
-    //   }
+    let token: IToken = this.getBySymbol(tokenSymbol)
+    let base: IToken = this.getBySymbol(baseSymbol)
 
-    //   // @ts-ignore
-    //   if (base != null && token != null) {
-    //     break
-    //   }
-    // }
-
-    let token: IToken = window[TOKENS_NAMESPACE][tokenIndexMap[tokenSymbol]];
-    let base: IToken = window[TOKENS_NAMESPACE][tokenIndexMap[baseSymbol]];
-
-    // @ts-ignore
     if (base == null || token == null) {
       return false
     }

@@ -12,9 +12,7 @@ Vue.config.devtools = process.env.NODE_ENV == "development"
 Vue.config.performance = process.env.NODE_ENV == "development"
 Vue.use(VueVirtualScroller)
 
-BLOCKCHAIN_INFO.isExchange = true;
-
-Promise.all([TOKENS.load(), BLOCKCHAIN_INFO.load()])
+Promise.all([TOKENS.load(), BLOCKCHAIN_INFO.load(true)])
   .then(_ => {
     new Vue({
       router,

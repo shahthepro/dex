@@ -1,5 +1,6 @@
-import { TOKEN_PAIR_SETTER, TRADEFORM_PRICE_SETTER, TRADEFORM_SIDE_SETTER, TRADEFORM_AMOUNT_SETTER } from '@/store/action-types'
-import { COMMIT_TOKEN_PAIR, COMMIT_TRADEFORM_PRICE, COMMIT_TRADEFORM_SIDE, COMMIT_TRADEFORM_AMOUNT } from '@/store/mutation-types'
+import { TOKEN_PAIR_SETTER } from '@/store/action-types'
+import { COMMIT_TOKEN_PAIR } from '@/store/mutation-types'
+import tradeForm from './modules/trade-form'
 
 interface IStockChartData {
   time: Date
@@ -11,7 +12,7 @@ interface IStockChartData {
 }
 
 interface IOrderMinimal {
-  hash: String
+  hash: string
   price: string
   amount: string
 }
@@ -21,7 +22,7 @@ interface IOrder extends IOrderMinimal {
   isBid: Boolean
   filled: string
   total: string
-  createdBy: String
+  createdBy: string
 }
 
 interface ITradeHistoryData {
@@ -36,12 +37,6 @@ interface IOrderbook {
   sellOrders: IOrderMinimal[]
 }
 
-interface ITradeForm {
-  side: number,
-  price: string,
-  amount: string
-}
-
 interface ITradePairInfo {
   token: string
   base: string
@@ -49,8 +44,7 @@ interface ITradePairInfo {
   openOrders: IOrder[]
   orderbook: IOrderbook
   tradeHistory: ITradeHistoryData[]
-  lastPrice: string,
-  tradeForm: ITradeForm
+  lastPrice: string
 }
 
 const state: ITradePairInfo = {
@@ -63,28 +57,12 @@ const state: ITradePairInfo = {
     sellOrders: []
   },
   tradeHistory: [],
-  lastPrice: '',
-  tradeForm: {
-    side: 0,
-    price: '',
-    amount: ''
-  }
+  lastPrice: ''
 }
 
 const actions = {
   [TOKEN_PAIR_SETTER] ({ commit }, args) {
     commit(COMMIT_TOKEN_PAIR, args)
-  },
-
-  // Trade form two-way binding
-  [TRADEFORM_PRICE_SETTER] ({ commit }, value) {
-    commit(COMMIT_TRADEFORM_PRICE, value)
-  },
-  [TRADEFORM_AMOUNT_SETTER] ({ commit }, value) {
-    commit(COMMIT_TRADEFORM_AMOUNT, value)
-  },
-  [TRADEFORM_SIDE_SETTER] ({ commit }, value) {
-    commit(COMMIT_TRADEFORM_SIDE, value)
   },
 }
 
@@ -92,17 +70,6 @@ const mutations = {
   [COMMIT_TOKEN_PAIR] (state, args) {
     state.base = args.base
     state.token = args.token
-  },
-
-  // Trade form two-way binding
-  [COMMIT_TRADEFORM_PRICE] (state, value) {
-    state.tradeForm.price = value
-  },
-  [COMMIT_TRADEFORM_AMOUNT] (state, value) {
-    state.tradeForm.amount = value
-  },
-  [COMMIT_TRADEFORM_SIDE] (state, value) {
-    state.tradeForm.side = value
   },
 }
 
@@ -113,5 +80,8 @@ export default {
   state,
   actions,
   mutations,
-  getters
+  getters,
+  modules: {
+    tradeForm
+  }
 }

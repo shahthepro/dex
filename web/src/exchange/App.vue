@@ -37,7 +37,10 @@
       <router-view></router-view>
     </v-content>
     <v-navigation-drawer temporary right v-model="accountDrawer" width="500" fixed app>
-      <UnlockWallet/>
+      <div class="p-20">
+        <h3 class="headline">My Wallet</h3>
+        <UnlockWallet/>
+      </div>
     </v-navigation-drawer>
   </v-app>
 </template>
@@ -94,5 +97,8 @@ export default {
 }
 .v-list .cdex-token-search-input {
   margin: 10px 0;
+}
+.p-20 {
+  padding: 20px;
 }
 </style>
