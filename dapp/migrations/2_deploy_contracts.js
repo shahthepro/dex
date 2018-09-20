@@ -20,15 +20,8 @@ module.exports = function (deployer, network, accounts) {
             a = [accounts[5], accounts[6], accounts[7], accounts[8]];
 
         case 'privatenet':
-            deployer.deploy(Exchange, requiredHomeSignatures, a, makeFee, takeFee, cancelFee)
-                // .then(() => {
-                //     configFile.foreign.contract = Exchange.address;
-                // });
-            
-            deployer.deploy(HomeBridge, requiredForiegnSignatures, a)
-                // .then(() => {
-                //     configFile.home.contract = HomeBridge.address;
-                // });
+            deployer.deploy(HomeBridge, requiredForiegnSignatures, a);
+            deployer.deploy(Exchange, requiredHomeSignatures, a, makeFee, takeFee, cancelFee);
             break;
     }
 };
