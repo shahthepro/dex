@@ -22,14 +22,14 @@ async function connectSoftwareWallet(): Promise<IWallet> {
   }
   const address = accounts[0]
 
-  let sendTx = async (tx: any): Promise<string> => {
+  let sendTx = async (tx: any): Promise<any> => {
     const nonce = await web3.eth.getTransactionCount(address)
     tx.from = address
     tx.nonce = nonce
     tx.chainId = networkId
 
     const receipt = await web3.eth.sendTransaction(tx)
-    return receipt.transactionHash
+    return receipt
   }
 
   let sign = (data: string): Promise<string> => {

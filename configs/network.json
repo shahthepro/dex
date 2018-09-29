@@ -1,10 +1,10 @@
 {
-    "home": {
+    "bridge": {
         "provider": "http://127.0.0.1:8501",
         "wsProvider": "ws://127.0.0.1:8601",
         "requiredSignatures": 2
     },
-    "foreign": {
+    "exchange": {
         "provider": "http://127.0.0.1:8501",
         "wsProvider": "ws://127.0.0.1:8601",
         "requiredSignatures": 2,

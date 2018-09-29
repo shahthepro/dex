@@ -7,11 +7,11 @@ const Exchange = artifacts.require('./Exchange.sol');
 const HomeBridge = artifacts.require('./HomeBridge.sol');
 
 module.exports = function (deployer, network, accounts) {
-    const requiredHomeSignatures = configFile.home.requiredSignatures;
-    const requiredForiegnSignatures = configFile.foreign.requiredSignatures;
-    const makeFee = configFile.foreign.makeFee;
-    const takeFee = configFile.foreign.takeFee;
-    const cancelFee = configFile.foreign.cancelFee;
+    const requiredHomeSignatures = configFile.bridge.requiredSignatures;
+    const requiredForiegnSignatures = configFile.exchange.requiredSignatures;
+    const makeFee = configFile.exchange.makeFee;
+    const takeFee = configFile.exchange.takeFee;
+    const cancelFee = configFile.exchange.cancelFee;
 
     let a = configFile.authorities;
 

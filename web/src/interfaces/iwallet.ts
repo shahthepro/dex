@@ -7,7 +7,7 @@ interface IWallet {
     networkId: number
     address: string
     keystore?: PrivateKey
-    sendTx(tx: any): Promise<string>
+    sendTx(tx: any): Promise<any>
     sign(data: string): Promise<string>
 }
 

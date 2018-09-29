@@ -26,7 +26,7 @@ async function createNewKeystore(passphrase: string): Promise<IWallet> {
 
   const address = account.address
 
-  let sendTx = async (tx: any): Promise<string> => {
+  let sendTx = async (tx: any): Promise<any> => {
     const nonce = await web3.eth.getTransactionCount(address)
     tx.from = address
     tx.nonce = nonce
@@ -35,7 +35,7 @@ async function createNewKeystore(passphrase: string): Promise<IWallet> {
     const signedTx = await account.signTransaction(tx)
     const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction)
 
-    return receipt.transactionHash
+    return receipt
   }
 
   let sign = (data: string): Promise<string> => {

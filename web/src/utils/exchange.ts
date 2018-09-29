@@ -23,7 +23,6 @@ async function placeOrder() {
 
   // const tokenData = TOKENS_INFO
 
-  console.log(EXCHANGE_CONTRACT_ADDRESS, ExchangeContract, ExchangeContract.methods)
   const data = ExchangeContract.methods.placeOrder(
     token.address,
     base.address,
@@ -36,7 +35,7 @@ async function placeOrder() {
   return wallet.sendTx({
     to: EXCHANGE_CONTRACT_ADDRESS,
     value: 0,
-    gas: 0,
+    gas: 300000,
     gasPrice: 0,
     data
   })

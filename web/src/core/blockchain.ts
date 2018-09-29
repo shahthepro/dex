@@ -19,8 +19,8 @@ interface INetwork {
 }
 
 interface INetworkInfo {
-  home: INetwork,
-  foreign: INetwork,
+  bridge: INetwork,
+  exchange: INetwork,
   authorities: string[],
 }
 
@@ -61,9 +61,9 @@ const BLOCKCHAIN_INFO = {
   },
   getNetworkInfo(): INetwork {
     if (this.isExchange) {
-      return this.NETWORK_INFO!.foreign
+      return this.NETWORK_INFO!.exchange
     }
-    return this.NETWORK_INFO!.home
+    return this.NETWORK_INFO!.bridge
   },
   getContractInfo(): IContract {
     if (this.isExchange) {

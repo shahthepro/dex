@@ -117,12 +117,12 @@ gulp.task('generate-abi', async (done) => {
         .pipe(gulp.dest(`web/public/abi`));
 });
 
-gulp.task('deploy-home-network', (done) => {
+gulp.task('deploy-bridge-network', (done) => {
     runCommand('truffle', ['deploy', '--network', 'home'], { cwd: 'dapp' }, done);
 });
 
-gulp.task('deploy-foreign-network', (done) => {
-    runCommand('truffle', ['deploy', '--network', 'foreign'], { cwd: 'dapp' }, done);
+gulp.task('deploy-exchange-network', (done) => {
+    runCommand('truffle', ['deploy', '--network', 'exchange'], { cwd: 'dapp' }, done);
 });
 
 gulp.task('deploy-private-network', (done) => {
@@ -132,7 +132,7 @@ gulp.task('deploy-private-network', (done) => {
 
 gulp.task('contracts-deploy', (done) => {
     if (process.env.NODE_ENV == 'production') {
-        runSequence('deploy-home-network', 'deploy-foreign-network', done);
+        runSequence('deploy-bridge-network', 'deploy-exchange-network', done);
     } else {
         runSequence('deploy-private-network', done);
     }
