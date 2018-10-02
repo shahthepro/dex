@@ -3,6 +3,8 @@ package validator
 import (
 	"encoding/json"
 	"os"
+
+	"hameid.net/cdex/dex/internal/helpers"
 )
 
 type NetworksInfo struct {
@@ -17,23 +19,23 @@ type NetworksInfo struct {
 
 type ContractsInfo struct {
 	Bridge struct {
-		Address string `json:"address"`
+		Address helpers.Address `json:"address"`
 		Topics  struct {
-			Deposit  string `json:"Deposit"`
-			Withdraw string `json:"Withdraw"`
+			Deposit  helpers.Hash `json:"Deposit"`
+			Withdraw helpers.Hash `json:"Withdraw"`
 		} `json:"topics"`
 	} `json:"bridge"`
 	Exchange struct {
-		Address string `json:"address"`
+		Address helpers.Address `json:"address"`
 		Topics  struct {
-			Deposit                    string `json:"Deposit"`
-			Withdraw                   string `json:"Withdraw"`
-			Transfer                   string `json:"Transfer"`
-			DepositConfirmation        string `json:"DepositConfirmation"`
-			WithdrawSignatureSubmitted string `json:"WithdrawSignatureSubmitted"`
-			CollectedSignatures        string `json:"CollectedSignatures"`
-			PlaceOrder                 string `json:"PlaceOrder"`
-			CancelOrder                string `json:"CancelOrder"`
+			Deposit                    helpers.Hash `json:"Deposit"`
+			Withdraw                   helpers.Hash `json:"Withdraw"`
+			Transfer                   helpers.Hash `json:"Transfer"`
+			DepositConfirmation        helpers.Hash `json:"DepositConfirmation"`
+			WithdrawSignatureSubmitted helpers.Hash `json:"WithdrawSignatureSubmitted"`
+			CollectedSignatures        helpers.Hash `json:"CollectedSignatures"`
+			PlaceOrder                 helpers.Hash `json:"PlaceOrder"`
+			CancelOrder                helpers.Hash `json:"CancelOrder"`
 		} `json:"topics"`
 	} `json:"exchange"`
 }

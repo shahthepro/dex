@@ -1,25 +1,25 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"os"
 
 	"hameid.net/cdex/dex/internal/validator"
 )
 
 func main() {
-	contractsInfo, err := validator.ReadContractsInfo("/home/shah/Projects/dex/src/hameid.net/cdex/dex/configs/contracts.g.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(err)
-	nwInfo, err := validator.ReadNetworksInfo("/home/shah/Projects/dex/src/hameid.net/cdex/dex/configs/network.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(err)
+	app := validator.NewValidator(
+		os.Getenv("DEX_VALIDATOR_CONTRACTS_FILE"),
+		os.Getenv("DEX_VALIDATOR_NETWORKS_FILE"),
+		os.Getenv("DEX_VALIDATOR_KEYSTORE_FILE"),
+		os.Getenv("DEX_VALIDATOR_PASSWORD_FILE"),
+	)
 
-	fmt.Println("Hello World!")
-	fmt.Println(contractsInfo)
-	fmt.Println(nwInfo)
+	app.Initialize()
+
+	done := make(chan bool)
+
+	app.RunOnBridgeNetwork()
+	app.RunOnExchangeNetwork()
+
+	<-done
 }

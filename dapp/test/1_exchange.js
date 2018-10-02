@@ -7,9 +7,9 @@ contract('Exchange contract', (accounts) => {
 
     let token1 = "0x2222233333444445555566666777778888899999";
     let token2 = "0x9999922222333334444455555666667777788888";
-    let node1Address = accounts[6];
-    let node2Address = accounts[7];
-    let node3Address = accounts[8];
+    let node1Address = "0xd2699c9d871f04f43d04dc9dbe669eee25eb3c85";
+    let node2Address = "0x3180a5b7e284126853f0d0e21791f0749f1f1f22";
+    let node3Address = "0xe75aa91d085a5475e8e15795218974cb262809ce";
     let unknownNode = accounts[9];
 
     let feeAccount = accounts[0];
@@ -20,20 +20,20 @@ contract('Exchange contract', (accounts) => {
         ExchangeInstance = await Exchange.deployed();
     });
 
-    depositTokens(token1, accounts[1], "4456892342355335462132");
-    depositTokens(token2, accounts[2], "9872346765123456456323");
+    depositTokens(token1, accounts[2], "4456892342355335462132");
+    depositTokens(token2, accounts[3], "9872346765123456456323");
 
     // 0x63b6a1d9cc58f4c4c2b22bf86e7da4b89ba49226d0ed4b4a300fc12c1a63f944
-    placeOrder(token2, token1, "234354432345", "100", true, 1, accounts[1]);
+    placeOrder(token2, token1, "234354432345", "100", true, 1, accounts[2]);
     // 0x6a72b4cc37c8018a311e40bb157687c4522681236d9d3e0419d02376f50826f4
-    placeOrder(token2, token1, "234354432345", "1000", false, 1, accounts[2]);
+    placeOrder(token2, token1, "234354432345", "1000", false, 1, accounts[3]);
 
-    cancelOrder(token1, accounts[1], 0);
+    // cancelOrder(token1, accounts[2], 0);
 
 
     function depositTokens(tokenAddress, targetAccount, balanceToDep) {
         it("Node 1 should sign and relay Deposit to Exchange", async () => {
-            await ExchangeInstance.deposit.sendTransaction(
+            const hash = await ExchangeInstance.deposit.sendTransaction(
                 targetAccount,
                 tokenAddress,
                 balanceToDep,
@@ -103,6 +103,7 @@ contract('Exchange contract', (accounts) => {
         });
     
         it("Balance should have gone through to Exchange", async () => {
+            await delay(3000);
             let balance = await ExchangeInstance.balanceOf.call(tokenAddress, targetAccount, {
                 from: targetAccount
             });
@@ -117,15 +118,18 @@ contract('Exchange contract', (accounts) => {
             const hash = await ExchangeInstance.placeOrder.sendTransaction(token, base, price, quantity, is_bid, nonce, {
                 from: creator
             });
+            await delay(3000);
             const balanceAfter = await ExchangeInstance.escrowBalanceOf.call(is_bid ? base : token, creator);
             
             let t = new BN(price, 10);
             t = balanceBefore.add(t.mul(new BN(quantity, 10)));
 
-            const logs = await getAllEvents('PlaceOrder', hash);
+            // // await delay(3000);
 
-            const orderHash = logs[0].args.orderHash;
-            orderHashes.push(orderHash);
+            // const logs = await getAllEvents('PlaceOrder', hash);
+
+            // const orderHash = logs[0].args.orderHash;
+            // orderHashes.push(orderHash);
 
             assert(balanceAfter.eq(t), "Incorrect balance");
         });
@@ -148,6 +152,7 @@ contract('Exchange contract', (accounts) => {
     function getAllEvents(eventName, transactionHash) {
         return new Promise((resolve, reject) => {
             const transactionReceipt = web3.eth.getTransactionReceipt(transactionHash);
+
             const blockNumber = transactionReceipt.blockNumber;
             const allEvents = ExchangeInstance[eventName]({fromBlock: blockNumber, toBlock: blockNumber});
 
@@ -160,5 +165,13 @@ contract('Exchange contract', (accounts) => {
             })
             // event.stopWatching();
         });
+    }
+
+    function delay(milliseconds) {
+        return new Promise((resolve, _) => {
+            setTimeout(() => {
+                resolve();
+            }, milliseconds);
+        })
     }
 });

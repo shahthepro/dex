@@ -74,6 +74,7 @@ contract Exchange is Ownable {
 
     // Pending deposits and authorities who confirmed them
     mapping (bytes32 => address[]) deposits;
+    mapping (bytes32 => bool) deposited;
 
     // Pending signatures and authorities who confirmed them
     mapping (bytes32 => SignaturesCollection) signatures;
@@ -163,6 +164,7 @@ contract Exchange is Ownable {
 
         // don't allow authority to confirm deposit twice
         require(!Helpers.addressArrayContains(deposits[hash], msg.sender), "ERR_RELAY_REENTRY");
+        require(deposited[hash] != true, "ERR_RELAY_REENTRY");
 
         deposits[hash].push(msg.sender);
 
@@ -172,6 +174,7 @@ contract Exchange is Ownable {
         }
 
         // balances[token][recipient] += value;
+        deposited[hash] = true;
         addToBalance(token, recipient, value);
         emit Deposit(recipient, token, value, transactionHash);
     }
