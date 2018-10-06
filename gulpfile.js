@@ -157,7 +157,7 @@ gulp.task('generate-config', (done) => {
     }
 
     const HomeBridgeAddress = HomeBridge.networks[mainnetID].address;
-    const ExchangeAddress = HomeBridge.networks[xnetID].address;
+    const ExchangeAddress = Exchange.networks[xnetID].address;
 
     writeJSONFile(getABIPath(HOMEBRIDGE_CONTRACT_NAME), HomeBridge.abi);
     writeJSONFile(getABIPath(EXCHANGE_CONTRACT_NAME), Exchange.abi);

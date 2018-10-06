@@ -45,7 +45,9 @@ type Validator struct {
 
 var channelSize = 10000
 
+// Initialize reads and decodes ABIs to be used for communicating with chain
 func (v *Validator) Initialize() {
+	fmt.Printf("\nConnecting to %s...\n", v.networks.Bridge.WebSocketProvider)
 	homeClient, err := ethclient.Dial(v.networks.Bridge.WebSocketProvider)
 	if err != nil {
 		log.Panic(err)
@@ -54,6 +56,7 @@ func (v *Validator) Initialize() {
 	if err != nil {
 		log.Panic(err)
 	}
+	fmt.Printf("Decoding Bridge contract ABI...\n")
 	bridgeABI, err := abi.JSON(strings.NewReader(string(HomeBridge.HomeBridgeABI)))
 	if err != nil {
 		log.Fatal(err)
@@ -62,14 +65,16 @@ func (v *Validator) Initialize() {
 	v.bridge.instance = bridge
 	v.bridge.abi = &bridgeABI
 
-	exchangeClient, err := ethclient.Dial(v.networks.Bridge.WebSocketProvider)
+	fmt.Printf("\nConnecting to %s...\n", v.networks.Exchange.WebSocketProvider)
+	exchangeClient, err := ethclient.Dial(v.networks.Exchange.WebSocketProvider)
 	if err != nil {
 		log.Panic(err)
 	}
-	exchange, err := Exchange.NewExchange(v.contracts.Bridge.Address.Address, exchangeClient)
+	exchange, err := Exchange.NewExchange(v.contracts.Exchange.Address.Address, exchangeClient)
 	if err != nil {
 		log.Panic(err)
 	}
+	fmt.Printf("Decoding Exchange contract ABI...\n")
 	exchangeABI, err := abi.JSON(strings.NewReader(string(Exchange.ExchangeABI)))
 	if err != nil {
 		log.Fatal(err)
@@ -77,9 +82,13 @@ func (v *Validator) Initialize() {
 	v.exchange.client = exchangeClient
 	v.exchange.instance = exchange
 	v.exchange.abi = &exchangeABI
+
+	fmt.Printf("\n\nValidator initialization successful :)\n\n")
 }
 
+// RunOnBridgeNetwork runs validator on the bridge network
 func (v *Validator) RunOnBridgeNetwork() {
+	fmt.Printf("Trying to listen events on Bridge contract %s...\n", v.contracts.Bridge.Address.Address.String())
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{v.contracts.Bridge.Address.Address},
 		Topics:    [][]common.Hash{{v.contracts.Bridge.Topics.Deposit.Hash}},
@@ -120,18 +129,18 @@ func (v *Validator) RunOnBridgeNetwork() {
 					continue eventListenerLoop
 				}
 
-				gasPrice, err := v.exchange.client.SuggestGasPrice(context.Background())
-				if err != nil {
-					log.Fatal(err)
-					continue eventListenerLoop
-				}
+				// gasPrice, err := v.exchange.client.SuggestGasPrice(context.Background())
+				// if err != nil {
+				// 	log.Fatal(err)
+				// 	continue eventListenerLoop
+				// }
 
 				auth := bind.NewKeyedTransactor(v.privateKey)
 
 				auth.Nonce = big.NewInt(int64(nonce))
 				auth.Value = big.NewInt(0)
 				auth.GasLimit = uint64(500000)
-				auth.GasPrice = gasPrice
+				auth.GasPrice = big.NewInt(1) // gasPrice
 
 				tx, err := v.exchange.instance.Deposit(auth, depositEvent.Recipient, depositEvent.Token, depositEvent.Value, vLog.TxHash)
 				if err != nil {
@@ -145,7 +154,9 @@ func (v *Validator) RunOnBridgeNetwork() {
 	}()
 }
 
+// RunOnExchangeNetwork runs validator on the exchange network
 func (v *Validator) RunOnExchangeNetwork() {
+	fmt.Printf("Trying to listen events on Exchange contract %s...\n", v.contracts.Exchange.Address.Address.String())
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{v.contracts.Exchange.Address.Address},
 		Topics:    [][]common.Hash{{v.contracts.Exchange.Topics.Withdraw.Hash}},
@@ -228,21 +239,30 @@ func (v *Validator) RunOnExchangeNetwork() {
 	}()
 }
 
+// Quit terminates validator instance
 func (v *Validator) Quit() {
+	fmt.Printf("\nCleaning up...\n")
+	fmt.Printf("\nBye bye...\n")
 }
 
+// NewValidator creates and populates a Vaidator struct object
 func NewValidator(contractsFilePath, networksFilePath, keystoreFilePath, passwordFilePath string) *Validator {
+	fmt.Printf("Starting validator...\n")
+	fmt.Printf("Reading config files...\n")
+	fmt.Printf("Reading %s...\n", contractsFilePath)
 	// Read config files
 	contractsInfo, err := ReadContractsInfo(contractsFilePath)
 	if err != nil {
 		log.Panic(err)
 	}
 
+	fmt.Printf("Reading %s...\n", networksFilePath)
 	nwInfo, err := ReadNetworksInfo(networksFilePath)
 	if err != nil {
 		log.Panic(err)
 	}
 
+	fmt.Printf("Decrypting keystore %s...\n", keystoreFilePath)
 	// Decrypt keystore
 	accountKey, err := utils.DecryptPrivateKeyFromKeystoreWithPasswordFile(keystoreFilePath, passwordFilePath)
 	if err != nil {
@@ -258,6 +278,8 @@ func NewValidator(contractsFilePath, networksFilePath, keystoreFilePath, passwor
 	}
 
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	fmt.Printf("Validator account address: %s\n\n", fromAddress.String())
 
 	return &Validator{
 		networks:   nwInfo,

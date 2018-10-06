@@ -29,7 +29,7 @@ const BLOCKCHAIN_INFO = {
   NETWORK_INFO: <INetworkInfo|null> null,
   CONTRACT_ABI: <any> null,
   isExchange: <boolean> false,
-  load (forExchange) {
+  load ({ forExchange }) {
     let contracts = fetch('/contracts.g.json')
       .then(resp => resp.json())
       .then(contracts => {

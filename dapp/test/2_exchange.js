@@ -28,7 +28,7 @@ contract('Exchange contract', (accounts) => {
     // 0x6a72b4cc37c8018a311e40bb157687c4522681236d9d3e0419d02376f50826f4
     placeOrder(token2, token1, "234354432345", "1000", false, 1, accounts[3]);
 
-    // cancelOrder(token1, accounts[2], 0);
+    cancelOrder(token1, accounts[2], 0);
 
 
     function depositTokens(tokenAddress, targetAccount, balanceToDep) {

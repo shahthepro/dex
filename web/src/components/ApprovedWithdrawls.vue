@@ -18,7 +18,7 @@
   // import HomeBridge from '@/utils/home-bridge.contract';
   // import BigNumber from 'bn.js';
 
-  console.log(HomeBridge.getSign)
+  // console.log(HomeBridge.getSign)
 
   export default {
     name: 'ApprovedWithdrawls',
@@ -60,7 +60,7 @@
         //   })
         //   .catch((err) => {
         //     console.error(err)
-          })
+        //   })
         // try {
         //     this.$store.dispatch('registerWeb3')
         // } catch (e) {
