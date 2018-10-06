@@ -7,11 +7,15 @@ import BridgeHelp from '@/views/BridgeHelp.vue'
 
 Vue.use(Router)
 
-console.log()
+let BASE_URL = process.env.BASE_URL
+
+if (process.env.NODE_ENV == 'development') {
+  BASE_URL = BASE_URL + 'bridge/'
+}
 
 export default new Router({
   mode: 'history',
-  base: process.env.BASE_URL + 'bridge' + '/',
+  base: BASE_URL,
   routes: [
     {
       path: '/',

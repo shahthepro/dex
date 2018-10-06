@@ -3,19 +3,16 @@
     <v-toolbar app>
       <v-toolbar-title v-text="title"></v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn icon @click.stop="accountDrawer = !accountDrawer">
-        <v-icon>account_circle</v-icon>
-      </v-btn>
+      <v-toolbar-items>
+          <v-btn flat href="https://chilra.com/trade">Trade</v-btn>
+          <v-btn flat :to="{ name: `deposit` }">Deposit</v-btn>
+          <v-btn flat :to="{ name: `withdraw` }">Withdraw</v-btn>
+          <v-btn flat :to="{ name: `help` }"><v-icon>help</v-icon></v-btn>
+      </v-toolbar-items>
     </v-toolbar>
     <v-content>
       <router-view></router-view>
     </v-content>
-    <v-navigation-drawer temporary right v-model="accountDrawer" fixed app width="500">
-      <div>HelloWorld</div>
-    </v-navigation-drawer>
-    <v-footer app>
-      <span>&copy; 2018</span>
-    </v-footer>
   </v-app>
 </template>
 
