@@ -55,13 +55,13 @@ contract HomeBridge is Ownable {
     }
 
     function deposit(address token, uint256 amount) public payable {
-        require(!isWithdrawDisabled);
+        require(!isWithdrawDisabled, "ERR_WITHDRAW_DISABLED");
 
         if (address(0) == token) {
-            require(msg.value > 0);
+            require(msg.value > 0, "ERR_NO_FUNDS");
             emit Deposit(msg.sender, address(0), msg.value);
         } else {
-            require(msg.value == 0 && amount > 0);
+            require(msg.value == 0 && amount > 0, "ERR_NO_FUNDS");
             assert(StandardToken(token).transferFrom(msg.sender, this, amount));
             emit Deposit(msg.sender, token, amount);
         }

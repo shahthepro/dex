@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import wallet from '@/store/modules/wallet/wallet';
-import { TOKEN_PAIR_NAMESPACE, WALLET_NAMESPACE } from '@/core/constants'
+import { TOKEN_PAIR_NAMESPACE, WALLET_NAMESPACE, DEPOSIT_FORM_NAMESPACE } from '@/core/constants'
 import IWallet from '@/interfaces/iwallet';
 
 Vue.use(Vuex)
@@ -15,6 +15,9 @@ export default new Vuex.Store({
     wallet (state) {
       return state[WALLET_NAMESPACE]
     },
+    depositForm (state) {
+      return state[DEPOSIT_FORM_NAMESPACE]
+    }
   },
   modules: {
     [WALLET_NAMESPACE]: wallet

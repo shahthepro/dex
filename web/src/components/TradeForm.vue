@@ -22,6 +22,7 @@
 </template>
 
 <script>
+import FORM_RULES from '@/utils/form-rules'
 import { TOKEN_PAIR_NAMESPACE } from '@/core/constants'
 import { SET_TRADEFORM_PRICE, SET_TRADEFORM_SIDE, SET_TRADEFORM_AMOUNT } from '@/store/action-types'
 import Exchange from '@/utils/exchange'
@@ -34,14 +35,7 @@ export default {
       volume: 0,
       lastTxHash: '',
       lastTxError: '',
-      rules: {
-        required(value) {
-          return (value != null && value.length > 0) || 'This is required'
-        },
-        number(value) {
-          return (value.length > 0 && /^[0-9]*\.?[0-9]+$/.test(value)) || `Please enter a valid number`
-        }
-      }
+      rules: FORM_RULES
     }
   },
   computed: {

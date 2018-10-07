@@ -1,16 +1,30 @@
 <template>
   <v-card>
     <v-card-text>
-      <v-form ref="form" v-model="form">
-        <v-autocomplete v-model="selectedToken" :items="tokens" hide-selected item-text="name" item-value="addr" label="Select a token"
+      <v-form ref="valid" v-model="valid">
+        <v-autocomplete v-model="selectedToken" :items="tokens" hide-selected item-text="symbol" item-value="symbol" label="Select a token"
           :rules="[rules.required]">
+          <template
+            slot="item"
+            slot-scope="{ item, tile }"
+          >
+            <v-list-tile-content>
+              <v-list-tile-title v-text="item.symbol"></v-list-tile-title>
+              <v-list-tile-sub-title v-if="item.symbol != 'ETH'" v-text="item.address"></v-list-tile-sub-title>
+            </v-list-tile-content>
+            <v-list-tile-action>
+              <v-icon>mdi-coin</v-icon>
+            </v-list-tile-action>
+          </template>
         </v-autocomplete>
-        <v-text-field v-model="amountToDeposit" name="amount" label="Amount to deposit" type="text" :rules="[rules.number]"></v-text-field>
-        <v-text-field v-model="gasPrice" name="gasPrice" label="Gas price (in gwei)" type="text" :rules="[rules.number]"></v-text-field>
+
+        <v-text-field v-model="amountToDeposit" label="Amount" :suffix="selectedToken" required :rules="[rules.number]"></v-text-field>
+        <v-text-field v-model="gasPrice" label="Gas Price" :suffix="`GWEI`" required :rules="[rules.number]"></v-text-field>
+
       </v-form>
     </v-card-text>
     <v-card-actions>
-      <v-btn block large color="success" :disabled="isTxInProgress || !form" :loading="isTxInProgress" v-on:click="transfer">DEPOSIT</v-btn>
+      <v-btn block large color="success" :disabled="loading" :loading="loading" v-on:click="transfer">DEPOSIT</v-btn>
     </v-card-actions>
     <v-card-text v-if="lastTxError.length > 0" class="cb-error-text">{{ lastTxError }}</v-card-text>
     </v-card-text>
@@ -24,81 +38,110 @@
   // import HomeBridge from '@/utils/home-bridge.contract';
   // import BigNumber from 'bn.js';
 
-  export default {
-    name: 'DepositForm',
-    props: {
-    },
-    data() {
-      return {
-        form: null,
+import FORM_RULES from '@/utils/form-rules'
+import TOKENS from '@/core/tokens'
 
-        selectedToken: null,
-        amountToDeposit: null,
-        gasPrice: null,
-        gasLimit: null,
+import store from '@/store'
+import { DEPOSIT_FORM_NAMESPACE } from '@/core/constants'
+import DEPOSIT_FORM_STORE_MODULE from '@/store/modules/bridge/deposit-form'
 
-        lastTxHash: '',
-        isTxInProgress: false,
-        lastTxError: '',
+import { SET_DEPOSITFORM_AMOUNT, SET_DEPOSITFORM_GASPRICE, SET_DEPOSITFORM_TOKEN } from '@/store/action-types'
 
-        rules: {
-          required(value) {
-            return (value != null && value.length > 0) || 'This is required'
-          },
-          number(value) {
-            return (value != null && value.length > 0 && /^[0-9]*\.?[0-9]+$/.test(value)) || `Please enter a valid number`
-          }
+if (!store.state[DEPOSIT_FORM_NAMESPACE]) {
+  store.registerModule(DEPOSIT_FORM_NAMESPACE, DEPOSIT_FORM_STORE_MODULE)
+}
+
+import Bridge from '@/utils/bridge'
+
+export default {
+  name: 'DepositForm',
+  props: {
+  },
+  data() {
+    return {
+      valid: null,
+
+      // selectedToken: null,
+      // amountToDeposit: null,
+      // gasPrice: null,
+      // gasLimit: null,
+
+      lastTxHash: '',
+      loading: false,
+      lastTxError: '',
+
+      tokens: TOKENS.get(),
+
+      rules: FORM_RULES
+    }
+  },
+  computed: {
+    // isWalletConnected() {
+    //   return this.$store.state.isWalletConnected
+    // },
+    // wallet() {
+    //   return this.$store.state.wallet
+    // },
+    selectedToken: {
+      get () {
+        return this.$store.state[DEPOSIT_FORM_NAMESPACE].token
+      },
+      set (value) {
+        if (value != null) {
+          this.$store.dispatch(SET_DEPOSITFORM_TOKEN, value)
         }
       }
     },
-    computed: {
-      isWalletConnected() {
-        return this.$store.state.isWalletConnected
+    gasPrice: {
+      get () {
+        return this.$store.state[DEPOSIT_FORM_NAMESPACE].gasPrice
       },
-      wallet() {
-        return this.$store.state.wallet
-      },
-      tokens() {
-        return this.$store.state.supportedTokens
-      },
-      appConfig() {
-        return this.$store.state.config
+      set (value) {
+        if (this.rules.number(value) === true && value > 0) {
+          this.$store.dispatch(SET_DEPOSITFORM_GASPRICE, value)
+        }
       }
     },
-    mounted() {
-      this.gasPrice = 8;
-      this.gasLimit = 35000;
+    amountToDeposit: {
+      get () {
+        return this.$store.state[DEPOSIT_FORM_NAMESPACE].amount
+      },
+      set (value) {
+        if (this.rules.number(value) === true && value > 0) {
+          this.$store.dispatch(SET_DEPOSITFORM_AMOUNT, value)
+        }
+      }
     },
-    methods: {
-      transfer() {
-        // if (!this.isWalletConnected) {
-        //     this.lastTxError = 'You have not connected a wallet yet. Connect a wallet and then try again.'
-        //     return
-        // }
-        // this.isTxInProgress = true;
-        // this.lastTxError = '';
-        // this.lastTxHash = '';
-        // HomeBridge.deposit(
-        //     this.selectedToken, 
-        //     new BigNumber(this.amountToDeposit), 
-        //     new BigNumber(this.gasLimit),
-        //     new BigNumber(this.gasPrice),
-        // )
-        // .then((txHash) => {
-        //     this.lastTxHash = txHash
-        //     const gasPrice = this.gasPrice
-        //     this.$refs.form.reset()
-        //     this.gasPrice = gasPrice
-        // })
-        // .catch((e) => {
-        //     this.lastTxError = e.message;
-        // })
-        // .then(() => {
-        //     this.isTxInProgress = false;
-        // });
+  },
+  created() {
+    this.$store.dispatch(SET_DEPOSITFORM_GASPRICE, 8);
+    // this.gasLimit = 35000;
+  },
+  methods: {
+    transfer() {
+      if (this.valid) {
+        this.loading = true
+        this.lastTxError = '';
+        this.lastTxHash = '';
+        Bridge.deposit()
+          .then(receipt => {
+            if (receipt.status == 1) {
+              this.lastTxHash = receipt.transactionHash
+              // this.$refs.valid.reset()
+            } else {
+              this.lastTxError = `Something went wrong, Do you have sufficient funds?`;
+            }
+          })
+          .catch(err => {
+            this.lastTxError = err.message
+          })
+          .then(_ => {
+            this.loading = false
+          })
       }
     }
   }
+}
 </script>
 
 <style lang="scss" scoped>
