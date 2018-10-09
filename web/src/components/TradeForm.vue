@@ -94,12 +94,12 @@ export default {
       if (this.valid) {
         Exchange.placeOrder()
           .then(receipt => {
+            console.log(receipt)
             if (receipt.status == 1) {
               this.lastTxHash = receipt.transactionHash
             } else {
               this.lastTxError = `Something went wrong, Do you have sufficient funds?`;
             }
-            // this.$refs.form.reset()
           })
           .catch(err => {
             this.lastTxError = err.message

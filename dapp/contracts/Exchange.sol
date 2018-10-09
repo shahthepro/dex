@@ -2,6 +2,8 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+// import "./core/DataStore.sol";
+import "./core/UserWallet.sol";
 import "./lib/MessageSigning.sol";
 import "./lib/Helpers.sol";
 import "./lib/Message.sol";
@@ -9,43 +11,19 @@ import "./lib/Message.sol";
 contract Exchange is Ownable {
     using SafeMath for uint256;
 
-    // Map Tokens => Users => Balances
-    mapping (address => mapping (address => uint256)) public balances;
-    mapping (address => mapping (address => uint256)) public escrowBalances; // In-order balances
-
     // Event created on money transfer
     event Transfer(address from, address to, address token, uint256 tokens);
 
     function balanceOf(address token, address user) public view returns (uint256) {
-        return balances[token][user];
-    }
-
-    function addToBalance(address token, address user, uint256 amount) private {
-        balances[token][user] = balances[token][user].add(amount);
+        return UserWallet.balanceOf(dataStoreContract, token, user);
     }
 
     function addToFeeAccount(address token, uint256 amount) private {
-        addToBalance(token, feeAccount, amount);
+        UserWallet.addToBalance(dataStoreContract, token, feeAccount, amount);
     }
 
     function escrowBalanceOf(address token, address user) public view returns (uint256) {
-        return escrowBalances[token][user];
-    }
-
-    function moveToEscrow(address token, address user, uint256 amount) private {
-        require(balances[token][user] >= amount, "ERR_INSUFFICIENT_BALANCE");
-        balances[token][user] = balances[token][user].sub(amount);
-        escrowBalances[token][user] = escrowBalances[token][user].add(amount);
-    }
-
-    function recoverFromEscrow(address token, address user, uint256 amount) private {
-        releaseEscrow(token, user, user, amount);
-    }
-
-    function releaseEscrow(address token, address fromAddress, address toAddress, uint256 amount) private {
-        require(escrowBalances[token][fromAddress] >= amount, "ERR_INSUFFICIENT_BALANCE");
-        escrowBalances[token][fromAddress] = escrowBalances[token][fromAddress].sub(amount);
-        balances[token][toAddress] = balances[token][toAddress].add(amount);
+        return UserWallet.escrowBalanceOf(dataStoreContract, token, user);
     }
 
     struct SignaturesCollection {
@@ -72,6 +50,8 @@ contract Exchange is Ownable {
 
     address[] public authorities;
 
+    address public dataStoreContract;
+
     // Pending deposits and authorities who confirmed them
     mapping (bytes32 => address[]) deposits;
     mapping (bytes32 => bool) deposited;
@@ -96,6 +76,7 @@ contract Exchange is Ownable {
     constructor (
         uint256 _requiredSignatures,
         address[] _authorities,
+        address dataStore_,
         uint256 makeFee_,
         uint256 takeFee_,
         uint256 cancelFee_
@@ -110,6 +91,8 @@ contract Exchange is Ownable {
         makeFee = makeFee_;
         takeFee = takeFee_;
         cancelFee = cancelFee_;
+
+        dataStoreContract = dataStore_;
 
         userFeeDiscounts[msg.sender] = 1 ether;
     }
@@ -126,6 +109,10 @@ contract Exchange is Ownable {
 
     function changeAdmin(address admin_) public onlyAdmin {
         admin = admin_;
+    }
+
+    function setDataStore(address dataStore_) public onlyAdmin {
+        dataStoreContract = dataStore_;
     }
 
     function changeAuthorities(
@@ -175,15 +162,14 @@ contract Exchange is Ownable {
 
         // balances[token][recipient] += value;
         deposited[hash] = true;
-        addToBalance(token, recipient, value);
+        UserWallet.addToBalance(dataStoreContract, token, recipient, value);
         emit Deposit(recipient, token, value, transactionHash);
     }
 
     function transferHomeViaRelay(address token, uint256 value) public {
-        require(balances[token][msg.sender] >= value, "ERR_INSUFFICIENT_BALANCE");
         require(value > 0, "ERR_ZERO_VALUE");
 
-        balances[token][msg.sender] -= value;
+        UserWallet.subFromBalance(dataStoreContract, token, msg.sender, value);
 
         emit Withdraw(msg.sender, token, value);
     }
@@ -282,10 +268,10 @@ contract Exchange is Ownable {
         // Add balance to wscrow
         if (is_bid) {
             // Buy order
-            moveToEscrow(base, msg.sender, volume);
+            UserWallet.moveToEscrow(dataStoreContract, base, msg.sender, volume);
         } else {
             // Sell order
-            moveToEscrow(token, msg.sender, volume);
+            UserWallet.moveToEscrow(dataStoreContract, token, msg.sender, volume);
         }
 
         // Emit event
@@ -307,11 +293,11 @@ contract Exchange is Ownable {
 
         if (order.is_bid) {
             // Buy Order
-            recoverFromEscrow(order.base, msg.sender, volumeNoFee);
+            UserWallet.recoverFromEscrow(dataStoreContract, order.base, msg.sender, volumeNoFee);
             addToFeeAccount(order.base, fee);
         } else {
             // Sell Order
-            recoverFromEscrow(order.token, msg.sender, volumeNoFee);
+            UserWallet.recoverFromEscrow(dataStoreContract, order.token, msg.sender, volumeNoFee);
             addToFeeAccount(order.token, fee);
         }
 

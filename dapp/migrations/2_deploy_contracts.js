@@ -5,8 +5,9 @@ const configFile = require(path.resolve('./../../configs/network.json'));
 
 const Exchange = artifacts.require('./Exchange.sol');
 const HomeBridge = artifacts.require('./HomeBridge.sol');
+const DataStore = artifacts.require('./core/DataStore.sol');
 
-module.exports = function (deployer, network, accounts) {
+module.exports = async function (deployer, network, accounts) {
     const requiredHomeSignatures = configFile.bridge.requiredSignatures;
     const requiredForiegnSignatures = configFile.exchange.requiredSignatures;
     const makeFee = configFile.exchange.makeFee;
@@ -15,13 +16,22 @@ module.exports = function (deployer, network, accounts) {
 
     let a = configFile.authorities;
 
+    let instance;
+
     switch (network) {
         case 'development':
             a = [accounts[5], accounts[6], accounts[7], accounts[8]];
 
         case 'privatenet':
             deployer.deploy(HomeBridge, requiredForiegnSignatures, a);
-            deployer.deploy(Exchange, requiredHomeSignatures, a, makeFee, takeFee, cancelFee);
+
+            await deployer.deploy(DataStore);
+            await deployer.deploy(Exchange, requiredHomeSignatures, a, DataStore.address, makeFee, takeFee, cancelFee);
+
+            // Whitelist exchange
+            instance = await DataStore.deployed();
+            await instance.addExchangeContract.sendTransaction(Exchange.address);
+
             break;
     }
 };

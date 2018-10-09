@@ -23,12 +23,15 @@ contract('Exchange contract', (accounts) => {
     depositTokens(token1, accounts[2], "4456892342355335462132");
     depositTokens(token2, accounts[3], "9872346765123456456323");
 
-    // 0x63b6a1d9cc58f4c4c2b22bf86e7da4b89ba49226d0ed4b4a300fc12c1a63f944
+    // 0x89d6d8cbbd569426a1498e3723d677021495b2077b19780549bb55a52cc05994
     placeOrder(token2, token1, "234354432345", "100", true, 1, accounts[2]);
-    // 0x6a72b4cc37c8018a311e40bb157687c4522681236d9d3e0419d02376f50826f4
+    // 0xd0e8e89c8aa0be039d97bece081e662fc6802fdffed32b84bf6b442d265ad002
     placeOrder(token2, token1, "234354432345", "1000", false, 1, accounts[3]);
 
+    orderHashes.push('0x89d6d8cbbd569426a1498e3723d677021495b2077b19780549bb55a52cc05994')
+    orderHashes.push('0xd0e8e89c8aa0be039d97bece081e662fc6802fdffed32b84bf6b442d265ad002')
     cancelOrder(token1, accounts[2], 0);
+    cancelOrder(token2, accounts[3], 1);
 
 
     function depositTokens(tokenAddress, targetAccount, balanceToDep) {
@@ -124,7 +127,7 @@ contract('Exchange contract', (accounts) => {
             let t = new BN(price, 10);
             t = balanceBefore.add(t.mul(new BN(quantity, 10)));
 
-            // // await delay(3000);
+            // await delay(5000);
 
             // const logs = await getAllEvents('PlaceOrder', hash);
 
@@ -143,6 +146,7 @@ contract('Exchange contract', (accounts) => {
             await ExchangeInstance.cancelOrder.sendTransaction(orderHash, {
                 from: creator
             });
+            await delay(3000);
             const balanceAfter = await ExchangeInstance.escrowBalanceOf.call(token, creator);
 
             assert(balanceAfter.lt(balanceBefore), "Incorrect balance");

@@ -34,8 +34,8 @@ type exchangeRef struct {
 
 // Validator struct
 type Validator struct {
-	networks   *NetworksInfo
-	contracts  *ContractsInfo
+	networks   *utils.NetworksInfo
+	contracts  *utils.ContractsInfo
 	privateKey *ecdsa.PrivateKey
 	publicKey  *ecdsa.PublicKey
 	address    *common.Address
@@ -109,6 +109,7 @@ func (v *Validator) RunOnBridgeNetwork() {
 				log.Fatal("Home Network Subcription Error:", err)
 
 			case vLog := <-logs:
+				fmt.Println("--------------------")
 				// Unpack deposit event
 				fmt.Println("Received `Deposit` event from Home Network")
 				depositEvent := struct {
@@ -175,6 +176,7 @@ func (v *Validator) RunOnExchangeNetwork() {
 				log.Fatal("Foreign Network Subcription Error:", err)
 
 			case vLog := <-logs:
+				fmt.Println("--------------------")
 				fmt.Println("Received `Withdraw` event from Foreign Network")
 				// if vLog.Topics[0].Hex() != withdrawEventTopic.Hex() {
 				// 	fmt.Println(vLog.Topics[0].Hex())
@@ -251,13 +253,13 @@ func NewValidator(contractsFilePath, networksFilePath, keystoreFilePath, passwor
 	fmt.Printf("Reading config files...\n")
 	fmt.Printf("Reading %s...\n", contractsFilePath)
 	// Read config files
-	contractsInfo, err := ReadContractsInfo(contractsFilePath)
+	contractsInfo, err := utils.ReadContractsInfo(contractsFilePath)
 	if err != nil {
 		log.Panic(err)
 	}
 
 	fmt.Printf("Reading %s...\n", networksFilePath)
-	nwInfo, err := ReadNetworksInfo(networksFilePath)
+	nwInfo, err := utils.ReadNetworksInfo(networksFilePath)
 	if err != nil {
 		log.Panic(err)
 	}
