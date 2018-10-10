@@ -6,6 +6,9 @@ import "./DataStore.sol";
 library UserWallet {
     using SafeMath for uint256;
 
+    // Event for balance updates
+    event BalanceUpdate(address token, address user, uint256 balance, uint256 escrow);
+
     string constant BALANCE_KEY = "_balance";
     string constant ESCROW_KEY = "_escrow_balance";
 
@@ -68,5 +71,9 @@ library UserWallet {
 
         ds.setUIntValue(escrowHash, escrowBalance.sub(amount));
         ds.setUIntValue(balanceHash, ds.getUIntValue(balanceHash).add(amount));
+    }
+
+    function notifyBalanceUpdate(address dataStoreContract, address token, address user) internal {
+        emit BalanceUpdate(token, user, balanceOf(dataStoreContract, token, user), escrowBalanceOf(dataStoreContract, token, user));
     }
 }

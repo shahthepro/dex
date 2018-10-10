@@ -10,6 +10,9 @@ import "./lib/Message.sol";
 
 contract Exchange is Ownable {
     using SafeMath for uint256;
+    
+    // Dummy event
+    event BalanceUpdate(address token, address user, uint256 balance, uint256 escrow);
 
     // Event created on money transfer
     event Transfer(address from, address to, address token, uint256 tokens);
@@ -164,6 +167,7 @@ contract Exchange is Ownable {
         deposited[hash] = true;
         UserWallet.addToBalance(dataStoreContract, token, recipient, value);
         emit Deposit(recipient, token, value, transactionHash);
+        UserWallet.notifyBalanceUpdate(dataStoreContract, token, recipient);
     }
 
     function transferHomeViaRelay(address token, uint256 value) public {
@@ -172,6 +176,8 @@ contract Exchange is Ownable {
         UserWallet.subFromBalance(dataStoreContract, token, msg.sender, value);
 
         emit Withdraw(msg.sender, token, value);
+
+        UserWallet.notifyBalanceUpdate(dataStoreContract, token, msg.sender);
     }
 
     function submitSignature(bytes signature, bytes message) public onlyAuthority {
@@ -269,9 +275,11 @@ contract Exchange is Ownable {
         if (is_bid) {
             // Buy order
             UserWallet.moveToEscrow(dataStoreContract, base, msg.sender, volume);
+            UserWallet.notifyBalanceUpdate(dataStoreContract, base, msg.sender);
         } else {
             // Sell order
             UserWallet.moveToEscrow(dataStoreContract, token, msg.sender, volume);
+            UserWallet.notifyBalanceUpdate(dataStoreContract, token, msg.sender);
         }
 
         // Emit event
@@ -295,10 +303,14 @@ contract Exchange is Ownable {
             // Buy Order
             UserWallet.recoverFromEscrow(dataStoreContract, order.base, msg.sender, volumeNoFee);
             addToFeeAccount(order.base, fee);
+            UserWallet.notifyBalanceUpdate(dataStoreContract, order.base, msg.sender);
+            UserWallet.notifyBalanceUpdate(dataStoreContract, order.base, feeAccount);
         } else {
             // Sell Order
             UserWallet.recoverFromEscrow(dataStoreContract, order.token, msg.sender, volumeNoFee);
             addToFeeAccount(order.token, fee);
+            UserWallet.notifyBalanceUpdate(dataStoreContract, order.token, msg.sender);
+            UserWallet.notifyBalanceUpdate(dataStoreContract, order.token, feeAccount);
         }
 
         // Mark as cancelled/closed

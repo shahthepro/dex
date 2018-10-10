@@ -36,6 +36,7 @@ type ContractsInfo struct {
 			CollectedSignatures        helpers.Hash `json:"CollectedSignatures"`
 			PlaceOrder                 helpers.Hash `json:"PlaceOrder"`
 			CancelOrder                helpers.Hash `json:"CancelOrder"`
+			BalanceUpdate              helpers.Hash `json:"BalanceUpdate"`
 		} `json:"topics"`
 	} `json:"exchange"`
 }
