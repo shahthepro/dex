@@ -10,7 +10,7 @@ import (
 
 // Wallet record
 type Wallet struct {
-	Wallet        *helpers.Address `json:"wallet"`
+	Address       *helpers.Address `json:"wallet"`
 	Token         *helpers.Address `json:"token"`
 	Balance       *big.Int         `json:"balance"`
 	EscrowBalance *big.Int         `json:"escrow"`
@@ -22,12 +22,14 @@ func (wallet *Wallet) Save(store *store.DataStore) error {
 		wallet, token, balance, escrow)
 		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (wallet, token) DO UPDATE
-		SET balance = $1, escrow = $2`
+		SET balance = $5, escrow = $6`
 
 	_, err := store.DB.Exec(
 		query,
-		wallet.Wallet.Hex(),
-		wallet.Token.Hex(),
+		wallet.Address,
+		wallet.Token,
+		wallet.Balance.String(),
+		wallet.EscrowBalance.String(),
 		wallet.Balance.String(),
 		wallet.EscrowBalance.String(),
 	)
@@ -41,14 +43,15 @@ func (wallet *Wallet) UpdateBalance(store *store.DataStore) error {
 		wallet, token, balance, escrow)
 		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (wallet, token) DO UPDATE
-		SET balance = $1`
+		SET balance = $5`
 
 	_, err := store.DB.Exec(
 		query,
-		wallet.Wallet.Hex(),
+		wallet.Address.Hex(),
 		wallet.Token.Hex(),
 		wallet.Balance.String(),
 		wallet.EscrowBalance.String(),
+		wallet.Balance.String(),
 	)
 
 	return err
@@ -60,14 +63,15 @@ func (wallet *Wallet) UpdateEscrowBalance(store *store.DataStore) error {
 		wallet, token, balance, escrow)
 		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (wallet, token) DO UPDATE
-		SET escrow = $2`
+		SET escrow = $5`
 
 	_, err := store.DB.Exec(
 		query,
-		wallet.Wallet.Hex(),
-		wallet.Token.Hex(),
-		wallet.Balance.String(),
-		wallet.EscrowBalance.String(),
+		wallet.Address,
+		wallet.Token,
+		wallet.Balance,
+		wallet.EscrowBalance,
+		wallet.EscrowBalance,
 	)
 
 	return err
@@ -88,9 +92,11 @@ func (wallet *Wallet) GetBalance(store *store.DataStore, user *helpers.Address, 
 	case sql.ErrNoRows:
 	case nil:
 		return nil
-	default:
-		return err
+		// default:
+		// 	return err
 	}
+
+	return err
 }
 
 // GetTokenBalancesForWallet returns all token balances for a given address, if any.
@@ -111,7 +117,7 @@ func GetTokenBalancesForWallet(store *store.DataStore, address *helpers.Address)
 		var wallet Wallet
 
 		err := rows.Scan(
-			&wallet.Wallet,
+			&wallet.Address,
 			&wallet.Token,
 			&wallet.Balance,
 			&wallet.EscrowBalance,

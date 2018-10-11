@@ -12,6 +12,7 @@ func main() {
 	app := relayer.NewRelayer(
 		os.Getenv("DEX_VALIDATOR_CONTRACTS_FILE"),
 		os.Getenv("DEX_VALIDATOR_NETWORKS_FILE"),
+		os.Getenv("CDEX_DB_CONNECTION_STRING"),
 	)
 
 	c := make(chan os.Signal, 1)

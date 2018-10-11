@@ -7,6 +7,11 @@ import (
 	"math/big"
 	"strings"
 
+	"hameid.net/cdex/dex/internal/store"
+
+	"hameid.net/cdex/dex/internal/helpers"
+	"hameid.net/cdex/dex/internal/models"
+
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -35,6 +40,7 @@ type Relayer struct {
 	contracts *utils.ContractsInfo
 	bridge    *bridgeRef
 	exchange  *exchangeRef
+	store     *store.DataStore
 }
 
 var channelSize = 10000
@@ -77,51 +83,54 @@ func (r *Relayer) Initialize() {
 	r.exchange.instance = exchange
 	r.exchange.abi = &exchangeABI
 
+	fmt.Printf("\n")
+	r.store.Initialize()
+
 	fmt.Printf("\n\nRelayer initialization successful :)\n\n")
 }
 
-// RunOnBridgeNetwork runs relayer on the bridge network
-func (r *Relayer) RunOnBridgeNetwork() {
-	fmt.Printf("Trying to listen events on Bridge contract %s...\n", r.contracts.Bridge.Address.Address.String())
-	query := ethereum.FilterQuery{
-		Addresses: []common.Address{r.contracts.Bridge.Address.Address},
-		Topics:    [][]common.Hash{{r.contracts.Bridge.Topics.Deposit.Hash}},
-	}
+// // RunOnBridgeNetwork runs relayer on the bridge network
+// func (r *Relayer) RunOnBridgeNetwork() {
+// 	fmt.Printf("Trying to listen events on Bridge contract %s...\n", r.contracts.Bridge.Address.Address.String())
+// 	query := ethereum.FilterQuery{
+// 		Addresses: []common.Address{r.contracts.Bridge.Address.Address},
+// 		Topics:    [][]common.Hash{{r.contracts.Bridge.Topics.Deposit.Hash}},
+// 	}
 
-	logs := make(chan types.Log, channelSize)
+// 	logs := make(chan types.Log, channelSize)
 
-	sub, err := r.bridge.client.SubscribeFilterLogs(context.Background(), query, logs)
-	if err != nil {
-		log.Panic(err)
-	}
+// 	sub, err := r.bridge.client.SubscribeFilterLogs(context.Background(), query, logs)
+// 	if err != nil {
+// 		log.Panic(err)
+// 	}
 
-	go func() {
-	eventListenerLoop:
-		for {
-			select {
-			case err := <-sub.Err():
-				log.Fatal("Home Network Subcription Error:", err)
+// 	go func() {
+// 	eventListenerLoop:
+// 		for {
+// 			select {
+// 			case err := <-sub.Err():
+// 				log.Fatal("Home Network Subcription Error:", err)
 
-			case vLog := <-logs:
-				fmt.Println("--------------------")
-				// Unpack deposit event
-				fmt.Println("Received `Deposit` event from Home Network")
-				depositEvent := struct {
-					Recipient common.Address
-					Token     common.Address
-					Value     *big.Int
-				}{}
-				err := r.bridge.abi.Unpack(&depositEvent, "Deposit", vLog.Data)
-				if err != nil {
-					log.Fatal("Unpack: ", err)
-					continue eventListenerLoop
-				}
-				// depositEvent.Recipient, depositEvent.Token, depositEvent.Value, vLog.TxHash
+// 			case vLog := <-logs:
+// 				fmt.Println("--------------------")
+// 				// Unpack deposit event
+// 				fmt.Println("Received `Deposit` event from Home Network")
+// 				depositEvent := struct {
+// 					Recipient common.Address
+// 					Token     common.Address
+// 					Value     *big.Int
+// 				}{}
+// 				err := r.bridge.abi.Unpack(&depositEvent, "Deposit", vLog.Data)
+// 				if err != nil {
+// 					log.Fatal("Unpack: ", err)
+// 					continue eventListenerLoop
+// 				}
+// 				// depositEvent.Recipient, depositEvent.Token, depositEvent.Value, vLog.TxHash
 
-			}
-		}
-	}()
-}
+// 			}
+// 		}
+// 	}()
+// }
 
 // RunOnExchangeNetwork runs relayer on the exchange network
 func (r *Relayer) RunOnExchangeNetwork() {
@@ -168,7 +177,17 @@ func (r *Relayer) RunOnExchangeNetwork() {
 							log.Fatal("Unpack: ", err)
 							continue eventListenerLoop
 						}
-						fmt.Println(buEvent.Token.Hex(), buEvent.User.Hex(), buEvent.Balance.String(), buEvent.Escrow.String())
+						wallet := models.Wallet{
+							Token:         &helpers.Address{buEvent.Token},
+							Address:       &helpers.Address{buEvent.User},
+							Balance:       buEvent.Balance,
+							EscrowBalance: buEvent.Escrow,
+						}
+						err = wallet.Save(r.store)
+						if err != nil {
+							log.Fatal("Commit: ", err)
+						}
+						fmt.Printf("\nUpdated %s token balance of wallet %s", buEvent.Token.Hex(), buEvent.User.Hex())
 					}
 				}
 				// fmt.Println("--------------------")
@@ -193,11 +212,12 @@ func (r *Relayer) RunOnExchangeNetwork() {
 // Quit terminates relayer instance
 func (r *Relayer) Quit() {
 	fmt.Printf("\nCleaning up...\n")
+	r.store.Close()
 	fmt.Printf("\nBye bye...\n")
 }
 
 // NewRelayer creates and populates a Relayer struct object
-func NewRelayer(contractsFilePath, networksFilePath string) *Relayer {
+func NewRelayer(contractsFilePath, networksFilePath, connectionString string) *Relayer {
 	fmt.Printf("Starting relayer...\n")
 	fmt.Printf("Reading config files...\n")
 	fmt.Printf("Reading %s...\n", contractsFilePath)
@@ -225,5 +245,6 @@ func NewRelayer(contractsFilePath, networksFilePath string) *Relayer {
 			instance: nil,
 			abi:      nil,
 		},
+		store: store.NewDataStore(connectionString),
 	}
 }
