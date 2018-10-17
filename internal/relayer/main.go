@@ -150,7 +150,6 @@ func (r *Relayer) RunOnExchangeNetwork() {
 	}
 
 	go func() {
-	eventListenerLoop:
 		for {
 			select {
 			case err := <-sub.Err():
@@ -166,44 +165,31 @@ func (r *Relayer) RunOnExchangeNetwork() {
 					// 	fmt.Println("Withdraw")
 
 					case r.contracts.Exchange.Topics.BalanceUpdate.Hash:
-						buEvent := struct {
-							Token   common.Address
-							User    common.Address
-							Balance *big.Int
-							Escrow  *big.Int
-						}{}
-						err := r.exchange.abi.Unpack(&buEvent, "BalanceUpdate", vLog.Data)
-						if err != nil {
-							log.Fatal("Unpack: ", err)
-							continue eventListenerLoop
-						}
-						wallet := models.Wallet{
-							Token:         &helpers.Address{buEvent.Token},
-							Address:       &helpers.Address{buEvent.User},
-							Balance:       buEvent.Balance,
-							EscrowBalance: buEvent.Escrow,
-						}
-						err = wallet.Save(r.store)
-						if err != nil {
-							log.Fatal("Commit: ", err)
-						}
-						fmt.Printf("\nUpdated %s token balance of wallet %s", buEvent.Token.Hex(), buEvent.User.Hex())
+						r.balanceUpdateLogCallback(vLog)
+						// buEvent := struct {
+						// 	Token   common.Address
+						// 	User    common.Address
+						// 	Balance *big.Int
+						// 	Escrow  *big.Int
+						// }{}
+						// err := r.exchange.abi.Unpack(&buEvent, "BalanceUpdate", vLog.Data)
+						// if err != nil {
+						// 	log.Fatal("Unpack: ", err)
+						// 	continue eventListenerLoop
+						// }
+						// wallet := models.Wallet{
+						// 	Token:         &helpers.Address{buEvent.Token},
+						// 	Address:       &helpers.Address{buEvent.User},
+						// 	Balance:       buEvent.Balance,
+						// 	EscrowBalance: buEvent.Escrow,
+						// }
+						// err = wallet.Save(r.store)
+						// if err != nil {
+						// 	log.Fatal("Commit: ", err)
+						// }
+						// fmt.Printf("\nUpdated %s token balance of wallet %s", buEvent.Token.Hex(), buEvent.User.Hex())
 					}
 				}
-				// fmt.Println("--------------------")
-				// fmt.Println("Received `Withdraw` event from Foreign Network")
-				// withdrawEvent := struct {
-				// 	Recipient common.Address
-				// 	Token     common.Address
-				// 	Value     *big.Int
-				// }{}
-				// err := r.exchange.abi.Unpack(&withdrawEvent, "Withdraw", vLog.Data)
-				// if err != nil {
-				// 	log.Fatal("Unpack: ", err)
-				// 	continue eventListenerLoop
-				// }
-
-				// withdrawEvent.Recipient, withdrawEvent.Token, withdrawEvent.Value, vLog.TxHash
 			}
 		}
 	}()
@@ -247,4 +233,29 @@ func NewRelayer(contractsFilePath, networksFilePath, connectionString string) *R
 		},
 		store: store.NewDataStore(connectionString),
 	}
+}
+
+func (r *Relayer) balanceUpdateLogCallback(vLog types.Log) {
+	buEvent := struct {
+		Token   common.Address
+		User    common.Address
+		Balance *big.Int
+		Escrow  *big.Int
+	}{}
+	err := r.exchange.abi.Unpack(&buEvent, "BalanceUpdate", vLog.Data)
+	if err != nil {
+		log.Fatal("Unpack: ", err)
+		return
+	}
+	wallet := models.Wallet{
+		Token:         &helpers.Address{buEvent.Token},
+		Address:       &helpers.Address{buEvent.User},
+		Balance:       buEvent.Balance,
+		EscrowBalance: buEvent.Escrow,
+	}
+	err = wallet.Save(r.store)
+	if err != nil {
+		log.Fatal("Commit: ", err)
+	}
+	fmt.Printf("\nUpdated %s token balance of wallet %s", buEvent.Token.Hex(), buEvent.User.Hex())
 }

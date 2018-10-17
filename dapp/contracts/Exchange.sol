@@ -4,6 +4,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 // import "./core/DataStore.sol";
 import "./core/UserWallet.sol";
+import "./core/Orderbook.sol";
 import "./lib/MessageSigning.sol";
 import "./lib/Helpers.sol";
 import "./lib/Message.sol";
@@ -154,17 +155,18 @@ contract Exchange is Ownable {
 
         // don't allow authority to confirm deposit twice
         require(!Helpers.addressArrayContains(deposits[hash], msg.sender), "ERR_RELAY_REENTRY");
-        require(deposited[hash] != true, "ERR_RELAY_REENTRY");
 
         deposits[hash].push(msg.sender);
 
-        if (deposits[hash].length != requiredSignatures) {
+        if (deposits[hash].length != requiredSignatures || deposited[hash] == true) {
+            // Deposit made already or not enough signatures
             emit DepositConfirmation(recipient, token, value, transactionHash);
             return;
         }
 
-        // balances[token][recipient] += value;
+        // require(deposited[hash] != true, "ERR_RELAY_REENTRY");
         deposited[hash] = true;
+
         UserWallet.addToBalance(dataStoreContract, token, recipient, value);
         emit Deposit(recipient, token, value, transactionHash);
         UserWallet.notifyBalanceUpdate(dataStoreContract, token, recipient);
@@ -223,100 +225,17 @@ contract Exchange is Ownable {
         return calculateFee(cost, discountedFeeAmount);
     }
 
-    // Order data structure
-    struct Order {
-        address owner;
-        address token;
-        address base;
-        uint256 price;
-        uint256 quantity;
-        uint256 volume;
-        uint256 filled;
-        bool is_bid;
-        bool exists;
-        bool open;
-    }
-    mapping (bytes32 => Order) orders;
-    // bytes32[] orderHashes;
-
     // events for Orderbook
-    event PlaceOrder(bytes32 orderHash, address token, address base, uint256 price, uint256 quantity, bool is_bid, address buyer);
+    event PlaceOrder(bytes32 orderHash, address token, address base, uint256 price, uint256 quantity, bool is_bid, address owner);
     event CancelOrder(bytes32 orderHash);
     
     // To place an order and move funds to ecrow
     function placeOrder(address token, address base, uint256 price, uint256 quantity, bool is_bid, uint256 nonce) public {
-        require(base < token, "ERR_INVALID_PAIR");
-        require(quantity != 0, "ERR_ZERO_AMOUNT");
-        require(price != 0, "ERR_ZERO_PRICE");
-
-        bytes32 h = keccak256(abi.encodePacked(msg.sender, token, base, price, quantity, is_bid, nonce));
-        Order memory order = orders[h];
-
-        // Order hash should be unique
-        require(order.exists == false, "ERR_NONCE_NOT_UNIQUE");
-        order.exists = true;
-
-        uint256 volume = price.mul(quantity);
-
-        // Store order details
-        order.owner = msg.sender;
-        order.token = token;
-        order.base = base;
-        order.price = price;
-        order.quantity = quantity;
-        order.volume = volume;
-        order.is_bid = is_bid;
-        order.open = true;
-
-        orders[h] = order;
-        // orderHashes.push(h);
-
-        // Add balance to wscrow
-        if (is_bid) {
-            // Buy order
-            UserWallet.moveToEscrow(dataStoreContract, base, msg.sender, volume);
-            UserWallet.notifyBalanceUpdate(dataStoreContract, base, msg.sender);
-        } else {
-            // Sell order
-            UserWallet.moveToEscrow(dataStoreContract, token, msg.sender, volume);
-            UserWallet.notifyBalanceUpdate(dataStoreContract, token, msg.sender);
-        }
-
-        // Emit event
-        emit PlaceOrder(h, token, base, price, quantity, is_bid, msg.sender);
+        Orderbook.placeOrder(dataStoreContract, msg.sender, token, base, price, quantity, is_bid, nonce);
     }
 
     // To cancel an order and recover funds from escrow
     function cancelOrder(bytes32 orderHash) public {
-        Order memory order = orders[orderHash];
-        require(order.exists, "ERR_NOT_FOUND");
-        require(order.owner == msg.sender, "ERR_NOT_OWNER");
-        require(order.open, "ERR_CLOSED_ORDER");
-
-        // Refund any remaining volume minus cancellation fee
-        uint256 volumeLeft = order.volume - order.filled;
-        require(volumeLeft > 0, "ERR_FILLED_ORDER");
-        uint256 fee = calculateFee(volumeLeft, cancelFee);
-        uint256 volumeNoFee = volumeLeft.sub(fee);
-
-        if (order.is_bid) {
-            // Buy Order
-            UserWallet.recoverFromEscrow(dataStoreContract, order.base, msg.sender, volumeNoFee);
-            addToFeeAccount(order.base, fee);
-            UserWallet.notifyBalanceUpdate(dataStoreContract, order.base, msg.sender);
-            UserWallet.notifyBalanceUpdate(dataStoreContract, order.base, feeAccount);
-        } else {
-            // Sell Order
-            UserWallet.recoverFromEscrow(dataStoreContract, order.token, msg.sender, volumeNoFee);
-            addToFeeAccount(order.token, fee);
-            UserWallet.notifyBalanceUpdate(dataStoreContract, order.token, msg.sender);
-            UserWallet.notifyBalanceUpdate(dataStoreContract, order.token, feeAccount);
-        }
-
-        // Mark as cancelled/closed
-        order.open = false;
-        orders[orderHash] = order;
-
-        emit CancelOrder(orderHash);
+        Orderbook.cancelOrder(dataStoreContract, msg.sender, orderHash);
     }
 }

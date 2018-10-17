@@ -126,7 +126,7 @@ gulp.task('deploy-exchange-network', (done) => {
 });
 
 gulp.task('deploy-private-network', (done) => {
-    const NETWORK = process.env.GETH_NETWORK || 'privatenet';
+    const NETWORK = process.env.GETH_NETWORK || 'paritynet';
     runCommand('truffle', ['deploy', '--reset', '--network', NETWORK], { cwd: 'dapp' }, done);
 });
 

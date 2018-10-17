@@ -21,9 +21,11 @@ contract('HomeBridge contract', (accounts) => {
         HomeBridgeInstance = await HomeBridge.deployed();
     });
 
-    depositTokens(token0, accounts[2], "4456892342355335462132");
-    depositTokens(token1, accounts[2], "4456892342355335462132");
-    depositTokens(token2, accounts[3], "9872346765123456456323");
+    depositTokens(token2, accounts[0], "4456892342355335462132");
+    depositTokens(token1, accounts[0], "4456892342355335462132");
+    // depositTokens(token0, accounts[2], "4456892342355335462132");
+    // depositTokens(token1, accounts[2], "4456892342355335462132");
+    // depositTokens(token2, accounts[3], "9872346765123456456323");
 
     function depositTokens(tokenAddress, targetAccount, balanceToDep) {
 		let value = 0;

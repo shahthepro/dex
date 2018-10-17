@@ -9,25 +9,26 @@ library UserWallet {
     // Event for balance updates
     event BalanceUpdate(address token, address user, uint256 balance, uint256 escrow);
 
-    string constant BALANCE_KEY = "_balance";
-    string constant ESCROW_KEY = "_escrow_balance";
+    string constant WALLET_PREFIX = "wallets/";
+    string constant BALANCE_KEY = "/balance";
+    string constant ESCROW_KEY = "/escrow_balance";
 
     function balanceOf(address dataStoreContract, address token, address user) internal view returns (uint256) {
-        bytes32 h = keccak256(abi.encodePacked(token, user, BALANCE_KEY));
+        bytes32 h = keccak256(abi.encodePacked(WALLET_PREFIX, token, user, BALANCE_KEY));
         DataStore ds = DataStore(dataStoreContract);
 
         return ds.getUIntValue(h);
     }
 
     function addToBalance(address dataStoreContract, address token, address user, uint256 amount) internal {
-        bytes32 h = keccak256(abi.encodePacked(token, user, BALANCE_KEY));
+        bytes32 h = keccak256(abi.encodePacked(WALLET_PREFIX, token, user, BALANCE_KEY));
         DataStore ds = DataStore(dataStoreContract);
 
         ds.setUIntValue(h, ds.getUIntValue(h).add(amount));
     }
 
     function subFromBalance(address dataStoreContract, address token, address user, uint256 amount) internal {
-        bytes32 h = keccak256(abi.encodePacked(token, user, BALANCE_KEY));
+        bytes32 h = keccak256(abi.encodePacked(WALLET_PREFIX, token, user, BALANCE_KEY));
         DataStore ds = DataStore(dataStoreContract);
         uint balance = ds.getUIntValue(h);
 
@@ -37,15 +38,15 @@ library UserWallet {
     }
 
     function escrowBalanceOf(address dataStoreContract, address token, address user) internal view returns (uint256) {
-        bytes32 h = keccak256(abi.encodePacked(token, user, ESCROW_KEY));
+        bytes32 h = keccak256(abi.encodePacked(WALLET_PREFIX, token, user, ESCROW_KEY));
         DataStore ds = DataStore(dataStoreContract);
 
         return ds.getUIntValue(h);
     }
 
     function moveToEscrow(address dataStoreContract, address token, address user, uint256 amount) internal {
-        bytes32 balanceHash = keccak256(abi.encodePacked(token, user, BALANCE_KEY));
-        bytes32 escrowHash = keccak256(abi.encodePacked(token, user, ESCROW_KEY));
+        bytes32 balanceHash = keccak256(abi.encodePacked(WALLET_PREFIX, token, user, BALANCE_KEY));
+        bytes32 escrowHash = keccak256(abi.encodePacked(WALLET_PREFIX, token, user, ESCROW_KEY));
         DataStore ds = DataStore(dataStoreContract);
 
         uint balance = ds.getUIntValue(balanceHash);
@@ -61,8 +62,8 @@ library UserWallet {
     }
 
     function releaseEscrow(address dataStoreContract, address token, address fromAddress, address toAddress, uint256 amount) internal {
-        bytes32 balanceHash = keccak256(abi.encodePacked(token, toAddress, BALANCE_KEY));
-        bytes32 escrowHash = keccak256(abi.encodePacked(token, fromAddress, ESCROW_KEY));
+        bytes32 balanceHash = keccak256(abi.encodePacked(WALLET_PREFIX, token, toAddress, BALANCE_KEY));
+        bytes32 escrowHash = keccak256(abi.encodePacked(WALLET_PREFIX, token, fromAddress, ESCROW_KEY));
         DataStore ds = DataStore(dataStoreContract);
 
         uint escrowBalance = ds.getUIntValue(escrowHash);

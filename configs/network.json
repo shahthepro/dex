@@ -1,23 +1,23 @@
 {
     "bridge": {
-        "provider": "http://127.0.0.1:8501",
-        "wsProvider": "ws://127.0.0.1:8601",
+        "provider": "http://127.0.0.1:8540",
+        "wsProvider": "ws://127.0.0.1:8450",
         "requiredSignatures": 2
     },
     "exchange": {
-        "provider": "http://127.0.0.1:8501",
-        "wsProvider": "ws://127.0.0.1:8601",
+        "provider": "http://127.0.0.1:8540",
+        "wsProvider": "ws://127.0.0.1:8450",
         "requiredSignatures": 2,
         "makeFee": "2500000000000000",
         "takeFee": "2500000000000000",
         "cancelFee": "1000000000000000"
     },
     "authorities": [
-        "0x3e4df913dbc5dc68f664d2e91c7fe05df762c0db",
-        "0xbdc8933eb16db7ffe0c9f8151ed75e6d2e38b916",
-        "0x5f281f579d88777a8e63e9eca78c38501383f2aa",
-        "0xd2699c9d871f04f43d04dc9dbe669eee25eb3c85",
-        "0x3180a5b7e284126853f0d0e21791f0749f1f1f22",
-        "0xe75aa91d085a5475e8e15795218974cb262809ce"
+        "0x991e501e6fbe1efc2e37ce938f6a39267851231a",
+        "0xcba46a07b311a87cefd88a382345037bed7b30e3",
+        "0xb663baefe3d58c7879432a9378173dab3c9cbf8c",
+        "0x32132762382E247E8b2709Ad68eFDDc1BD4ae82a",
+        "0x9F29Ef6A545ACdfb7dD749DAdD07E39c504FFB42",
+        "0x09834D20CD0f0d8F6566290695ac3f6b2F81C2d8"
     ]
 }

@@ -193,7 +193,7 @@
         this.privateKeyWalletLoading = true;
         this.$store.dispatch(CONNECT_WALLET, {
           type: EWalletTypes.PrivateKey,
-          privateKey: this.privateKey
+          privateKey: this.privateKey.trim()
         })
           .then((_) => {
             this.privateKey = '';
