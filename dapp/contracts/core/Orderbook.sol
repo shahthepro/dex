@@ -95,15 +95,16 @@ library Orderbook {
 
         if (getOrderIsBid(dataStoreContract, orderHash)) {
             // Buy Order
-            UserWallet.recoverFromEscrow(dataStoreContract, pairBase, msg.sender, volumeNoFee);
+            UserWallet.recoverFromEscrow(dataStoreContract, pairBase, owner, volumeNoFee);
+            // // UserWallet.releaseEscrow(dataStoreContract, pairBase, owner, owner, volumeNoFee);
             addToFeeAccount(dataStoreContract, pairBase, fee);
-            UserWallet.notifyBalanceUpdate(dataStoreContract, pairBase, msg.sender);
+            UserWallet.notifyBalanceUpdate(dataStoreContract, pairBase, owner);
             UserWallet.notifyBalanceUpdate(dataStoreContract, pairBase, feeAccount);
         } else {
             // Sell Order
-            UserWallet.recoverFromEscrow(dataStoreContract, pairToken, msg.sender, volumeNoFee);
+            UserWallet.recoverFromEscrow(dataStoreContract, pairToken, owner, volumeNoFee);
             addToFeeAccount(dataStoreContract, pairToken, fee);
-            UserWallet.notifyBalanceUpdate(dataStoreContract, pairToken, msg.sender);
+            UserWallet.notifyBalanceUpdate(dataStoreContract, pairToken, owner);
             UserWallet.notifyBalanceUpdate(dataStoreContract, pairToken, feeAccount);
         }
 

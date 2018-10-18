@@ -34,11 +34,6 @@ contract('Exchange contract', (accounts) => {
     cancelOrder("0x57994b8b569f70b39675eb86908665cac734ed11a5290428cd8270fa7fb72423", token1, accounts[2]);
     cancelOrder("0x0f1f6da978abb51642c9faa1c9b3a23c388b93e3990371cd82db4825322c3073", token2, accounts[3]);
 
-    // orderHashes.push('0x89d6d8cbbd569426a1498e3723d677021495b2077b19780549bb55a52cc05994')
-    // orderHashes.push('0xd0e8e89c8aa0be039d97bece081e662fc6802fdffed32b84bf6b442d265ad002')
-    // // cancelOrder(token1, accounts[2], 0);
-    // // cancelOrder(token2, accounts[3], 1);
-
     function signDepositTx(instance, targetAccount, tokenAddress, balanceToDep, depositTransactionHash, authorityAddress) {
         return instance.deposit.sendTransaction(
             targetAccount,
@@ -100,9 +95,10 @@ contract('Exchange contract', (accounts) => {
                     return instance.balanceOf.call(is_bid ? base : token, creator);
                 })
                 .then((balanceAfter) => {
-                    let t = new BN(price, 10);
+                    let volume = new BN(price, 10);
 
-                    t = balanceBefore.sub(t.mul(new BN(quantity, 10)));
+                    volume = volume.mul(new BN(quantity, 10));
+                    let t = balanceBefore.sub(volume);
                     assert(balanceAfter.eq(t), `Expected balance to be ${t.toString()} but got ${balanceAfter.toString()}`);
                 });
         });
