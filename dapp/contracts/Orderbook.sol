@@ -65,9 +65,10 @@ contract Orderbook is DEXContract {
         address base, 
         uint256 price, 
         uint256 quantity, 
-        uint256 volume, 
         bool is_bid
     ) private {
+        uint256 volume = price.mul(quantity);
+        
         // Store order
         setOrderOwner(orderHash, owner);
         setOrderToken(orderHash, token);
@@ -77,6 +78,17 @@ contract Orderbook is DEXContract {
         setOrderQuantity(orderHash, quantity);
         setOrderIsBid(orderHash, is_bid);
         setOrderIsOpen(orderHash, true);
+
+        DEXChain chain = DEXChain(exchangeContract);
+        if (is_bid) {
+            // Buy order
+            chain.moveToEscrow(base, owner, volume);
+            chain.notifyBalanceUpdate(base, owner);
+        } else {
+            // Sell order
+            chain.moveToEscrow(token, owner, volume);
+            chain.notifyBalanceUpdate(token, owner);
+        }
     }
 
     // To place an order and move funds to ecrow
@@ -95,21 +107,10 @@ contract Orderbook is DEXContract {
 
         bytes32 orderHash = getOrderHash(owner, token, base, price, quantity, is_bid, nonce);
 
-        // createOrder(orderHash);
+        createOrder(orderHash);
 
-        // uint256 volume = price.mul(quantity);
-        // storeOrder(orderHash, owner, token, base, price, quantity, volume, is_bid);
+        storeOrder(orderHash, owner, token, base, price, quantity, is_bid);
 
-        // DEXChain chain = DEXChain(exchangeContract);
-        // if (is_bid) {
-        //     // Buy order
-        //     chain.moveToEscrow(base, owner, volume);
-        //     chain.notifyBalanceUpdate(base, owner);
-        // } else {
-        //     // Sell order
-        //     chain.moveToEscrow(token, owner, volume);
-        //     chain.notifyBalanceUpdate(token, owner);
-        // }
 
         // Event
         emit PlaceOrder(orderHash, token, base, price, quantity, is_bid, owner);
