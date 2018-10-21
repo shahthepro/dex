@@ -179,39 +179,62 @@ gulp.task('deploy-exchange-contracts', async (done) => {
     let web3 = new Web3();
     web3.setProvider(new web3.providers.HttpProvider(networksConfig.exchange.provider));
     
-    let source = fs.readFileSync('dapp/build/DEXChain.json');
+    let source = fs.readFileSync('dapp/build/Orderbook.json');
     let contracts = JSON.parse(source)['contracts'];
+
+    // let obsource = fs.readFileSync('dapp/build/DEXChain.json');
+    // let contracts = JSON.parse(source)['contracts'];
 
     let accounts = await getWeb3Accounts(web3);
 
     let from = accounts[0];
-    let opts = { from };
+    let opts = { 
+        from,
+        gas: '5000000000000000',
+        gasPrice: 0
+    };
 
     let DataStore = await deployContract(web3, contracts['core/DataStore.sol:DataStore'], [], opts);
     console.log(`DataStore deployed at ${DataStore.options.address}`);
 
-    let DEXChain = await deployContract(web3, contracts['DEXChain.sol:DEXChain'], [], opts);
+    let DEXChain = await deployContract(web3, contracts['DEXChain.sol:DEXChain'], [DataStore.options.address], opts);
     console.log(`DEXChain deployed at ${DEXChain.options.address}`);
 
-    console.log("Whitelisting DEXChain contract...")
-    DataStore.methods.whitelistContract(DEXChain.options.address).send(opts)
-    .then(function (r) {
+    let Orderbook = await deployContract(web3, contracts['Orderbook.sol:Orderbook'], [
+        DataStore.options.address, DEXChain.options.address
+    ], opts);
+    console.log(`Orderbook deployed at ${DEXChain.options.address}`);
+
+    console.log("Whitelisting DEXChain contract for DataStore...")
+    await DataStore.methods.whitelistContract(DEXChain.options.address).send(opts)
+    .then(function () {
         console.log("Feeding DataStore address to DEXChain...");
         return DEXChain.methods.setDataStore(DataStore.options.address).send(opts)
     })
-    .then(function (r) {
+    .then(function () {
         console.log("Feeding Authorities to DEXChain...");
         return DEXChain.methods.setAuthorities(networksConfig.exchange.requiredSignatures, networksConfig.authorities).send(opts)
     })
-    // .then(function (r) {
-    //     return DEXChain.methods.setFeeAccount(accounts[1]).send(opts)
-    // })
-    // .then(function (r) {
-    //     return DEXChain.methods.getFeeAccount().call(opts)
-    // })
-    // .then(function (test) {
-    //     console.log("FINALLY", test)
-    // })
+    .then(function () {
+        console.log("Whitelisting Orderbook contract for DataStore...")
+        return DataStore.methods.whitelistContract(Orderbook.options.address).send(opts)
+    })
+    .then(function () {
+        console.log("Whitelisting Orderbook contract for DEXChain...")
+        return DEXChain.methods.whitelistContract(Orderbook.options.address).send(opts)
+    })
+    .then(function () {
+        console.log("Feeding fee account address to Orderbook...")
+        return Orderbook.methods.setFeeAccount(accounts[0]).send(opts)
+    })
+    .then(function () {
+        console.log("Feeding fee details to Orderbook...")
+        return Orderbook.methods.updateFees(
+            networksConfig.exchange.makeFee, 
+            networksConfig.exchange.takeFee,
+            networksConfig.exchange.cancelFee
+        ).send(opts)
+    })
     .catch(function (err) {
         console.error(err);
     })
@@ -312,7 +335,7 @@ function deployContract(web3, contractJSON, args, opts) {
         // gas: '100000000000000',
         // gas: '18446744073709551',
         gas: '5000000000000000',
-        gasPrice: 1
+        gasPrice: 0
     }, opts)
 
     return new Promise(function (resolve, reject) {
