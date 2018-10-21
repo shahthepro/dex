@@ -2,14 +2,15 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-// import "./core/DataStore.sol";
+import "./core/DataStore.sol";
 import "./core/UserWallet.sol";
 import "./core/Orderbook.sol";
+import "./core/FeeLibrary.sol";
 import "./lib/MessageSigning.sol";
 import "./lib/Helpers.sol";
 import "./lib/Message.sol";
 
-contract Exchange is Ownable {
+contract Exchange { // is Ownable {
     using SafeMath for uint256;
     
     // Dummy event
@@ -45,9 +46,9 @@ contract Exchange is Ownable {
 
     address public feeAccount; // the account that will receive fees
 
-    uint256 public makeFee; // percentage times (1 ether)
-    uint256 public takeFee; // percentage times (1 ether)
-    uint256 public cancelFee; // percentage times (1 ether)
+    // uint256 public makeFee; // percentage times (1 ether)
+    // uint256 public takeFee; // percentage times (1 ether)
+    // uint256 public cancelFee; // percentage times (1 ether)
 
     mapping (address => uint256) public userFeeDiscounts;
     mapping (address => uint256) public tokenFeeDiscounts;
@@ -77,28 +78,31 @@ contract Exchange is Ownable {
     // Collected signatures which should be relayed to home chain.
     event CollectedSignatures(address relayAuthority, bytes32 messageHash);
 
+    bool public contractInitiated;
+
     constructor (
-        uint256 _requiredSignatures,
-        address[] _authorities,
-        address dataStore_,
-        uint256 makeFee_,
-        uint256 takeFee_,
-        uint256 cancelFee_
+        // uint256 _requiredSignatures,
+        // address[] _authorities,
+        // address dataStore_,
+        // uint256 makeFee_,
+        // uint256 takeFee_,
+        // uint256 cancelFee_
     ) public
     {
-        require(_requiredSignatures != 0, "ERR_ZERO_REQSIGN");
-        require(_requiredSignatures <= _authorities.length, "ERR_INVALID_REQSIGN");
-        requiredSignatures = _requiredSignatures;
-        authorities = _authorities;
-        feeAccount = msg.sender;
+        // require(_requiredSignatures != 0, "ERR_ZERO_REQSIGN");
+        // require(_requiredSignatures <= _authorities.length, "ERR_INVALID_REQSIGN");
+
+        // dataStoreContract = dataStore_;
+
+        // requiredSignatures = _requiredSignatures;
+        // authorities = _authorities;
+        // feeAccount = msg.sender;
         admin = msg.sender;
-        makeFee = makeFee_;
-        takeFee = takeFee_;
-        cancelFee = cancelFee_;
+        // makeFee = makeFee_;
+        // takeFee = takeFee_;
+        // cancelFee = cancelFee_;
 
-        dataStoreContract = dataStore_;
-
-        userFeeDiscounts[msg.sender] = 1 ether;
+        // userFeeDiscounts[msg.sender] = 1 ether;
     }
 
     modifier onlyAuthority() {
@@ -119,26 +123,63 @@ contract Exchange is Ownable {
         dataStoreContract = dataStore_;
     }
 
+    // function initiateExchangeContract(
+    //     uint256 _requiredSignatures,
+    //     address[] _authorities,
+    //     address dataStore_,
+    //     uint256 makeFee_,
+    //     uint256 takeFee_,
+    //     uint256 cancelFee_
+    // ) public onlyAdmin {
+    //     // require(contractInitiated != true, "ERR_ALREADY_INITIATED");
+    //     // require(_requiredSignatures != 0, "ERR_ZERO_REQSIGN");
+    //     // require(_requiredSignatures <= _authorities.length, "ERR_INVALID_REQSIGN");
+
+    //     dataStoreContract = dataStore_;
+
+    //     requiredSignatures = _requiredSignatures;
+    //     // authorities = _authorities;
+    //     // feeAccount = msg.sender;
+
+    //     // makeFee = makeFee_;
+    //     // takeFee = takeFee_;
+    //     // // cancelFee = cancelFee_;
+    //     // Orderbook.setCancelFee(dataStoreContract, cancelFee_);
+
+    //     // contractInitiated = true;
+    // }
+
     function changeAuthorities(
         uint256 requiredSignaturesParam,
         address[] authoritiesParam
     ) public onlyAdmin {
-        require(requiredSignaturesParam != 0, "ERR_ZERO_REQSIGN");
-        require(requiredSignaturesParam <= authoritiesParam.length, "ERR_INVALID_REQSIGN");
+        require(requiredSignaturesParam > 0, "ERR_ZERO_REQSIGN");
+        // require(requiredSignaturesParam <= authoritiesParam.length, "ERR_INVALID_REQSIGN");
         requiredSignatures = requiredSignaturesParam;
         authorities = authoritiesParam;
     }
 
     function changeFeeAccount(address feeAccount_) public onlyAdmin {
-        feeAccount = feeAccount_;
+        FeeLibrary.setFeeAccount(dataStoreContract, feeAccount_);
+        // feeAccount = feeAccount_;
     }
 
+    // function changeFees(uint256 makeFee_, uint256 takeFee_, uint256 cancelFee_) public onlyAdmin {
+    //     changeMakeFee(makeFee_); 
+    //     changeTakeFee(takeFee_); 
+    //     changeCancelFee(cancelFee_);
+    // }
+
     function changeMakeFee(uint256 makeFee_) public onlyAdmin {
-        makeFee = makeFee_;
+        FeeLibrary.setMakeFee(dataStoreContract, makeFee_);
     }
 
     function changeTakeFee(uint256 takeFee_) public onlyAdmin {
-        takeFee = takeFee_;
+        FeeLibrary.setTakeFee(dataStoreContract, takeFee_);
+    }
+
+    function changeCancelFee(uint256 cancelFee_) public onlyAdmin {
+        FeeLibrary.setCancelFee(dataStoreContract, cancelFee_);
     }
 
     function setTokenFeeDiscounts(address token, uint256 discount) public onlyAdmin {
@@ -225,17 +266,17 @@ contract Exchange is Ownable {
         return calculateFee(cost, discountedFeeAmount);
     }
 
-    // events for Orderbook
-    event PlaceOrder(bytes32 orderHash, address token, address base, uint256 price, uint256 quantity, bool is_bid, address owner);
-    event CancelOrder(bytes32 orderHash);
+    // // events for Orderbook
+    // event PlaceOrder(bytes32 orderHash, address token, address base, uint256 price, uint256 quantity, bool is_bid, address owner);
+    // event CancelOrder(bytes32 orderHash);
     
-    // To place an order and move funds to ecrow
-    function placeOrder(address token, address base, uint256 price, uint256 quantity, bool is_bid, uint256 nonce) public {
-        Orderbook.placeOrder(dataStoreContract, msg.sender, token, base, price, quantity, is_bid, nonce);
-    }
+    // // To place an order and move funds to ecrow
+    // function placeOrder(address token, address base, uint256 price, uint256 quantity, bool is_bid, uint256 nonce) public {
+    //     Orderbook.placeOrder(dataStoreContract, msg.sender, token, base, price, quantity, is_bid, nonce);
+    // }
 
-    // To cancel an order and recover funds from escrow
-    function cancelOrder(bytes32 orderHash) public {
-        Orderbook.cancelOrder(dataStoreContract, msg.sender, orderHash);
-    }
+    // // To cancel an order and recover funds from escrow
+    // function cancelOrder(bytes32 orderHash) public {
+    //     Orderbook.cancelOrder(dataStoreContract, msg.sender, orderHash);
+    // }
 }

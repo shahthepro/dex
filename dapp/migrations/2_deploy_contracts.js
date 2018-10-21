@@ -27,57 +27,78 @@ module.exports = function (deployer, network, accounts) {
         case 'privatenet':
         case 'paritynet':
             deployer.deploy(DataStore)
+            // .then(function () {
+            //     return deployer.deploy(UserWallet);
+            // })
+            // .then(function () {
+            //     return deployer.link(UserWallet, Orderbook);
+            // })
+            // .then(function () {
+            //     return deployer.deploy(Orderbook); // , { gas: "4999999999999999" }
+            // })
+            // .then(function () {
+            //     return deployer.link(UserWallet, Exchange);
+            // })
+            // .then(function () {
+            //     return deployer.link(Orderbook, Exchange);
+            // })
+            // .then(function () {
+            //     return deployer.deploy(Exchange, requiredForiegnSignatures, a, DataStore.address, makeFee, takeFee, cancelFee);
+            // })
             .then(function () {
-                return deployer.deploy(UserWallet);
+                return deployer.deploy(Orderbook, DataStore.address);
             })
-            .then(function () {
-                return deployer.link(UserWallet, Orderbook);
-            })
-            .then(function () {
-                return deployer.deploy(Orderbook); // , { gas: "4999999999999999" }
-            })
-            .then(function () {
-                return deployer.link(UserWallet, Exchange);
-            })
-            .then(function () {
-                return deployer.link(Orderbook, Exchange);
-            })
-            .then(function () {
-                return deployer.deploy(Exchange, requiredForiegnSignatures, a, DataStore.address, makeFee, takeFee, cancelFee);
-            })
-            .then(function () {
-                return DataStore.deployed();
-            })
-            .then(function (datastoreInstance) {
-                return datastoreInstance.addExchangeContract.sendTransaction(Exchange.address);
-            })
-            .then(function () {
-                return deployer.deploy(HomeBridge, requiredHomeSignatures, a);
-            });
+            // .then(function () {
+            //     return Orderbook.deployed()
+            // })
+            // .then(function (instance) {
+            //     return instance.whitelistContract.sendTransaction(Orderbook.address);
+            // })
+            // .then(function () {
+            //     return DataStore.deployed()
+            // })
+            // .then(function (instance) {
+            //     console.log(DataStore.address, Orderbook.address)
+            //     return instance.whitelistContract.call(Orderbook.address);
+            // })
+            // // .then(function () {
+            // //     return Orderbook.deployed()
+            // // })
+            // // .then(function (instance) {
+            // //     return instance.setFeeAccount.sendTransaction(accounts[1], { from: accounts[0] });
+            // // })
+            // // .then(function () {
+            // //     return Orderbook.deployed()
+            // // })
+            // // .then(function (instance) {
+            // //     return instance.getFeeAccount.call();
+            // // })
+            // .then(function (resp) {
+            //     console.log("RESP", resp)
+            //     return DataStore.deployed()
+            // })
+            // .then(function (instance) {
+            //     return instance.allowedContracts.call(Orderbook.address);
+            // })
+            // .then(function (resp) {
+            //     console.log("RESP", resp)
+            // })
+            // // .then(function (datastoreInstance) {
+            // //     return datastoreInstance.whitelistContract.sendTransaction(DataStore.address);
+            // // })
+            // // .then(function () {
+            // //     return DataStore.deployed();
+            // // })
+            // // .then(function (datastoreInstance) {
+            // //     return datastoreInstance.isContractAllowed.call(DataStore.address);
+            // // })
+            // // .then(function (op) {
+            // //     console.log("OP", op);
+            // // })
+            // // .then(function () {
+            // //     return deployer.deploy(HomeBridge, requiredHomeSignatures, a);
+            // // });
             
-
-        // try {
-        //     await deployer.deploy(DataStore);
-            
-        //     await deployer.deploy(UserWallet);
-        //     await deployer.link(UserWallet, Orderbook);
-        //     await deployer.deploy(Orderbook);
-        //     await deployer.link(UserWallet, Exchange);
-        //     await deployer.link(Orderbook, Exchange);
-
-        //     await deployer.deploy(Exchange, requiredForiegnSignatures, a, DataStore.address, makeFee, takeFee, cancelFee);
-            
-        //     // Whitelist exchange
-        //     instance = await DataStore.deployed();
-        //     await instance.addExchangeContract.sendTransaction(Exchange.address);
-            
-        //     await deployer.deploy(HomeBridge, requiredHomeSignatures, a);
-
-            
-        // } catch (e) {
-        //     console.error(e)
-        //     throw e
-        // }
             break;
     }
 };

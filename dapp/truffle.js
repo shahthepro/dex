@@ -12,7 +12,7 @@ module.exports = {
       port: 8501,
       network_id: '*',
       gas: 30000000,
-      gasPrice: 1
+      gasPrice: 0
     },
     paritynet: {
       host: '127.0.0.1',
