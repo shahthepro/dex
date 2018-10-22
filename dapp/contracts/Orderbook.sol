@@ -68,7 +68,7 @@ contract Orderbook is DEXContract {
         bool is_bid
     ) private {
         uint256 volume = price.mul(quantity);
-        
+
         // Store order
         setOrderOwner(orderHash, owner);
         setOrderToken(orderHash, token);
@@ -110,7 +110,6 @@ contract Orderbook is DEXContract {
         createOrder(orderHash);
 
         storeOrder(orderHash, owner, token, base, price, quantity, is_bid);
-
 
         // Event
         emit PlaceOrder(orderHash, token, base, price, quantity, is_bid, owner);

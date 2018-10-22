@@ -9,6 +9,9 @@ const watch = require('gulp-watch');
 
 const HOMEBRIDGE_CONTRACT_NAME = 'HomeBridge';
 const EXCHANGE_CONTRACT_NAME = 'Exchange';
+const DEXCHAIN_CONTRACT_NAME = 'DEXChain';
+const DATASTORE_CONTRACT_NAME = 'DataStore';
+const ORDERBOOK_CONTRACT_NAME = 'Orderbook';
 
 const GENERATED_CONFIG_FILE_NAME = 'contracts.g';
 const NETWORKS_CONFIG_FILE_NAME = 'network';
@@ -25,11 +28,6 @@ function runCommand (command, args, opts, done) {
     cmd.on('close', (code, signal) => {
         done(code);
     });
-}
-
-function readTruffleJSON (contractName) {
-    const trufflePath = path.resolve(__dirname, `dapp/build/contracts/${contractName}.json`);
-    return JSON.parse(fs.readFileSync(trufflePath, 'utf8'));
 }
 
 function writeJSONFile (outFile, data) {
@@ -72,7 +70,7 @@ function getAllTopicsFromABI(abi) {
             [event.name]: web3Utils.keccak256(`${event.name}(${event.inputs.map(p => p.type).join(',')})`)
         }
     })
-    .reduce((e1, e2) => Object.assign(e1, e2));
+    .reduce((e1, e2) => Object.assign(e1, e2), {});
 }
 
 gulp.task('clean-generated-abi', (done) => {
@@ -80,7 +78,12 @@ gulp.task('clean-generated-abi', (done) => {
         if (status != 0) {
             done(status);
         }
-        runCommand('mkdir', ['-p', `_abi/${HOMEBRIDGE_CONTRACT_NAME}`, `_abi/${EXCHANGE_CONTRACT_NAME}`], {}, done);
+        runCommand('mkdir', [
+            '-p', 
+            `_abi/${HOMEBRIDGE_CONTRACT_NAME}`, 
+            `_abi/${DEXCHAIN_CONTRACT_NAME}`,
+            `_abi/${ORDERBOOK_CONTRACT_NAME}`
+        ], {}, done);
     });
 });
 
@@ -97,50 +100,49 @@ gulp.task('clean-config-files', (done) => {
     runCommand('rm', ['-f', getConfigFilePath(GENERATED_CONFIG_FILE_NAME)], {}, done);
 });
 
+gulp.task('clean-contracts', (done) => {
+    fs.writeFileSync(getConfigFilePath(GENERATED_CONFIG_FILE_NAME), '{}');
+    done();
+})
+
 gulp.task('clean', (done) => {
-    runSequence(['clean-generated-abi', 'clean-tmp-files', 'clean-config-files'], done);
-});
-
-gulp.task('deploy-contracts', (done) => {
-    runSequence('')
-});
-
-gulp.task('truffle-contracts-compile', (done) => {
-    runCommand('truffle', ['compile'], { cwd: 'dapp' }, done);
+    runSequence(['clean-generated-abi', 'clean-tmp-files', 'clean-config-files', 'clean-contracts'], done);
 });
 
 gulp.task('generate-abi', async (done) => {
     const HomeBridgeABI = getABIPath(HOMEBRIDGE_CONTRACT_NAME);
-    const ExchangeABI = getABIPath(EXCHANGE_CONTRACT_NAME);
+    const DEXChainABI = getABIPath(DEXCHAIN_CONTRACT_NAME);
+    const OrderbookABI = getABIPath(ORDERBOOK_CONTRACT_NAME);
 
     // Generate .go files
     await generateABIWithJSON(HomeBridgeABI, HOMEBRIDGE_CONTRACT_NAME, `_abi/${HOMEBRIDGE_CONTRACT_NAME}/${HOMEBRIDGE_CONTRACT_NAME}.go`);
-    await generateABIWithJSON(ExchangeABI, EXCHANGE_CONTRACT_NAME, `_abi/${EXCHANGE_CONTRACT_NAME}/${EXCHANGE_CONTRACT_NAME}.go`);
+    await generateABIWithJSON(DEXChainABI, DEXCHAIN_CONTRACT_NAME, `_abi/${DEXCHAIN_CONTRACT_NAME}/${DEXCHAIN_CONTRACT_NAME}.go`);
+    await generateABIWithJSON(OrderbookABI, ORDERBOOK_CONTRACT_NAME, `_abi/${ORDERBOOK_CONTRACT_NAME}/${ORDERBOOK_CONTRACT_NAME}.go`);
 
     // Copy abi json to public directory
-    return gulp.src([HomeBridgeABI, ExchangeABI])
+    return gulp.src([HomeBridgeABI, DEXChainABI, OrderbookABI])
         .pipe(gulp.dest(`web/public/abi`));
 });
 
-gulp.task('truffle-deploy-bridge-network', (done) => {
-    runCommand('truffle', ['deploy', '--network', 'home'], { cwd: 'dapp' }, done);
-});
+gulp.task('copy-config', (done) => {
+    const configFile = getConfigFilePath(GENERATED_CONFIG_FILE_NAME);
+    const networksFile = getConfigFilePath(NETWORKS_CONFIG_FILE_NAME);
+    const tokensFile = getConfigFilePath(TOKENS_CONFIG_FILE_NAME);
 
-gulp.task('truffle-deploy-exchange-network', (done) => {
-    runCommand('truffle', ['deploy', '--network', 'exchange'], { cwd: 'dapp' }, done);
+    // copy to public directory
+    return gulp.src([configFile, networksFile, tokensFile])
+        .pipe(gulp.dest(`web/public`));
 });
 
 gulp.task('deploy-contracts', (done) => {
-    runSequence('compile-contracts', 'deploy-bridge-contracts', 'deploy-exchange-contracts', done);
+    runSequence('clean-contracts', 'compile-contracts', 'deploy-bridge-contracts', 'deploy-exchange-contracts', done);
 });
 
 gulp.task('compile-contracts', (done) => {
     let env = Object.create(process.env);
     env.DEX_DAPP_BUILD_DIR = path.resolve(process.cwd(), 'dapp/build');
     env.DEX_DAPP_SRC_DIR = path.resolve(process.cwd(), 'dapp/contracts');
-    env.DEX_DAPP_LIB_DIR = path.resolve(process.cwd(), 'node_modules/openzeppelin-solidity')
-    env.DEX_DAPP_LIB_DEST_DIR = path.resolve(process.cwd(), 'dapp/contracts/openzeppelin-solidity');
-    // env.DEX_DAPP_LIB_PATH = path.resolve(process.cwd(), 'node_modules/openzeppelin-solidity')
+    env.DEX_DAPP_LIB_DIR = path.resolve(process.cwd(), 'node_modules/openzeppelin-solidity');   
     return runCommand('sh', [
         'scripts/build-contracts.sh'
     ], {
@@ -149,24 +151,36 @@ gulp.task('compile-contracts', (done) => {
 });
 
 gulp.task('deploy-bridge-contracts', async (done) => {
+    let networksConfig = JSON.parse(fs.readFileSync('configs/network.json'));
+
     let web3 = new Web3();
-    web3.setProvider(new web3.providers.HttpProvider('http://localhost:8501'));
+    web3.setProvider(new web3.providers.HttpProvider(networksConfig.bridge.provider));
+    let networkID = await web3.eth.net.getId()
     
     let source = fs.readFileSync('dapp/build/HomeBridge.json');
     let contracts = JSON.parse(source)['contracts'];
-
-    let networksConfig = JSON.parse(fs.readFileSync('configs/network.json'));
 
     let accounts = await getWeb3Accounts(web3);
 
     let from = accounts[0];
     let opts = { from };
 
+    let HomeBridgeJSON = contracts['HomeBridge.sol:HomeBridge']; 
+    let HomeBridgeABI = JSON.parse(HomeBridgeJSON.abi);
+
     try {
-        let HomeBridge = await deployContract(web3, contracts['HomeBridge.sol:HomeBridge'], [
+        let HomeBridge = await deployContract(web3, HomeBridgeJSON, [
             networksConfig.bridge.requiredSignatures,
             networksConfig.authorities
         ], opts);
+        writeJSONFile(getABIPath(HOMEBRIDGE_CONTRACT_NAME), HomeBridgeABI);
+        appendToConfigFile({
+            bridge: {
+                network: networkID,
+                address: HomeBridge.options.address,
+                topics: getAllTopicsFromABI(HomeBridgeABI)
+            }
+        })
         console.log(`HomeBridge deployed at ${HomeBridge.options.address}`);
     } catch (e) {
         console.error(e);
@@ -178,12 +192,19 @@ gulp.task('deploy-exchange-contracts', async (done) => {
 
     let web3 = new Web3();
     web3.setProvider(new web3.providers.HttpProvider(networksConfig.exchange.provider));
+    let networkID = await web3.eth.net.getId()
     
     let source = fs.readFileSync('dapp/build/Orderbook.json');
     let contracts = JSON.parse(source)['contracts'];
 
-    // let obsource = fs.readFileSync('dapp/build/DEXChain.json');
-    // let contracts = JSON.parse(source)['contracts'];
+    let DataStoreJSON = contracts['core/DataStore.sol:DataStore']; 
+    let DataStoreABI = JSON.parse(DataStoreJSON.abi);
+
+    let DEXChainJSON = contracts['DEXChain.sol:DEXChain']; 
+    let DEXChainABI = JSON.parse(DEXChainJSON.abi);
+
+    let OrderbookJSON = contracts['Orderbook.sol:Orderbook']; 
+    let OrderbookABI = JSON.parse(OrderbookJSON.abi);
 
     let accounts = await getWeb3Accounts(web3);
 
@@ -194,16 +215,40 @@ gulp.task('deploy-exchange-contracts', async (done) => {
         gasPrice: 0
     };
 
-    let DataStore = await deployContract(web3, contracts['core/DataStore.sol:DataStore'], [], opts);
+    let DataStore = await deployContract(web3, DataStoreJSON, [], opts);
+    writeJSONFile(getABIPath(DATASTORE_CONTRACT_NAME), DataStoreABI);
+    appendToConfigFile({
+        datastore: {
+            network: networkID,
+            address: DataStore.options.address,
+            topics: getAllTopicsFromABI(DataStoreABI)
+        }
+    })
     console.log(`DataStore deployed at ${DataStore.options.address}`);
 
-    let DEXChain = await deployContract(web3, contracts['DEXChain.sol:DEXChain'], [DataStore.options.address], opts);
+    let DEXChain = await deployContract(web3, DEXChainJSON, [DataStore.options.address], opts);
+    writeJSONFile(getABIPath(DEXCHAIN_CONTRACT_NAME), DEXChainABI);
+    appendToConfigFile({
+        exchange: {
+            network: networkID,
+            address: DEXChain.options.address,
+            topics: getAllTopicsFromABI(DEXChainABI)
+        }
+    })
     console.log(`DEXChain deployed at ${DEXChain.options.address}`);
 
-    let Orderbook = await deployContract(web3, contracts['Orderbook.sol:Orderbook'], [
+    let Orderbook = await deployContract(web3, OrderbookJSON, [
         DataStore.options.address, DEXChain.options.address
     ], opts);
-    console.log(`Orderbook deployed at ${DEXChain.options.address}`);
+    writeJSONFile(getABIPath(ORDERBOOK_CONTRACT_NAME), OrderbookABI);
+    appendToConfigFile({
+        orderbook: {
+            network: networkID,
+            address: Orderbook.options.address,
+            topics: getAllTopicsFromABI(OrderbookABI)
+        }
+    })
+    console.log(`Orderbook deployed at ${Orderbook.options.address}`);
 
     console.log("Whitelisting DEXChain contract for DataStore...")
     await DataStore.methods.whitelistContract(DEXChain.options.address).send(opts)
@@ -240,73 +285,12 @@ gulp.task('deploy-exchange-contracts', async (done) => {
     })
 });
 
-gulp.task('truffle-deploy-private-network', async (done) => {
-    const NETWORK = process.env.GETH_NETWORK || 'privatenet';
-    runCommand('truffle', ['deploy', '--reset', '--all', '--network', NETWORK], { cwd: 'dapp' }, done);
-});
-
-gulp.task('truffle-contracts-deploy', (done) => {
-    if (process.env.NODE_ENV == 'production') {
-        runSequence('truffle-deploy-bridge-network', 'truffle-deploy-exchange-network', done);
-    } else {
-        runSequence('truffle-deploy-private-network', done);
-    }
-});
-
-gulp.task('truffle-generate-config', (done) => {
-    const HomeBridge = readTruffleJSON(HOMEBRIDGE_CONTRACT_NAME);
-    const Exchange = readTruffleJSON(EXCHANGE_CONTRACT_NAME);
-
-    let mainnetID = MAINNET_NETWORK_ID;
-    let xnetID = SIDECHAIN_NETWORK_ID;
-
-    if (process.env.NODE_ENV == 'production') {
-        mainnetID = MAINNET_NETWORK_ID;
-        xnetID = SIDECHAIN_NETWORK_ID;
-    } else if (process.env.GETH_NETWORK == null || process.env.GETH_NETWORK == 'privatenet') {
-        mainnetID = SIDECHAIN_NETWORK_ID;
-        xnetID = SIDECHAIN_NETWORK_ID;
-    } else {
-        mainnetID = DEVELOPMENT_NETWORK_ID;
-        xnetID = DEVELOPMENT_NETWORK_ID;
-    }
-
-    const HomeBridgeAddress = HomeBridge.networks[mainnetID].address;
-    const ExchangeAddress = Exchange.networks[xnetID].address;
-
-    writeJSONFile(getABIPath(HOMEBRIDGE_CONTRACT_NAME), HomeBridge.abi);
-    writeJSONFile(getABIPath(EXCHANGE_CONTRACT_NAME), Exchange.abi);
-
-    const configFile = getConfigFilePath(GENERATED_CONFIG_FILE_NAME);
-    const networksFile = getConfigFilePath(NETWORKS_CONFIG_FILE_NAME);
-    const tokensFile = getConfigFilePath(TOKENS_CONFIG_FILE_NAME);
-
-    writeJSONFile(configFile, {
-        bridge: {
-            network: mainnetID,
-            address: HomeBridgeAddress,
-            topics: getAllTopicsFromABI(HomeBridge.abi)
-        },
-        exchange: {
-            network: xnetID,
-            address: ExchangeAddress,
-            topics: getAllTopicsFromABI(Exchange.abi)
-        }
-    });
-
-    // copy to public directory
-    return gulp.src([configFile, networksFile, tokensFile])
-        .pipe(gulp.dest(`web/public`));
-
-});
-
 gulp.task('build-go', (done) => {
     done();
 });
 
 gulp.task('default', (done) => {
-    runSequence('clean', 'truffle-contracts-compile', 'truffle-contracts-deploy', 'truffle-generate-config', 'generate-abi', 'build-go', done);
-    // runSequence('clean', 'deploy-contracts', 'generate-abi', 'build-go', done);
+    runSequence('clean', 'deploy-contracts', 'copy-config', 'generate-abi', 'build-go', done);
 });
 
 function getWeb3Accounts(web3) {
@@ -321,6 +305,7 @@ function getWeb3Accounts(web3) {
         });
     });
 }
+
 function deployContract(web3, contractJSON, args, opts) {
     // ABI description as JSON structure
     let abi = JSON.parse(contractJSON.abi);
@@ -332,7 +317,6 @@ function deployContract(web3, contractJSON, args, opts) {
     let MyContract = new web3.eth.Contract(abi);
 
     opts = Object.assign({}, {
-        // gas: '100000000000000',
         // gas: '18446744073709551',
         gas: '5000000000000000',
         gasPrice: 0
@@ -343,11 +327,6 @@ function deployContract(web3, contractJSON, args, opts) {
             data: code,
             arguments: args
         })
-        // .estimateGas({
-        //     from: accounts[0],
-        //     gas: '18446744073709551615',
-        //     gasPrice: '1'
-        // })
         .send(opts)
         .on('error', function (error) {
             reject(error);
@@ -371,105 +350,8 @@ function deployContract(web3, contractJSON, args, opts) {
     
 }
 
-function whitelistExchangeContract(DataStore, Exchange, opts) {
-    return new Promise(function (resolve, reject) {
-        DataStore.methods
-            .addExchangeContract(Exchange.options.address)
-            .send(opts)
-            .on('error', function (error) {
-                reject(error);
-            })
-            .on('transactionHash', function (transactionHash) {
-                // console.log(`Got transaction hash: ${transactionHash}`);
-            })
-            .on('receipt', function (receipt) {
-                console.log(`Whitelisting ${Exchange.options.address}, Waiting for confirmation...`);
-            })
-            .then(function () {
-                console.log(`Whitelisted ${Exchange.options.address}.`);
-                resolve();
-            })
-            .catch(function (err) {
-                reject(err);
-            });
-    })
-}
-
-// function runContractMethod(method, args, opts) {
-//     return new Promise(function (resolve, reject) {
-//         method(...args).send(opts, function (err, transactionHash) {});
-//     })
-// }
-
-function initExchangeContract(Exchange, args, opts) {
-    return new Promise(function (resolve, reject) {
-        console.log("Updating DataStore contract address...");
-        Exchange.methods.setDataStore(args[2]).send(opts)
-        .then(function () {
-            console.log("Updating Authorities...");
-            return Exchange.methods.changeAuthorities(args[0], args[1]).send({
-                ...opts,
-                gas: '1000000000'
-            });
-        })
-        .then(function () {
-            console.log("Updating fee account...");
-            return Exchange.methods.changeFeeAccount(opts.from).send({
-                ...opts,
-                gas: '1000000000'
-            });
-        })
-        .then(function () {
-            console.log("Updating make fee...");
-            return Exchange.methods.changeMakeFee(args[3]).send({
-                ...opts,
-                gas: '1000000000'
-            });
-            // return Exchange.methods.changeFees(args[3], args[4], args[5]).send({
-                //     ...opts,
-                //     gas: '1000000'
-                // });
-        })
-        .then(function () {
-            console.log("Updating take fee...");
-                
-            return Exchange.methods.changeTakeFee(args[4]).send({
-                ...opts,
-                gas: '1000000000'
-            });
-        })
-        .then(function () {
-            console.log("Updating cancel fee...");
-                
-            return Exchange.methods.changeCancelFee(args[5]).send({
-                ...opts,
-                gas: '1000000000'
-            });
-        })
-        .then(function () {
-            resolve();
-        })
-        .catch(function (err) {
-            reject(err);
-        });
-        // Exchange.methods
-        //     .initiateExchangeContract(...args)
-        //     .send(opts)
-        //     .on('error', function (error) {
-        //         reject(error);
-        //     })
-        //     .on('transactionHash', function (transactionHash) {
-        //         // console.log(`Got transaction hash: ${transactionHash}`);
-        //     })
-        //     .on('receipt', function (receipt) {
-        //         console.log(`Initiating exchange at ${Exchange.options.address}, Waiting for confirmation...`);
-        //     })
-        //     .then(function () {
-        //         console.log(`Exchange available at ${Exchange.options.address}.`);
-        //         resolve();
-        //     })
-        //     .catch(function (err) {
-        //         reject(err);
-        //     });
-    });
+function appendToConfigFile(data) {
+    let config = JSON.parse(fs.readFileSync(getConfigFilePath(GENERATED_CONFIG_FILE_NAME), 'utf8'));
+    config = Object.assign({}, config, data);
+    writeJSONFile(getConfigFilePath(GENERATED_CONFIG_FILE_NAME), config);
 }
