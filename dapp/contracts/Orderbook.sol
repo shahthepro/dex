@@ -10,6 +10,7 @@ contract Orderbook is DEXContract {
 
     // events for Orderbook
     event PlaceOrder(bytes32 orderHash, address token, address base, uint256 price, uint256 quantity, bool is_bid, address owner);
+    event Trade(bytes32 buyOrderHash, bytes32 sellOrderHash, uint256 volume);
     event CancelOrder(bytes32 orderHash);
 
     uint8 constant ORDER_PREFIX = 0xA0;
@@ -133,9 +134,8 @@ contract Orderbook is DEXContract {
         address pairToken = getOrderToken(orderHash);
 
         address feeAccount = getFeeAccount();
-        uint256 cancelFee = getCancelFee();
 
-        uint256 fee = calculateFee(volumeLeft, cancelFee);
+        uint256 fee = calculateCancelFee(volumeLeft);
         uint256 volumeNoFee = volumeLeft.sub(fee);
 
         DEXChain chain = DEXChain(exchangeContract);
@@ -160,21 +160,85 @@ contract Orderbook is DEXContract {
         emit CancelOrder(orderHash);
     }
 
-    // // Matches buy and sell orders
-    function matchOrders(bytes32 buyOrderHash, bytes32 sellOrderHash) private onlyAllowedUsersOrAdmin {
-        require(getOrderExists(buyOrderHash), "ERR_ORDER_MISSING");
-        require(getOrderExists(sellOrderHash), "ERR_ORDER_MISSING");
+    // Matches buy and sell orders
+    function matchOrders(bytes32 buyOrderHash, bytes32 sellOrderHash) public onlyAllowedUsersOrAdmin {
+        // require(getOrderExists(buyOrderHash), "ERR_ORDER_MISSING");
+        // require(getOrderExists(sellOrderHash), "ERR_ORDER_MISSING");
 
-        require(getOrderIsOpen(buyOrderHash), "ERR_ORDER_CLOSED");
-        require(getOrderIsOpen(sellOrderHash), "ERR_ORDER_CLOSED");
+        // require(getOrderIsOpen(buyOrderHash), "ERR_ORDER_CLOSED");
+        // require(getOrderIsOpen(sellOrderHash), "ERR_ORDER_CLOSED");
 
-        require(getOrderIsBid(buyOrderHash), "ERR_INVALID_ORDER");
-        require(!getOrderIsBid(sellOrderHash), "ERR_INVALID_ORDER");
+        // require(getOrderIsBid(buyOrderHash), "ERR_INVALID_ORDER");
+        // require(!getOrderIsBid(sellOrderHash), "ERR_INVALID_ORDER");
 
-        require(getOrderBase(buyOrderHash) == getOrderBase(sellOrderHash), "ERR_ORDER_MISMATCH");
-        require(getOrderToken(buyOrderHash) == getOrderToken(sellOrderHash), "ERR_ORDER_MISMATCH");
+        // require(getOrderBase(buyOrderHash) == getOrderBase(sellOrderHash), "ERR_ORDER_MISMATCH");
+        // require(getOrderToken(buyOrderHash) == getOrderToken(sellOrderHash), "ERR_ORDER_MISMATCH");
+        // require(getOrderPrice(buyOrderHash) == getOrderPrice(sellOrderHash), "ERR_ORDER_MISMATCH");
 
+        // uint256 volumeToTrade = getTradeableOrderVolume(getOrderAvailableVolume(buyOrderHash), getOrderAvailableVolume(sellOrderHash));
+        uint256 volumeToTrade = 0;
+
+        address token = getOrderToken(buyOrderHash);
+        address base = getOrderBase(buyOrderHash);
+        address taker = getOrderOwner(buyOrderHash);
+        address maker = getOrderOwner(sellOrderHash);
+
+        uint256 takeFee = calculateTakeFee(volumeToTrade);
+        uint256 makeFee = calculateMakeFee(volumeToTrade);
+
+        address feeAccount = getFeeAccount();
+
+        // DEXChain chain = DEXChain(exchangeContract);
+        // chain.releaseEscrow(base, taker, maker, volumeToTrade.sub(makeFee));
+        // chain.releaseEscrow(base, taker, feeAccount, makeFee);
+        // chain.releaseEscrow(token, maker, taker, volumeToTrade.sub(takeFee));
+        // chain.releaseEscrow(token, maker, feeAccount, takeFee);
+
+        // chain.notifyBalanceUpdate(base, taker);
+        // chain.notifyBalanceUpdate(base, maker);
+        // chain.notifyBalanceUpdate(base, feeAccount);
+        // chain.notifyBalanceUpdate(token, taker);
+        // chain.notifyBalanceUpdate(token, maker);
+        // chain.notifyBalanceUpdate(token, feeAccount);
+
+        // emit Trade(buyOrderHash, sellOrderHash, volumeToTrade);
+    }
+
+    // function doTrade(bytes32 buyOrderHash, bytes32 sellOrderHash, uint256 volumeToTrade) private {
+    //     // address token = getOrderToken(buyOrderHash);
+    //     // address base = getOrderBase(buyOrderHash);
+    //     // address taker = getOrderOwner(buyOrderHash);
+    //     // address maker = getOrderOwner(sellOrderHash);
+
+    //     // uint256 takeFee = calculateTakeFee(volumeToTrade);
+    //     // uint256 makeFee = calculateMakeFee(volumeToTrade);
+
+    //     // address feeAccount = getFeeAccount();
+
+    //     // DEXChain chain = DEXChain(exchangeContract);
+    //     // chain.releaseEscrow(base, taker, maker, volumeToTrade.sub(makeFee));
+    //     // chain.releaseEscrow(base, taker, feeAccount, makeFee);
+    //     // chain.releaseEscrow(token, maker, taker, volumeToTrade.sub(takeFee));
+    //     // chain.releaseEscrow(token, maker, feeAccount, takeFee);
+
+    //     // chain.notifyBalanceUpdate(base, taker);
+    //     // chain.notifyBalanceUpdate(base, maker);
+    //     // chain.notifyBalanceUpdate(base, feeAccount);
+    //     // chain.notifyBalanceUpdate(token, taker);
+    //     // chain.notifyBalanceUpdate(token, maker);
+    //     // chain.notifyBalanceUpdate(token, feeAccount);
+
+    //     emit Trade(buyOrderHash, sellOrderHash, volumeToTrade);
+    // }
+
+    function getTradeableOrderVolume(uint256 takeVolume, uint256 makeVolume) private pure returns (uint256) {
+        require(takeVolume > 0 && makeVolume > 0, "ERR_INVALID_ORDER");
         
+        if (takeVolume <= makeVolume) {
+            return takeVolume;
+        }
+
+        return makeVolume;
     }
 
     // Order getter/setters
@@ -278,6 +342,10 @@ contract Orderbook is DEXContract {
         ds.setUIntValue(keccak256(abi.encodePacked(ORDER_PREFIX, orderHash, ORDER_VOLUME_FILLED_KEY)), value);
     }
 
+    function getOrderAvailableVolume(bytes32 orderHash) public view returns (uint256) {
+        return getOrderVolume(orderHash).sub(getOrderFilledVolume(orderHash));
+    }
+
     /**
      * Everything related to fees
      */
@@ -345,6 +413,18 @@ contract Orderbook is DEXContract {
     function calculateFee(uint256 cost, uint256 feeAmount) private pure returns (uint256) {
         uint256 fee = (cost.mul(feeAmount)).div(1 ether);
         return fee;
+    }
+
+    function calculateTakeFee(uint256 cost) private view returns (uint256) {
+        return calculateFee(cost, getTakeFee());
+    }
+
+    function calculateMakeFee(uint256 cost) private view returns (uint256) {
+        return calculateFee(cost, getMakeFee());
+    }
+
+    function calculateCancelFee(uint256 cost) private view returns (uint256) {
+        return calculateFee(cost, getCancelFee());
     }
 
 }
