@@ -163,16 +163,21 @@ gulp.task('deploy-bridge-contracts', async (done) => {
     let accounts = await getWeb3Accounts(web3);
 
     let from = accounts[0];
-    let opts = { from };
+    let txOpts = { from };
 
     let HomeBridgeJSON = contracts['HomeBridge.sol:HomeBridge']; 
     let HomeBridgeABI = JSON.parse(HomeBridgeJSON.abi);
 
     try {
-        let HomeBridge = await deployContract(web3, HomeBridgeJSON, [
-            networksConfig.bridge.requiredSignatures,
-            networksConfig.authorities
-        ], opts);
+        let HomeBridge = await deployContract({
+            web3,
+            contractJSON: HomeBridgeJSON,
+            args: [
+                networksConfig.bridge.requiredSignatures,
+                networksConfig.authorities
+            ],
+            txOpts
+        });
         writeJSONFile(getABIPath(HOMEBRIDGE_CONTRACT_NAME), HomeBridgeABI);
         appendToConfigFile({
             bridge: {
@@ -193,30 +198,22 @@ gulp.task('deploy-exchange-contracts', async (done) => {
     let web3 = new Web3();
     web3.setProvider(new web3.providers.HttpProvider(networksConfig.exchange.provider));
     let networkID = await web3.eth.net.getId()
-    
-    let source = fs.readFileSync('dapp/build/Orderbook.json');
-    let contracts = JSON.parse(source)['contracts'];
-
-    let DataStoreJSON = contracts['core/DataStore.sol:DataStore']; 
-    let DataStoreABI = JSON.parse(DataStoreJSON.abi);
-
-    let DEXChainJSON = contracts['DEXChain.sol:DEXChain']; 
-    let DEXChainABI = JSON.parse(DEXChainJSON.abi);
-
-    let OrderbookJSON = contracts['Orderbook.sol:Orderbook']; 
-    let OrderbookABI = JSON.parse(OrderbookJSON.abi);
 
     let accounts = await getWeb3Accounts(web3);
 
     let from = accounts[0];
-    let opts = { 
+    let txOpts = { 
         from,
-        gas: '5000000000000000',
+        gas: '184467440737095516',
         gasPrice: 0
     };
 
-    let DataStore = await deployContract(web3, DataStoreJSON, [], opts);
+    console.log(`\n\nDeploying DataStore...`)
+    let DataStoreContractSource = JSON.parse(fs.readFileSync('dapp/build/DataStore.json'));
+    let DataStoreJSON = DataStoreContractSource.contracts['core/DataStore.sol:DataStore']; 
+    let DataStoreABI = JSON.parse(DataStoreJSON.abi);
     writeJSONFile(getABIPath(DATASTORE_CONTRACT_NAME), DataStoreABI);
+    let DataStore = await deployContract({ web3, contractJSON: DataStoreJSON, txOpts});
     appendToConfigFile({
         datastore: {
             network: networkID,
@@ -226,8 +223,17 @@ gulp.task('deploy-exchange-contracts', async (done) => {
     })
     console.log(`DataStore deployed at ${DataStore.options.address}`);
 
-    let DEXChain = await deployContract(web3, DEXChainJSON, [DataStore.options.address], opts);
+    console.log(`\n\nDeploying DEXChain...`)
+    let DEXChainContractSource = JSON.parse(fs.readFileSync('dapp/build/DEXChain.json'));
+    let DEXChainJSON = DEXChainContractSource.contracts['DEXChain.sol:DEXChain']; 
+    let DEXChainABI = JSON.parse(DEXChainJSON.abi);
     writeJSONFile(getABIPath(DEXCHAIN_CONTRACT_NAME), DEXChainABI);
+    let DEXChain = await deployContract({
+        web3, 
+        contractJSON: DEXChainJSON, 
+        args: [DataStore.options.address], 
+        txOpts
+    });
     appendToConfigFile({
         exchange: {
             network: networkID,
@@ -237,10 +243,48 @@ gulp.task('deploy-exchange-contracts', async (done) => {
     })
     console.log(`DEXChain deployed at ${DEXChain.options.address}`);
 
-    let Orderbook = await deployContract(web3, OrderbookJSON, [
-        DataStore.options.address, DEXChain.options.address
-    ], opts);
+    let OrderbookContractSource = JSON.parse(fs.readFileSync('dapp/build/Orderbook.json'));
+    console.log(`\n\nDeploying FeeHelpers...`)
+    let FeeHelpersJSON = OrderbookContractSource.contracts['lib/FeeHelpers.sol:FeeHelpers']; 
+    // let FeeHelpersABI = JSON.parse(FeeHelpersJSON.abi);
+    let FeeHelpers = await deployContract({ web3, contractJSON: FeeHelpersJSON, txOpts });
+    console.log(`FeeHelpers deployed at ${FeeHelpers.options.address}`);
+
+    console.log(`\n\nDeploying OrderHelpers...`)
+    let OrderHelpersJSON = OrderbookContractSource.contracts['lib/OrderHelpers.sol:OrderHelpers']; 
+    // let OrderHelpersABI = JSON.parse(OrderHelpersJSON.abi);
+    let OrderHelpers = await deployContract({ web3, contractJSON: OrderHelpersJSON, txOpts });
+    console.log(`OrderHelpers deployed at ${OrderHelpers.options.address}`);
+
+    console.log(`\n\nDeploying OrderbookHelpers...`)
+    let OrderbookHelpersJSON = OrderbookContractSource.contracts['lib/OrderbookHelpers.sol:OrderbookHelpers']; 
+    // let OrderbookHelpersABI = JSON.parse(OrderbookHelpersJSON.abi);
+    let OrderbookHelpers = await deployContract({
+        web3,
+        contractJSON: OrderbookHelpersJSON,
+        txOpts,
+        libraries: {
+            'lib/FeeHelpers.sol': FeeHelpers.options.address,
+            'lib/OrderHelpers.sol': OrderHelpers.options.address,
+        }
+    });
+    console.log(`OrderbookHelpers deployed at ${OrderbookHelpers.options.address}`);
+    
+    console.log(`\n\nDeploying Orderbook...`)
+    let OrderbookJSON = OrderbookContractSource.contracts['Orderbook.sol:Orderbook']; 
+    let OrderbookABI = JSON.parse(OrderbookJSON.abi);
     writeJSONFile(getABIPath(ORDERBOOK_CONTRACT_NAME), OrderbookABI);
+    let Orderbook = await deployContract({
+        web3, 
+        contractJSON: OrderbookJSON, 
+        args: [DataStore.options.address, DEXChain.options.address], 
+        txOpts,
+        libraries: {
+            'lib/FeeHelpers.sol': FeeHelpers.options.address,
+            'lib/OrderHelpers.sol': OrderHelpers.options.address,
+            'lib/OrderbookHelpers.sol': OrderbookHelpers.options.address,
+        }
+    });
     appendToConfigFile({
         orderbook: {
             network: networkID,
@@ -251,26 +295,26 @@ gulp.task('deploy-exchange-contracts', async (done) => {
     console.log(`Orderbook deployed at ${Orderbook.options.address}`);
 
     console.log("Whitelisting DEXChain contract for DataStore...")
-    await DataStore.methods.whitelistContract(DEXChain.options.address).send(opts)
+    await DataStore.methods.whitelistContract(DEXChain.options.address).send(txOpts)
     .then(function () {
         console.log("Feeding DataStore address to DEXChain...");
-        return DEXChain.methods.setDataStore(DataStore.options.address).send(opts)
+        return DEXChain.methods.setDataStore(DataStore.options.address).send(txOpts)
     })
     .then(function () {
         console.log("Feeding Authorities to DEXChain...");
-        return DEXChain.methods.setAuthorities(networksConfig.exchange.requiredSignatures, networksConfig.authorities).send(opts)
+        return DEXChain.methods.setAuthorities(networksConfig.exchange.requiredSignatures, networksConfig.authorities).send(txOpts)
     })
     .then(function () {
         console.log("Whitelisting Orderbook contract for DataStore...")
-        return DataStore.methods.whitelistContract(Orderbook.options.address).send(opts)
+        return DataStore.methods.whitelistContract(Orderbook.options.address).send(txOpts)
     })
     .then(function () {
         console.log("Whitelisting Orderbook contract for DEXChain...")
-        return DEXChain.methods.whitelistContract(Orderbook.options.address).send(opts)
+        return DEXChain.methods.whitelistContract(Orderbook.options.address).send(txOpts)
     })
     .then(function () {
         console.log("Feeding fee account address to Orderbook...")
-        return Orderbook.methods.setFeeAccount(accounts[0]).send(opts)
+        return Orderbook.methods.setFeeAccount(accounts[0]).send(txOpts)
     })
     .then(function () {
         console.log("Feeding fee details to Orderbook...")
@@ -278,7 +322,7 @@ gulp.task('deploy-exchange-contracts', async (done) => {
             networksConfig.exchange.makeFee, 
             networksConfig.exchange.takeFee,
             networksConfig.exchange.cancelFee
-        ).send(opts)
+        ).send(txOpts)
     })
     .catch(function (err) {
         console.error(err);
@@ -306,28 +350,34 @@ function getWeb3Accounts(web3) {
     });
 }
 
-function deployContract(web3, contractJSON, args, opts) {
+function deployContract({ web3, contractJSON, args, txOpts, libraries }) {
     // ABI description as JSON structure
     let abi = JSON.parse(contractJSON.abi);
 
     // Smart contract EVM bytecode as hex
     let code = '0x' + contractJSON.bin;
 
+    if (libraries) {
+        for (let libName in libraries) {
+            code = code.replace(new RegExp("_*" + libName + ".*_*", "g"), libraries[libName].slice(2));
+        }
+    }
+
     // Create Contract proxy class
     let MyContract = new web3.eth.Contract(abi);
 
-    opts = Object.assign({}, {
-        // gas: '18446744073709551',
-        gas: '5000000000000000',
+    txOpts = Object.assign({}, {
+        gas: '18446744073709551',
+        // gas: '5000000000000000',
         gasPrice: 0
-    }, opts)
+    }, txOpts)
 
     return new Promise(function (resolve, reject) {
         MyContract.deploy({
             data: code,
             arguments: args
         })
-        .send(opts)
+        .send(txOpts)
         .on('error', function (error) {
             reject(error);
         })
@@ -340,6 +390,52 @@ function deployContract(web3, contractJSON, args, opts) {
         // .on('confirmation', function(confirmationNumber, receipt){
         //     console.log(`Contract creation confirmed...`);
         // })
+        .then(function (newContractInstance) {
+            resolve(newContractInstance);
+        })
+        .catch(function (err) {
+            reject(err);
+        });
+    });
+    
+}
+
+function deployContractEstimate({ web3, contractJSON, args, opts, libraries }) {
+    // ABI description as JSON structure
+    let abi = JSON.parse(contractJSON.abi);
+
+    // Smart contract EVM bytecode as hex
+    let code = '0x' + contractJSON.bin;
+
+    console.log(code);
+
+    // Create Contract proxy class
+    let MyContract = new web3.eth.Contract(abi);
+
+    opts = Object.assign({}, {
+        gas: '18446744073709551',
+        // gas: '5000000000000000',
+        gasPrice: 0
+    }, opts)
+
+    return new Promise(function (resolve, reject) {
+        MyContract.deploy({
+            data: code,
+            arguments: args
+        })
+        .estimateGas(opts)
+        // .on('error', function (error) {
+        //     reject(error);
+        // })
+        // .on('transactionHash', function (transactionHash) {
+        //     console.log(`Got transaction hash: ${transactionHash}`);
+        // })
+        // .on('receipt', function (receipt) {
+        //     console.log(`Deployed at ${receipt.contractAddress}. Waiting for confirmation...`);
+        // })
+        // // .on('confirmation', function(confirmationNumber, receipt){
+        // //     console.log(`Contract creation confirmed...`);
+        // // })
         .then(function (newContractInstance) {
             resolve(newContractInstance);
         })
