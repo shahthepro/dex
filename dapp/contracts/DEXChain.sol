@@ -1,7 +1,7 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.3;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./core/DataStore.sol";
+import "./interfaces/IDataStore.sol";
 import "./core/DEXContract.sol";
 import "./lib/MessageSigning.sol";
 import "./lib/Helpers.sol";
@@ -58,12 +58,12 @@ contract DEXChain is DEXContract {
     mapping (bytes32 => SignaturesCollection) signatures;
 
     function balanceOf(address token, address owner) public view returns (uint256) {
-        DataStore ds = DataStore(dataStoreContract);
+        IDataStore ds = IDataStore(dataStoreContract);
         return ds.getTokenValue(token, owner, GENERAL_VAULT);
     }
 
     function escrowBalanceOf(address token, address owner) public view returns (uint256) {
-        DataStore ds = DataStore(dataStoreContract);
+        IDataStore ds = IDataStore(dataStoreContract);
         return ds.getTokenValue(token, owner, ESCROW_VAULT);
     }
 
@@ -72,24 +72,24 @@ contract DEXChain is DEXContract {
     }
 
     function addToBalance(address token, address owner, uint256 value) public onlyAllowedContracts {
-        DataStore ds = DataStore(dataStoreContract);
+        IDataStore ds = IDataStore(dataStoreContract);
         ds.addTokenValue(token, owner, GENERAL_VAULT, value);
     }
 
     function addToEscrowBalance(address token, address owner, uint256 value) public onlyAllowedContracts {
-        DataStore ds = DataStore(dataStoreContract);
+        IDataStore ds = IDataStore(dataStoreContract);
         ds.addTokenValue(token, owner, ESCROW_VAULT, value);
     }
 
     function subFromBalance(address token, address owner, uint256 value) public onlyAllowedContracts {
         require(balanceOf(token, owner) >= value, "ERR_INSUFFICIENT_FUNDS");
-        DataStore ds = DataStore(dataStoreContract);
+        IDataStore ds = IDataStore(dataStoreContract);
         ds.subTokenValue(token, owner, GENERAL_VAULT, value);
     }
 
     function subFromEscrowBalance(address token, address owner, uint256 value) public onlyAllowedContracts {
         require(escrowBalanceOf(token, owner) >= value, "ERR_INSUFFICIENT_FUNDS");
-        DataStore ds = DataStore(dataStoreContract);
+        IDataStore ds = IDataStore(dataStoreContract);
         ds.subTokenValue(token, owner, ESCROW_VAULT, value);
     }
 
