@@ -12,6 +12,7 @@ const EXCHANGE_CONTRACT_NAME = 'Exchange';
 const DEXCHAIN_CONTRACT_NAME = 'DEXChain';
 const DATASTORE_CONTRACT_NAME = 'DataStore';
 const ORDERBOOK_CONTRACT_NAME = 'Orderbook';
+const FEE_CONTRACT_NAME = 'FeeContract';
 
 const GENERATED_CONFIG_FILE_NAME = 'contracts.g';
 const NETWORKS_CONFIG_FILE_NAME = 'network';
@@ -113,6 +114,8 @@ gulp.task('generate-abi', async (done) => {
     const HomeBridgeABI = getABIPath(HOMEBRIDGE_CONTRACT_NAME);
     const DEXChainABI = getABIPath(DEXCHAIN_CONTRACT_NAME);
     const OrderbookABI = getABIPath(ORDERBOOK_CONTRACT_NAME);
+    const DataStoreABI = getABIPath(DATASTORE_CONTRACT_NAME);
+    const FeeContractABI = getABIPath(FEE_CONTRACT_NAME);
 
     // Generate .go files
     await generateABIWithJSON(HomeBridgeABI, HOMEBRIDGE_CONTRACT_NAME, `_abi/${HOMEBRIDGE_CONTRACT_NAME}/${HOMEBRIDGE_CONTRACT_NAME}.go`);
@@ -120,7 +123,7 @@ gulp.task('generate-abi', async (done) => {
     await generateABIWithJSON(OrderbookABI, ORDERBOOK_CONTRACT_NAME, `_abi/${ORDERBOOK_CONTRACT_NAME}/${ORDERBOOK_CONTRACT_NAME}.go`);
 
     // Copy abi json to public directory
-    return gulp.src([HomeBridgeABI, DEXChainABI, OrderbookABI])
+    return gulp.src([HomeBridgeABI, DEXChainABI, OrderbookABI, DataStoreABI, FeeContractABI])
         .pipe(gulp.dest(`web/public/abi`));
 });
 
@@ -186,7 +189,7 @@ gulp.task('deploy-bridge-contracts', async (done) => {
                 topics: getAllTopicsFromABI(HomeBridgeABI)
             }
         })
-        console.log(`HomeBridge deployed at ${HomeBridge.options.address}`);
+        console.log(`HomeBridge deployed at ${HomeBridge.options.address}\n\n`);
     } catch (e) {
         console.error(e);
     }
@@ -204,7 +207,7 @@ gulp.task('deploy-exchange-contracts', async (done) => {
     let from = accounts[0];
     let txOpts = { 
         from,
-        gas: '184467440737095516',
+        gas: '3000000',
         gasPrice: 0
     };
 
@@ -270,6 +273,29 @@ gulp.task('deploy-exchange-contracts', async (done) => {
     });
     console.log(`OrderbookHelpers deployed at ${OrderbookHelpers.options.address}`);
     
+    console.log(`\n\nDeploying FeeContract...`)
+    let FeeContractContractSource = JSON.parse(fs.readFileSync('dapp/build/FeeContract.json'));
+    let FeeContractJSON = FeeContractContractSource.contracts['FeeContract.sol:FeeContract']; 
+    let FeeContractABI = JSON.parse(FeeContractJSON.abi);
+    writeJSONFile(getABIPath(FEE_CONTRACT_NAME), FeeContractABI);
+    let FeeContract = await deployContract({
+        web3, 
+        contractJSON: FeeContractJSON, 
+        args: [DataStore.options.address], 
+        txOpts,
+        libraries: {
+            'lib/FeeHelpers.sol': FeeHelpers.options.address,
+        }
+    });
+    appendToConfigFile({
+        feecontract: {
+            network: networkID,
+            address: FeeContract.options.address,
+            topics: getAllTopicsFromABI(FeeContractABI)
+        }
+    })
+    console.log(`FeeContract deployed at ${FeeContract.options.address}`);
+    
     console.log(`\n\nDeploying Orderbook...`)
     let OrderbookJSON = OrderbookContractSource.contracts['Orderbook.sol:Orderbook']; 
     let OrderbookABI = JSON.parse(OrderbookJSON.abi);
@@ -297,10 +323,6 @@ gulp.task('deploy-exchange-contracts', async (done) => {
     console.log("Whitelisting DEXChain contract for DataStore...")
     await DataStore.methods.whitelistContract(DEXChain.options.address).send(txOpts)
     .then(function () {
-        console.log("Feeding DataStore address to DEXChain...");
-        return DEXChain.methods.setDataStore(DataStore.options.address).send(txOpts)
-    })
-    .then(function () {
         console.log("Feeding Authorities to DEXChain...");
         return DEXChain.methods.setAuthorities(networksConfig.exchange.requiredSignatures, networksConfig.authorities).send(txOpts)
     })
@@ -313,12 +335,13 @@ gulp.task('deploy-exchange-contracts', async (done) => {
         return DEXChain.methods.whitelistContract(Orderbook.options.address).send(txOpts)
     })
     .then(function () {
-        console.log("Feeding fee account address to Orderbook...")
-        return Orderbook.methods.setFeeAccount(accounts[0]).send(txOpts)
+        console.log("Whitelisting FeeContract contract for DataStore...")
+        return DataStore.methods.whitelistContract(FeeContract.options.address).send(txOpts)
     })
     .then(function () {
-        console.log("Feeding fee details to Orderbook...")
-        return Orderbook.methods.updateFees(
+        console.log("Feeding fee details to FeeContract...")
+        return FeeContract.methods.updateFees(
+            accounts[0],
             networksConfig.exchange.makeFee, 
             networksConfig.exchange.takeFee,
             networksConfig.exchange.cancelFee

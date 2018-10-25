@@ -2,7 +2,6 @@ pragma solidity ^0.4.3;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./../interfaces/IDataStore.sol";
-import "./../interfaces/IDEXChain.sol";
 
 library FeeHelpers {
     using SafeMath for uint256;
@@ -19,11 +18,6 @@ library FeeHelpers {
         setTakeFee(dataStoreContract, takeFee_);
     }
 
-    // function addToFeeAccount(address dataStoreContract, address exchangeContract, address token, uint256 amount) private {
-    //     IDEXChain chain = IDEXChain(exchangeContract);
-    //     chain.addToBalance(token, getFeeAccount(dataStoreContract), amount);
-    // }
-
     // Fee account getter
     function getFeeAccount(address dataStoreContract) public view returns (address) {
         IDataStore ds = IDataStore(dataStoreContract);
@@ -31,9 +25,9 @@ library FeeHelpers {
     }
 
     // Fee account setter
-    function setFeeAccount(address dataStoreContract, address feeAccount) public {
+    function setFeeAccount(address dataStoreContract, address value) public {
         IDataStore ds = IDataStore(dataStoreContract);
-        ds.setAddressValue(keccak256(abi.encodePacked(FEES_PREFIX, FEES_ACCOUNT_KEY)), feeAccount);
+        ds.setAddressValue(keccak256(abi.encodePacked(FEES_PREFIX, FEES_ACCOUNT_KEY)), value);
     }
 
     // Cancel fee getter

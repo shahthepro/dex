@@ -5,10 +5,11 @@ rm -rf $DEX_DAPP_BUILD_DIR
 mkdir $DEX_DAPP_BUILD_DIR
 cd $DEX_DAPP_SRC_DIR
 #solc Exchange.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/Exchange.json
-solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR HomeBridge.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/HomeBridge.json
+solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize HomeBridge.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/HomeBridge.json
 
-solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR core/DataStore.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/DataStore.json
-solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR DEXChain.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/DEXChain.json
-solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR Orderbook.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/Orderbook.json
+solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 core/DataStore.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/DataStore.json
+solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 DEXChain.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/DEXChain.json
+solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 Orderbook.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/Orderbook.json
+solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 FeeContract.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/FeeContract.json
 # rm -rf $DEX_DAPP_LIB_DEST_DIR
 )
