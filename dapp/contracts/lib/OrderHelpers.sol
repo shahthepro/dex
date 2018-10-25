@@ -2,7 +2,7 @@ pragma solidity ^0.4.3;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./../interfaces/IDataStore.sol";
-import "./../interfaces/IDEXChain.sol";
+// import "./../interfaces/IDEXChain.sol";
 
 library OrderHelpers {
     using SafeMath for uint256;

@@ -9,6 +9,8 @@ contract DEXContract { // is Ownable
 
     constructor() public {
         admin = msg.sender;
+        allowedContracts[address(this)] = true;
+        allowedUsers[admin] = true;
     }
 
     modifier onlyAdmin() {

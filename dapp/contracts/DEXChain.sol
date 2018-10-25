@@ -68,26 +68,30 @@ contract DEXChain is DEXContract {
     }
 
     function notifyBalanceUpdate(address token, address owner) public onlyAllowedContracts {
+        _notifyBalanceUpdate(token, owner);
+    }
+
+    function _notifyBalanceUpdate(address token, address owner) private {
         emit BalanceUpdate(token, owner, balanceOf(token, owner), escrowBalanceOf(token, owner));
     }
 
-    function addToBalance(address token, address owner, uint256 value) public onlyAllowedContracts {
+    function addToBalance(address token, address owner, uint256 value) private {
         IDataStore ds = IDataStore(dataStoreContract);
         ds.addTokenValue(token, owner, GENERAL_VAULT, value);
     }
 
-    function addToEscrowBalance(address token, address owner, uint256 value) public onlyAllowedContracts {
+    function addToEscrowBalance(address token, address owner, uint256 value) private {
         IDataStore ds = IDataStore(dataStoreContract);
         ds.addTokenValue(token, owner, ESCROW_VAULT, value);
     }
 
-    function subFromBalance(address token, address owner, uint256 value) public onlyAllowedContracts {
+    function subFromBalance(address token, address owner, uint256 value) private {
         require(balanceOf(token, owner) >= value, "ERR_INSUFFICIENT_FUNDS");
         IDataStore ds = IDataStore(dataStoreContract);
         ds.subTokenValue(token, owner, GENERAL_VAULT, value);
     }
 
-    function subFromEscrowBalance(address token, address owner, uint256 value) public onlyAllowedContracts {
+    function subFromEscrowBalance(address token, address owner, uint256 value) private {
         require(escrowBalanceOf(token, owner) >= value, "ERR_INSUFFICIENT_FUNDS");
         IDataStore ds = IDataStore(dataStoreContract);
         ds.subTokenValue(token, owner, ESCROW_VAULT, value);
@@ -127,7 +131,7 @@ contract DEXChain is DEXContract {
 
         addToBalance(token, recipient, value);
         emit Deposit(recipient, token, value, transactionHash);
-        notifyBalanceUpdate(token, recipient);
+        _notifyBalanceUpdate(token, recipient);
     }
 
     function transferHomeViaRelay(address token, uint256 value) public {
@@ -137,7 +141,7 @@ contract DEXChain is DEXContract {
 
         emit Withdraw(msg.sender, token, value);
 
-        notifyBalanceUpdate(token, msg.sender);
+        _notifyBalanceUpdate(token, msg.sender);
     }
 
     function submitSignature(bytes signature, bytes message) public onlyAuthority {
