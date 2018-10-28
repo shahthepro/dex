@@ -4,7 +4,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./core/DEXContract.sol";
 import "./interfaces/IDEXChain.sol";
 import "./interfaces/IDataStore.sol";
-// import "./lib/FeeHelpers.sol";
+import "./lib/FeeHelpers.sol";
 // import "./lib/OrderbookHelpers.sol";
 // import "./lib/OrderHelpers.sol";
 
@@ -95,13 +95,68 @@ contract Orderbook is DEXContract {
 
     // To cancel an order and recover funds from escrow
     function cancelOrder(bytes32 orderHash) public {
-        // OrderbookHelpers.cancelOrder(dataStoreContract, exchangeContract, orderHash);
+        checkIfOrderIsCancellable(orderHash);
+        // // Refund any remaining volume minus cancellation fee
+        // uint256 volume = getOrderVolume(orderHash);
+        // uint256 volumeFilled = getOrderFilledVolume(orderHash);
+        // uint256 volumeLeft = volume - volumeFilled;
+        // require(volumeLeft > 0, "ERR_FILLED_ORDER");
+
+        // address pairBase = getOrderBase(orderHash);
+        // address pairToken = getOrderToken(orderHash);
+
+        // address feeAccount = FeeHelpers.getFeeAccount(dataStoreContract);
+        uint256 volumeNoFee;
+        uint256 fee;
+        (volumeNoFee, fee) = getCancellationData(orderHash);
+
+        // uint256 fee = FeeHelpers.calculateCancelFee(dataStoreContract, volumeLeft);
+        // uint256 volumeNoFee = volumeLeft.sub(fee);
+
+        // IDEXChain chain = IDEXChain(exchangeContract);
+
+        // if (getOrderIsBid(orderHash)) {
+        //     // Buy Order
+        //     chain.recoverFromEscrow(pairBase, msg.sender, volumeNoFee);
+        //     chain.recoverFromEscrow(pairBase, feeAccount, fee);
+        //     chain.notifyBalanceUpdate(pairBase, msg.sender);
+        //     chain.notifyBalanceUpdate(pairBase, feeAccount);
+        // } else {
+        //     // Sell Order
+        //     chain.recoverFromEscrow(pairToken, msg.sender, volumeNoFee);
+        //     chain.recoverFromEscrow(pairToken, feeAccount, fee);
+        //     chain.notifyBalanceUpdate(pairToken, msg.sender);
+        //     chain.notifyBalanceUpdate(pairToken, feeAccount);
+        // }
+
+        // Mark as cancelled/closed
+        setOrderIsOpen(orderHash, false);
         emit CancelOrder(orderHash);
     }
 
-    // function matchOrders(bytes32 buyOrderHash, bytes32 sellOrderHash) public onlyAllowedUsers {
+    function checkIfOrderIsCancellable(bytes32 orderHash) private {
+        require(getOrderExists(orderHash), "ERR_NOT_FOUND");
+
+        require(getOrderOwner(orderHash) == msg.sender, "ERR_NOT_OWNER");
+
+        require(getOrderIsOpen(orderHash), "ERR_CLOSED_ORDER");
+    }
+
+    function getCancellationData(bytes32 orderHash) private returns (uint256, uint256) {
+        uint256 volume = getOrderVolume(orderHash);
+        uint256 volumeFilled = getOrderFilledVolume(orderHash);
+        uint256 volumeLeft = volume - volumeFilled;
+        require(volumeLeft > 0, "ERR_FILLED_ORDER");
+
+        uint256 fee = FeeHelpers.calculateCancelFee(dataStoreContract, volumeLeft);
+        uint256 volumeNoFee = volumeLeft.sub(fee);
+
+        return (volumeNoFee, fee);
+    }
+
+    function matchOrders(bytes32 buyOrderHash, bytes32 sellOrderHash) public onlyAllowedUsers {
         // OrderbookHelpers.matchOrders(dataStoreContract, exchangeContract, buyOrderHash, sellOrderHash);
-    // }
+    }
 
     uint8 constant ORDER_PREFIX = 0xA0;
     uint8 constant ORDER_OWNER_KEY = 0xA1;

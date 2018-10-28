@@ -16,5 +16,6 @@
         "0x991e501e6fbe1efc2e37ce938f6a39267851231a",
         "0xcba46a07b311a87cefd88a382345037bed7b30e3",
         "0xb663baefe3d58c7879432a9378173dab3c9cbf8c"
-    ]
+    ],
+    "feeAccount": "0x5b6adeb406172a4f6d408e331494dddc2894326d"
 }

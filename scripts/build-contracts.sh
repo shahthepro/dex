@@ -9,7 +9,10 @@ solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize HomeBridge.sol --combine
 
 solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 DataStore.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/DataStore.json
 solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 DEXChain.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/DEXChain.json
-solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 Orderbook.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/Orderbook.json
+# solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 Orderbook.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/Orderbook.json
 solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 FeeContract.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/FeeContract.json
+solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 OrdersDB.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/OrdersDB.json
+solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 NewOrderContract.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/NewOrderContract.json
+solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 CancelOrderContract.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/CancelOrderContract.json
 # rm -rf $DEX_DAPP_LIB_DEST_DIR
 )
