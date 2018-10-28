@@ -60,9 +60,11 @@ contract CancelOrderContract {
 
         uint256 fee = feeContract.calculateCancelFee(amount);
         address feeAccount = feeContract.getFeeAccount();
+
+        uint256 volumeNoFee = (amount.mul(1 ether - fee)) / 1 ether;
         
-        chain.recoverFromEscrow(token, msg.sender, amount.sub(fee));
-        chain.releaseEscrow(token, msg.sender, feeAccount, fee);
+        chain.recoverFromEscrow(token, msg.sender, volumeNoFee);
+        chain.releaseEscrow(token, msg.sender, feeAccount, amount.sub(volumeNoFee));
         chain.notifyBalanceUpdate(token, msg.sender);
         chain.notifyBalanceUpdate(token, feeAccount);
     }

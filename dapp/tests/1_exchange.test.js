@@ -156,15 +156,16 @@ describe('Deposits', () => {
 		let feeBalanceAfterCancel = await DEXChain.methods.balanceOf(TEST_VALUES.token2, networksConfig.feeAccount).call()
 		feeBalanceAfterCancel = new BN(feeBalanceAfterCancel, 10)
 
-		let volumeOfOrder = escrowBeforeCancel.sub(escrowAfterCancel)
-		let fee = feeBalanceAfterCancel.sub(feeBalanceBeforeCancel)
-		let returnedToAccount = balanceAfterCancel.sub(balanceBeforeCancel)
+		// let volumeOfOrder = escrowBeforeCancel.sub(escrowAfterCancel)
+		// let fee = feeBalanceAfterCancel.sub(feeBalanceBeforeCancel)
+		// let returnedToAccount = balanceAfterCancel.sub(balanceBeforeCancel)
 
-		console.log(balanceBeforeCancel.toString(), escrowBeforeCancel.toString(), feeBalanceBeforeCancel.toString())
-		console.log(balanceAfterCancel.toString(), escrowAfterCancel.toString(), feeBalanceAfterCancel.toString())
+		// console.log(balanceBeforeCancel.toString(), escrowBeforeCancel.toString(), feeBalanceBeforeCancel.toString())
+		// console.log(balanceAfterCancel.toString(), escrowAfterCancel.toString(), feeBalanceAfterCancel.toString())
 
-		console.log(volumeOfOrder.toString(), returnedToAccount.toString(), fee.toString())
-		// expect(returnedToAccount.add(fee).toString()).toBe(volumeOfOrder.toString())
+		// console.log(volumeOfOrder.toString(), returnedToAccount.toString(), fee.toString())
+		// // expect(returnedToAccount.add(fee).toString()).toBe(volumeOfOrder.toString())
+		expect(balanceBeforeCancel.add(escrowBeforeCancel).add(feeBalanceBeforeCancel).sub(balanceAfterCancel).sub(escrowAfterCancel).sub(feeBalanceAfterCancel).toNumber()).toBe(0)
 
 		done()
 	})
