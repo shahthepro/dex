@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "test-contracts": "gulp deploy-contracts && jest",
     "test": "jest"
   },
   "author": "Shahul Hameed",

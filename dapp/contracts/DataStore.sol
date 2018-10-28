@@ -1,8 +1,8 @@
 pragma solidity ^0.4.3;
 
 // import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./DEXContract.sol";
-// import "./../interfaces/IDataStore.sol";
+import "./core/DEXContract.sol";
+// import "./interfaces/IDataStore.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract DataStore is DEXContract {

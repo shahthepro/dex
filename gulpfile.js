@@ -213,7 +213,7 @@ gulp.task('deploy-exchange-contracts', async (done) => {
 
     console.log(`\n\nDeploying DataStore...`)
     let DataStoreContractSource = JSON.parse(fs.readFileSync('dapp/build/DataStore.json'));
-    let DataStoreJSON = DataStoreContractSource.contracts['core/DataStore.sol:DataStore']; 
+    let DataStoreJSON = DataStoreContractSource.contracts['DataStore.sol:DataStore']; 
     let DataStoreABI = JSON.parse(DataStoreJSON.abi);
     writeJSONFile(getABIPath(DATASTORE_CONTRACT_NAME), DataStoreABI);
     let DataStore = await deployContract({ web3, contractJSON: DataStoreJSON, txOpts});
@@ -246,35 +246,14 @@ gulp.task('deploy-exchange-contracts', async (done) => {
     })
     console.log(`DEXChain deployed at ${DEXChain.options.address}`);
 
-    let OrderbookContractSource = JSON.parse(fs.readFileSync('dapp/build/Orderbook.json'));
+    let FeeContractContractSource = JSON.parse(fs.readFileSync('dapp/build/FeeContract.json'));
     console.log(`\n\nDeploying FeeHelpers...`)
-    let FeeHelpersJSON = OrderbookContractSource.contracts['lib/FeeHelpers.sol:FeeHelpers']; 
+    let FeeHelpersJSON = FeeContractContractSource.contracts['lib/FeeHelpers.sol:FeeHelpers']; 
     // let FeeHelpersABI = JSON.parse(FeeHelpersJSON.abi);
     let FeeHelpers = await deployContract({ web3, contractJSON: FeeHelpersJSON, txOpts });
     console.log(`FeeHelpers deployed at ${FeeHelpers.options.address}`);
 
-    console.log(`\n\nDeploying OrderHelpers...`)
-    let OrderHelpersJSON = OrderbookContractSource.contracts['lib/OrderHelpers.sol:OrderHelpers']; 
-    // let OrderHelpersABI = JSON.parse(OrderHelpersJSON.abi);
-    let OrderHelpers = await deployContract({ web3, contractJSON: OrderHelpersJSON, txOpts });
-    console.log(`OrderHelpers deployed at ${OrderHelpers.options.address}`);
-
-    console.log(`\n\nDeploying OrderbookHelpers...`)
-    let OrderbookHelpersJSON = OrderbookContractSource.contracts['lib/OrderbookHelpers.sol:OrderbookHelpers']; 
-    // let OrderbookHelpersABI = JSON.parse(OrderbookHelpersJSON.abi);
-    let OrderbookHelpers = await deployContract({
-        web3,
-        contractJSON: OrderbookHelpersJSON,
-        txOpts,
-        libraries: {
-            'lib/FeeHelpers.sol': FeeHelpers.options.address,
-            'lib/OrderHelpers.sol': OrderHelpers.options.address,
-        }
-    });
-    console.log(`OrderbookHelpers deployed at ${OrderbookHelpers.options.address}`);
-    
     console.log(`\n\nDeploying FeeContract...`)
-    let FeeContractContractSource = JSON.parse(fs.readFileSync('dapp/build/FeeContract.json'));
     let FeeContractJSON = FeeContractContractSource.contracts['FeeContract.sol:FeeContract']; 
     let FeeContractABI = JSON.parse(FeeContractJSON.abi);
     writeJSONFile(getABIPath(FEE_CONTRACT_NAME), FeeContractABI);
@@ -295,6 +274,27 @@ gulp.task('deploy-exchange-contracts', async (done) => {
         }
     })
     console.log(`FeeContract deployed at ${FeeContract.options.address}`);
+
+    let OrderbookContractSource = JSON.parse(fs.readFileSync('dapp/build/Orderbook.json'));
+    // console.log(`\n\nDeploying OrderHelpers...`)
+    // let OrderHelpersJSON = OrderbookContractSource.contracts['lib/OrderHelpers.sol:OrderHelpers']; 
+    // // let OrderHelpersABI = JSON.parse(OrderHelpersJSON.abi);
+    // let OrderHelpers = await deployContract({ web3, contractJSON: OrderHelpersJSON, txOpts });
+    // console.log(`OrderHelpers deployed at ${OrderHelpers.options.address}`);
+
+    // console.log(`\n\nDeploying OrderbookHelpers...`)
+    // let OrderbookHelpersJSON = OrderbookContractSource.contracts['lib/OrderbookHelpers.sol:OrderbookHelpers']; 
+    // // let OrderbookHelpersABI = JSON.parse(OrderbookHelpersJSON.abi);
+    // let OrderbookHelpers = await deployContract({
+    //     web3,
+    //     contractJSON: OrderbookHelpersJSON,
+    //     txOpts,
+    //     libraries: {
+    //         // 'lib/FeeHelpers.sol': FeeHelpers.options.address,
+    //         'lib/OrderHelpers.sol': OrderHelpers.options.address,
+    //     }
+    // });
+    // console.log(`OrderbookHelpers deployed at ${OrderbookHelpers.options.address}`);
     
     console.log(`\n\nDeploying Orderbook...`)
     let OrderbookJSON = OrderbookContractSource.contracts['Orderbook.sol:Orderbook']; 
@@ -307,8 +307,8 @@ gulp.task('deploy-exchange-contracts', async (done) => {
         txOpts,
         libraries: {
             'lib/FeeHelpers.sol': FeeHelpers.options.address,
-            'lib/OrderHelpers.sol': OrderHelpers.options.address,
-            'lib/OrderbookHelpers.sol': OrderbookHelpers.options.address,
+            // 'lib/OrderHelpers.sol': OrderHelpers.options.address,
+            // 'lib/OrderbookHelpers.sol': OrderbookHelpers.options.address,
         }
     });
     appendToConfigFile({
@@ -382,6 +382,7 @@ function deployContract({ web3, contractJSON, args, txOpts, libraries }) {
 
     if (libraries) {
         for (let libName in libraries) {
+            console.log(libName, libraries[libName])
             code = code.replace(new RegExp("_*" + libName + ".*_*", "g"), libraries[libName].slice(2));
         }
     }
@@ -413,52 +414,6 @@ function deployContract({ web3, contractJSON, args, txOpts, libraries }) {
         // .on('confirmation', function(confirmationNumber, receipt){
         //     console.log(`Contract creation confirmed...`);
         // })
-        .then(function (newContractInstance) {
-            resolve(newContractInstance);
-        })
-        .catch(function (err) {
-            reject(err);
-        });
-    });
-    
-}
-
-function deployContractEstimate({ web3, contractJSON, args, opts, libraries }) {
-    // ABI description as JSON structure
-    let abi = JSON.parse(contractJSON.abi);
-
-    // Smart contract EVM bytecode as hex
-    let code = '0x' + contractJSON.bin;
-
-    console.log(code);
-
-    // Create Contract proxy class
-    let MyContract = new web3.eth.Contract(abi);
-
-    opts = Object.assign({}, {
-        gas: '18446744073709551',
-        // gas: '5000000000000000',
-        gasPrice: 0
-    }, opts)
-
-    return new Promise(function (resolve, reject) {
-        MyContract.deploy({
-            data: code,
-            arguments: args
-        })
-        .estimateGas(opts)
-        // .on('error', function (error) {
-        //     reject(error);
-        // })
-        // .on('transactionHash', function (transactionHash) {
-        //     console.log(`Got transaction hash: ${transactionHash}`);
-        // })
-        // .on('receipt', function (receipt) {
-        //     console.log(`Deployed at ${receipt.contractAddress}. Waiting for confirmation...`);
-        // })
-        // // .on('confirmation', function(confirmationNumber, receipt){
-        // //     console.log(`Contract creation confirmed...`);
-        // // })
         .then(function (newContractInstance) {
             resolve(newContractInstance);
         })

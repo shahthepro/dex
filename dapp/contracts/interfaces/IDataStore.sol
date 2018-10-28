@@ -1,53 +1,53 @@
 pragma solidity ^0.4.3;
 
 interface IDataStore {
-    function getUIntValue(bytes32 record) public view returns(uint);
+    function getUIntValue(bytes32 record) external view returns(uint);
 
-    function setUIntValue(bytes32 record, uint value) public;
+    function setUIntValue(bytes32 record, uint value) external;
 
-    function deleteUIntValue(bytes32 record) public;
+    function deleteUIntValue(bytes32 record) external;
 
-    function addUIntValue(bytes32 record, uint value) public;
+    function addUIntValue(bytes32 record, uint value) external;
 
-    function subUIntValue(bytes32 record, uint value) public;
+    function subUIntValue(bytes32 record, uint value) external;
 
-    function getStringValue(bytes32 record) public view returns(string);
+    function getStringValue(bytes32 record) external view returns(string);
 
-    function setStringValue(bytes32 record, string value) public;
+    function setStringValue(bytes32 record, string value) external;
 
-    function deleteStringValue(bytes32 record) public;
+    function deleteStringValue(bytes32 record) external;
 
-    function getAddressValue(bytes32 record) public view returns(address);
+    function getAddressValue(bytes32 record) external view returns(address);
 
-    function setAddressValue(bytes32 record, address value) public;
+    function setAddressValue(bytes32 record, address value) external;
 
-    function deleteAddressValue(bytes32 record) public;
+    function deleteAddressValue(bytes32 record) external;
 
-    function getBytesValue(bytes32 record) public view returns(bytes);
+    function getBytesValue(bytes32 record) external view returns(bytes);
 
-    function setBytesValue(bytes32 record, bytes value) public;
+    function setBytesValue(bytes32 record, bytes value) external;
 
-    function deleteBytesValue(bytes32 record) public;
+    function deleteBytesValue(bytes32 record) external;
 
-    function getBooleanValue(bytes32 record) public view returns(bool);
+    function getBooleanValue(bytes32 record) external view returns(bool);
 
-    function setBooleanValue(bytes32 record, bool value) public;
+    function setBooleanValue(bytes32 record, bool value) external;
 
-    function deleteBooleanValue(bytes32 record) public;
+    function deleteBooleanValue(bytes32 record) external;
 
-    function getIntValue(bytes32 record) public view returns(int);
+    function getIntValue(bytes32 record) external view returns(int);
 
-    function setIntValue(bytes32 record, int value) public;
+    function setIntValue(bytes32 record, int value) external;
 
-    function deleteIntValue(bytes32 record) public;
+    function deleteIntValue(bytes32 record) external;
 
-    function getTokenValue(address token, address owner, uint16 vault) public view returns(uint);
+    function getTokenValue(address token, address owner, uint16 vault) external view returns(uint);
 
-    function setTokenValue(address token, address owner, uint16 vault, uint value) public;
+    function setTokenValue(address token, address owner, uint16 vault, uint value) external;
 
-    function deleteTokenValue(address token, address owner, uint16 vault) public;
+    function deleteTokenValue(address token, address owner, uint16 vault) external;
 
-    function addTokenValue(address token, address owner, uint16 vault, uint value) public;
+    function addTokenValue(address token, address owner, uint16 vault, uint value) external;
 
-    function subTokenValue(address token, address owner, uint16 vault, uint value) public;
+    function subTokenValue(address token, address owner, uint16 vault, uint value) external;
 }
