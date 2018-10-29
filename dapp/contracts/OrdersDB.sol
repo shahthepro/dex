@@ -28,6 +28,7 @@ contract OrdersDB is DEXContract {
     uint8 constant ORDER_IS_BID_KEY = 0xA8;
     uint8 constant ORDER_EXISTS_KEY = 0xA9;
     uint8 constant ORDER_OPEN_KEY = 0xAA;
+    uint8 constant ORDER_TIMESTAMP_KEY = 0xAB;
 
     function getOrderExists(bytes32 orderHash) public view returns (bool) {
         IDataStore ds = IDataStore(dataStoreContract);
@@ -37,6 +38,16 @@ contract OrdersDB is DEXContract {
     function setOrderExists(bytes32 orderHash, bool value) public onlyAllowedContracts {
         IDataStore ds = IDataStore(dataStoreContract);
         ds.setBooleanValue(keccak256(abi.encodePacked(ORDER_PREFIX, orderHash, ORDER_EXISTS_KEY)), value);
+    }
+
+    function getOrderTimestamp(bytes32 orderHash) public view returns (uint256) {
+        IDataStore ds = IDataStore(dataStoreContract);
+        return ds.getUIntValue(keccak256(abi.encodePacked(ORDER_PREFIX, orderHash, ORDER_TIMESTAMP_KEY)));
+    }
+
+    function setOrderTimestamp(bytes32 orderHash, uint256 value) public onlyAllowedContracts {
+        IDataStore ds = IDataStore(dataStoreContract);
+        ds.setUIntValue(keccak256(abi.encodePacked(ORDER_PREFIX, orderHash, ORDER_TIMESTAMP_KEY)), value);
     }
 
     function getOrderIsBid(bytes32 orderHash) public view returns (bool) {

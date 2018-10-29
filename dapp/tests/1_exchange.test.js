@@ -7,6 +7,7 @@ let DEXChainABI = require('./../../_tmp/DEXChain.json');
 // let OrderbookABI = require('./../../_tmp/Orderbook.json');
 // let NewOrderContractABI = require('./../../_tmp/NewOrderContract.json');
 let CancelOrderContractABI = require('./../../_tmp/CancelOrderContract.json');
+let OrderMatchContractABI = require('./../../_tmp/OrderMatchContract.json');
 
 let BN = require('bn.js')
 
@@ -20,6 +21,7 @@ let DEXChain = new web3.eth.Contract(DEXChainABI, contractsConfig.exchange.addre
 // let Orderbook = new web3.eth.Contract(OrderbookABI, contractsConfig.orderbook.address)
 // let NewOrderContract = new web3.eth.Contract(NewOrderContractABI, contractsConfig.neworder.address)
 let CancelOrderContract = new web3.eth.Contract(CancelOrderContractABI, contractsConfig.cancelorder.address)
+let OrderMatchContract = new web3.eth.Contract(OrderMatchContractABI, contractsConfig.ordermatch.address)
 
 let TEST_VALUES = {
     token1: "0x2222233333444445555566666777778888899999",
@@ -209,7 +211,7 @@ function signDepositTx(tokenAddress, targetAccount, balanceToDep, depositTransac
 function getAccounts() {
 	return new Promise((resolve, reject) => {
 		if (accounts != null) {
-			resolve(accounts);
+			resolve(accounts)
 		} else {
 			web3.eth.getAccounts(function (err, accounts_) {
 				if (err) {

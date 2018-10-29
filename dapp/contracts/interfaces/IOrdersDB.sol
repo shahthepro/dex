@@ -5,6 +5,10 @@ interface IOrdersDB {
     function getOrderExists(bytes32 orderHash) external view returns (bool);
 
     function setOrderExists(bytes32 orderHash, bool value) external;
+	
+    function getOrderTimestamp(bytes32 orderHash) external view returns (uint256);
+
+    function setOrderTimestamp(bytes32 orderHash, uint256 value) external;
 
     function getOrderIsBid(bytes32 orderHash) external view returns (bool);
 

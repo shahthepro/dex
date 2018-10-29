@@ -66,14 +66,17 @@ contract OrderMatchContract is DEXContract {
         address token, address base, 
         address taker, address maker,
         uint256 takeFee, uint256 makeFee,
-        uint256 volumeToTrade,
-        address feeAccount) private {
+        uint256 volumeToTrade, address feeAccount
+	) private {
+
+        uint256 noFeeMakeVolume = volumeToTrade.sub(makeFee);
+        uint256 noFeeTakeVolume = volumeToTrade.sub(takeFee);
 
         IDEXChain chain = IDEXChain(exchangeContract);
-        chain.releaseEscrow(base, taker, maker, volumeToTrade.mul(1 ether - makeFee) / 1 ether);
-        chain.releaseEscrow(base, taker, feeAccount, makeFee);
-        chain.releaseEscrow(token, maker, taker, volumeToTrade.mul(1 ether - takeFee) / 1 ether);
-        chain.releaseEscrow(token, maker, feeAccount, takeFee);
+        chain.releaseEscrow(base, taker, maker, noFeeMakeVolume);
+        chain.releaseEscrow(base, taker, feeAccount, volumeToTrade.sub(noFeeMakeVolume));
+        chain.releaseEscrow(token, maker, taker, noFeeTakeVolume);
+        chain.releaseEscrow(token, maker, feeAccount, volumeToTrade.sub(noFeeTakeVolume));
 
         chain.notifyBalanceUpdate(base, taker);
         chain.notifyBalanceUpdate(base, maker);

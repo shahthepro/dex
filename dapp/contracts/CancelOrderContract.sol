@@ -73,6 +73,7 @@ contract CancelOrderContract {
         ordersDB.setOrderQuantity(orderHash, quantity);
         ordersDB.setOrderIsBid(orderHash, is_bid);
         ordersDB.setOrderIsOpen(orderHash, true);
+        ordersDB.setOrderTimestamp(orderHash, now);
 
         IDEXChain chain = IDEXChain(exchangeContract);
         if (is_bid) {
@@ -97,10 +98,17 @@ contract CancelOrderContract {
         require(volumeLeft > 0, "ERR_FILLED_ORDER");
 
 
+        IFeeContract feeContract = IFeeContract(feeContractAddress);
+        uint256 fee = 0;
+        if (now - ordersDB.getOrderTimestamp(orderHash) > 14 days) {
+            fee = feeContract.calculateCancelFee(volumeLeft);
+        }
+        address feeAccount = feeContract.getFeeAccount();
+
         if (ordersDB.getOrderIsBid(orderHash)) {
-            transferFundsAfterCancel(ordersDB.getOrderBase(orderHash), volumeLeft);
+            transferFundsAfterCancel(ordersDB.getOrderBase(orderHash), volumeLeft, fee, feeAccount);
         } else {
-            transferFundsAfterCancel(ordersDB.getOrderToken(orderHash), volumeLeft);
+            transferFundsAfterCancel(ordersDB.getOrderToken(orderHash), volumeLeft, fee, feeAccount);
         }
 
         // Mark as cancelled/closed
@@ -118,91 +126,14 @@ contract CancelOrderContract {
         require(ordersDB.getOrderIsOpen(orderHash), "ERR_CLOSED_ORDER");
     }
 
-    function transferFundsAfterCancel(address token, uint256 amount) private {
-        IFeeContract feeContract = IFeeContract(feeContractAddress);
+    function transferFundsAfterCancel(address token, uint256 amount, uint256 fee, address feeAccount) private {
         IDEXChain chain = IDEXChain(exchangeContract);
 
-        uint256 fee = feeContract.calculateCancelFee(amount);
-        address feeAccount = feeContract.getFeeAccount();
-
-        uint256 volumeNoFee = (amount.mul(1 ether - fee)) / 1 ether;
+        uint256 volumeNoFee = amount.sub(fee);
         
         chain.recoverFromEscrow(token, msg.sender, volumeNoFee);
         chain.releaseEscrow(token, msg.sender, feeAccount, amount.sub(volumeNoFee));
         chain.notifyBalanceUpdate(token, msg.sender);
         chain.notifyBalanceUpdate(token, feeAccount);
     }
-
-    // function ensureOrdersMatch(bytes32 buyOrderHash, bytes32 sellOrderHash) private view {
-    //     IOrdersDB ordersDB = IOrdersDB(ordersDBContract);
-
-    //     require(ordersDB.getOrderExists(buyOrderHash), "ERR_ORDER_MISSING");
-    //     require(ordersDB.getOrderExists(sellOrderHash), "ERR_ORDER_MISSING");
-
-    //     require(ordersDB.getOrderIsOpen(buyOrderHash), "ERR_ORDER_CLOSED");
-    //     require(ordersDB.getOrderIsOpen(sellOrderHash), "ERR_ORDER_CLOSED");
-
-    //     require(ordersDB.getOrderIsBid(buyOrderHash), "ERR_INVALID_ORDER");
-    //     require(!ordersDB.getOrderIsBid(sellOrderHash), "ERR_INVALID_ORDER");
-
-    //     require(ordersDB.getOrderBase(buyOrderHash) == ordersDB.getOrderBase(sellOrderHash), "ERR_ORDER_MISMATCH");
-    //     require(ordersDB.getOrderToken(buyOrderHash) == ordersDB.getOrderToken(sellOrderHash), "ERR_ORDER_MISMATCH");
-    //     require(ordersDB.getOrderPrice(buyOrderHash) == ordersDB.getOrderPrice(sellOrderHash), "ERR_ORDER_MISMATCH");
-    // }
-
-    // // Matches buy and sell orders
-    // function matchOrders(bytes32 buyOrderHash, bytes32 sellOrderHash) public {
-    //     ensureOrdersMatch(buyOrderHash, sellOrderHash);
-        
-    //     IOrdersDB ordersDB = IOrdersDB(ordersDBContract);
-    //     IFeeContract feeContract = IFeeContract(feeContractAddress);
-
-    //     uint256 volumeToTrade = getTradeableOrderVolume(
-    //         ordersDB.getOrderAvailableVolume(buyOrderHash), 
-    //         ordersDB.getOrderAvailableVolume(sellOrderHash));
-        
-    //     address token = ordersDB.getOrderToken(buyOrderHash);
-    //     address base = ordersDB.getOrderBase(buyOrderHash);
-    //     address taker = ordersDB.getOrderOwner(buyOrderHash);
-    //     address maker = ordersDB.getOrderOwner(sellOrderHash);
-
-    //     uint256 takeFee = feeContract.calculateTakeFee(volumeToTrade);
-    //     uint256 makeFee = feeContract.calculateMakeFee(volumeToTrade);
-
-    //     address feeAccount = feeContract.getFeeAccount();
-
-    //     tradeFunds(token, base, taker, maker, takeFee, makeFee, volumeToTrade, feeAccount);
-    // }
-
-    // function tradeFunds(
-    //     address token, address base, 
-    //     address taker, address maker,
-    //     uint256 takeFee, uint256 makeFee,
-    //     uint256 volumeToTrade,
-    //     address feeAccount) private {
-
-    //     IDEXChain chain = IDEXChain(exchangeContract);
-    //     chain.releaseEscrow(base, taker, maker, volumeToTrade.sub(makeFee));
-    //     chain.releaseEscrow(base, taker, feeAccount, makeFee);
-    //     chain.releaseEscrow(token, maker, taker, volumeToTrade.sub(takeFee));
-    //     chain.releaseEscrow(token, maker, feeAccount, takeFee);
-
-    //     chain.notifyBalanceUpdate(base, taker);
-    //     chain.notifyBalanceUpdate(base, maker);
-    //     chain.notifyBalanceUpdate(base, feeAccount);
-    //     chain.notifyBalanceUpdate(token, taker);
-    //     chain.notifyBalanceUpdate(token, maker);
-    //     chain.notifyBalanceUpdate(token, feeAccount);
-    // }
-
-    // function getTradeableOrderVolume(uint256 takeVolume, uint256 makeVolume) private pure returns (uint256) {
-    //     require(takeVolume > 0 && makeVolume > 0, "ERR_INVALID_ORDER");
-        
-    //     if (takeVolume <= makeVolume) {
-    //         return takeVolume;
-    //     }
-
-    //     return makeVolume;
-    // }
-
 }
