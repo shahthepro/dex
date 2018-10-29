@@ -14,5 +14,6 @@ solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 FeeCon
 solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 OrdersDB.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/OrdersDB.json
 solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 NewOrderContract.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/NewOrderContract.json
 solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 CancelOrderContract.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/CancelOrderContract.json
+solc openzeppelin-solidity=$DEX_DAPP_LIB_DIR --optimize --optimize-runs 1 OrderMatchContract.sol --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc > $DEX_DAPP_BUILD_DIR/OrderMatchContract.json
 # rm -rf $DEX_DAPP_LIB_DEST_DIR
 )

@@ -94,7 +94,7 @@ describe('Deposits', () => {
 		accounts = await getAccounts()
 
 		let price = 100;
-		let quantity = 1234;
+		let quantity = 123456789;
 
 		let volume = new BN((price * quantity).toString(), 10)
 
@@ -160,8 +160,8 @@ describe('Deposits', () => {
 		// let fee = feeBalanceAfterCancel.sub(feeBalanceBeforeCancel)
 		// let returnedToAccount = balanceAfterCancel.sub(balanceBeforeCancel)
 
-		// console.log(balanceBeforeCancel.toString(), escrowBeforeCancel.toString(), feeBalanceBeforeCancel.toString())
-		// console.log(balanceAfterCancel.toString(), escrowAfterCancel.toString(), feeBalanceAfterCancel.toString())
+		console.log(balanceBeforeCancel.toString(), escrowBeforeCancel.toString(), feeBalanceBeforeCancel.toString())
+		console.log(balanceAfterCancel.toString(), escrowAfterCancel.toString(), feeBalanceAfterCancel.toString())
 
 		// console.log(volumeOfOrder.toString(), returnedToAccount.toString(), fee.toString())
 		// // expect(returnedToAccount.add(fee).toString()).toBe(volumeOfOrder.toString())

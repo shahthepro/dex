@@ -2,7 +2,7 @@ pragma solidity ^0.4.3;
 
 import "openzeppelin-solidity/contracts/AddressUtils.sol";
 
-contract DEXContract { // is Ownable
+contract DEXContract {
     address public admin;
     mapping(address => bool) public allowedContracts;
     mapping(address => bool) public allowedUsers;

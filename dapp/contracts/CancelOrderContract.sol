@@ -14,13 +14,11 @@ contract CancelOrderContract {
 
     address public ordersDBContract;
     address public exchangeContract;
-    address public dataStoreContract;
     address public feeContractAddress;
 
-    constructor (address ordersDB_, address dataStore_, address exchange_, address fee_) public {
+    constructor (address ordersDB_, address exchange_, address fee_) public {
         ordersDBContract = ordersDB_;
         exchangeContract = exchange_;
-        dataStoreContract = dataStore_;
         feeContractAddress = fee_;
     }
 

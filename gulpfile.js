@@ -16,6 +16,7 @@ const FEE_CONTRACT_NAME = 'FeeContract';
 const ORDERSDB_CONTRACT_NAME = 'OrdersDB';
 const NEWORDER_CONTRACT_NAME = 'NewOrderContract';
 const CANCELORDER_CONTRACT_NAME = 'CancelOrderContract';
+const ORDERMATCH_CONTRACT_NAME = 'OrderMatchContract';
 
 const GENERATED_CONFIG_FILE_NAME = 'contracts.g';
 const NETWORKS_CONFIG_FILE_NAME = 'network';
@@ -374,7 +375,7 @@ gulp.task('deploy-exchange-contracts', async (done) => {
     let CancelOrderContract = await deployContract({
         web3, 
         contractJSON: CancelOrderContractJSON, 
-        args: [OrdersDB.options.address, DataStore.options.address, DEXChain.options.address, FeeContract.options.address], 
+        args: [OrdersDB.options.address, DEXChain.options.address, FeeContract.options.address], 
         txOpts
     });
     appendToConfigFile({
@@ -385,6 +386,26 @@ gulp.task('deploy-exchange-contracts', async (done) => {
         }
     })
     console.log(`CancelOrderContract deployed at ${CancelOrderContract.options.address}`);
+    
+    let OrderMatchContractContractSource = JSON.parse(fs.readFileSync('dapp/build/OrderMatchContract.json'));
+    console.log(`\n\nDeploying OrderMatchContract...`)
+    let OrderMatchContractJSON = OrderMatchContractContractSource.contracts['OrderMatchContract.sol:OrderMatchContract']; 
+    let OrderMatchContractABI = JSON.parse(OrderMatchContractJSON.abi);
+    writeJSONFile(getABIPath(ORDERMATCH_CONTRACT_NAME), OrderMatchContractABI);
+    let OrderMatchContract = await deployContract({
+        web3, 
+        contractJSON: OrderMatchContractJSON, 
+        args: [OrdersDB.options.address, DEXChain.options.address, FeeContract.options.address], 
+        txOpts
+    });
+    appendToConfigFile({
+        ordermatch: {
+            network: networkID,
+            address: OrderMatchContract.options.address,
+            topics: getAllTopicsFromABI(OrderMatchContractABI)
+        }
+    })
+    console.log(`OrderMatchContract deployed at ${OrderMatchContract.options.address}`);
 
     console.log("\n\n\nWhitelisting DEXChain contract for DataStore...")
     await DataStore.methods.whitelistContract(DEXChain.options.address).send(txOpts)
