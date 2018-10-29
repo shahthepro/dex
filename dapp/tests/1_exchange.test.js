@@ -5,7 +5,7 @@ let contractsConfig = require('./../../configs/contracts.g.json');
 let DataStoreABI = require('./../../_tmp/DataStore.json');
 let DEXChainABI = require('./../../_tmp/DEXChain.json');
 // let OrderbookABI = require('./../../_tmp/Orderbook.json');
-let NewOrderContractABI = require('./../../_tmp/NewOrderContract.json');
+// let NewOrderContractABI = require('./../../_tmp/NewOrderContract.json');
 let CancelOrderContractABI = require('./../../_tmp/CancelOrderContract.json');
 
 let BN = require('bn.js')
@@ -18,7 +18,7 @@ let accounts;
 let DataStore = new web3.eth.Contract(DataStoreABI, contractsConfig.datastore.address)
 let DEXChain = new web3.eth.Contract(DEXChainABI, contractsConfig.exchange.address)
 // let Orderbook = new web3.eth.Contract(OrderbookABI, contractsConfig.orderbook.address)
-let NewOrderContract = new web3.eth.Contract(NewOrderContractABI, contractsConfig.neworder.address)
+// let NewOrderContract = new web3.eth.Contract(NewOrderContractABI, contractsConfig.neworder.address)
 let CancelOrderContract = new web3.eth.Contract(CancelOrderContractABI, contractsConfig.cancelorder.address)
 
 let TEST_VALUES = {
@@ -103,7 +103,7 @@ describe('Deposits', () => {
 		let escrowBeforeOrder = await DEXChain.methods.escrowBalanceOf(TEST_VALUES.token2, accounts[3]).call()
 		escrowBeforeOrder = new BN(escrowBeforeOrder, 10)
 
-		let r = await NewOrderContract.methods.placeOrder(TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, true, Date.now()).send({
+		let r = await CancelOrderContract.methods.placeOrder(TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, true, Date.now()).send({
 			from: accounts[3],
 			gasPrice: 0,
 			gas: '100000000'
