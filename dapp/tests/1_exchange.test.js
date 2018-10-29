@@ -59,17 +59,7 @@ describe('Deposits', () => {
 	test(`should deposit token 1 to account 1`, async (done) => {
 		accounts = await getAccounts()
 		
-		let beforeDeposit = await DEXChain.methods.balanceOf(TEST_VALUES.token1, accounts[2]).call()
-		beforeDeposit = new BN(beforeDeposit, 10)
-		
-		let toDep = '987123456789'
-		let hash = TEST_VALUES.hashPrefix + Date.now() + '0';
-		await depositToken(TEST_VALUES.token1, accounts[2], toDep, hash);
-		
-		let afterDeposit = await DEXChain.methods.balanceOf(TEST_VALUES.token1, accounts[2]).call()
-		afterDeposit = new BN(afterDeposit, 10)
-		
-		expect(afterDeposit.sub(beforeDeposit.add(new BN(toDep, 10))).toNumber()).toBe(0)
+		await depositTokens(TEST_VALUES.token1, accounts[2], '987123456789')
 		
 		done()
 	})
@@ -77,17 +67,7 @@ describe('Deposits', () => {
 	test(`should deposit token 2 to account 2`, async (done) => {
 		accounts = await getAccounts()
 		
-		let beforeDeposit = await DEXChain.methods.balanceOf(TEST_VALUES.token2, accounts[3]).call()
-		beforeDeposit = new BN(beforeDeposit, 10)
-		
-		let toDep = '8769871236789'
-		let hash = TEST_VALUES.hashPrefix + Date.now() + '0';
-		await depositToken(TEST_VALUES.token2, accounts[3], toDep, hash);
-		
-		let afterDeposit = await DEXChain.methods.balanceOf(TEST_VALUES.token2, accounts[3]).call()
-		afterDeposit = new BN(afterDeposit, 10)
-		
-		expect(afterDeposit.sub(beforeDeposit.add(new BN(toDep, 10))).toNumber()).toBe(0)
+		await depositTokens(TEST_VALUES.token2, accounts[3], '8769871236789')
 		
 		done()
 	})
@@ -97,34 +77,12 @@ describe('Deposits', () => {
 
 		let price = 100;
 		let quantity = 123456789;
-
-		let volume = new BN((price * quantity).toString(), 10)
-
-		let balanceBeforeOrder = await DEXChain.methods.balanceOf(TEST_VALUES.token2, accounts[3]).call()
-		balanceBeforeOrder = new BN(balanceBeforeOrder, 10)
-		let escrowBeforeOrder = await DEXChain.methods.escrowBalanceOf(TEST_VALUES.token2, accounts[3]).call()
-		escrowBeforeOrder = new BN(escrowBeforeOrder, 10)
-
-		let r = await CancelOrderContract.methods.placeOrder(TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, true, Date.now()).send({
-			from: accounts[3],
-			gasPrice: 0,
-			gas: '100000000'
-		})
-
-		expect(r.status).toBe(true)
-		expect(r.events.hasOwnProperty('PlaceOrder')).toBe(true)
-
-		ORDER_HASHES.push(r.events.PlaceOrder.returnValues.orderHash);
-		console.log(`Created order ${r.events.PlaceOrder.returnValues.orderHash}`);
 		
-		let balanceAfterOrder = await DEXChain.methods.balanceOf(TEST_VALUES.token2, accounts[3]).call()
-		balanceAfterOrder = new BN(balanceAfterOrder, 10)
-		let escrowAfterOrder = await DEXChain.methods.escrowBalanceOf(TEST_VALUES.token2, accounts[3]).call()
-		escrowAfterOrder = new BN(escrowAfterOrder, 10)
+		let orderHash = await placeOrder(accounts[3], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, true)
 
-		expect(balanceAfterOrder.sub(balanceBeforeOrder.sub(volume)).toNumber()).toBe(0)
-		expect(escrowAfterOrder.sub(escrowBeforeOrder.add(volume)).toNumber()).toBe(0)
-
+		ORDER_HASHES.push(orderHash);
+		console.log(`Created order ${orderHash}`);
+		
 		done()
 	})
 
@@ -133,71 +91,26 @@ describe('Deposits', () => {
 
 		accounts = await getAccounts()
 
-		let balanceBeforeCancel = await DEXChain.methods.balanceOf(TEST_VALUES.token2, accounts[3]).call()
-		balanceBeforeCancel = new BN(balanceBeforeCancel, 10)
-		let escrowBeforeCancel = await DEXChain.methods.escrowBalanceOf(TEST_VALUES.token2, accounts[3]).call()
-		escrowBeforeCancel = new BN(escrowBeforeCancel, 10)
-
-		let feeBalanceBeforeCancel = await DEXChain.methods.balanceOf(TEST_VALUES.token2, networksConfig.feeAccount).call()
-		feeBalanceBeforeCancel = new BN(feeBalanceBeforeCancel, 10)
-
-		let r = await CancelOrderContract.methods.cancelOrder(ORDER_HASHES[0]).send({
-			from: accounts[3],
-			gasPrice: 0,
-			gas: '100000000'
-		})
-
-		expect(r.status).toBe(true)
-		expect(r.events.hasOwnProperty('CancelOrder')).toBe(true)
-		
-		let balanceAfterCancel = await DEXChain.methods.balanceOf(TEST_VALUES.token2, accounts[3]).call()
-		balanceAfterCancel = new BN(balanceAfterCancel, 10)
-		let escrowAfterCancel = await DEXChain.methods.escrowBalanceOf(TEST_VALUES.token2, accounts[3]).call()
-		escrowAfterCancel = new BN(escrowAfterCancel, 10)
-
-		let feeBalanceAfterCancel = await DEXChain.methods.balanceOf(TEST_VALUES.token2, networksConfig.feeAccount).call()
-		feeBalanceAfterCancel = new BN(feeBalanceAfterCancel, 10)
-
-		// let volumeOfOrder = escrowBeforeCancel.sub(escrowAfterCancel)
-		// let fee = feeBalanceAfterCancel.sub(feeBalanceBeforeCancel)
-		// let returnedToAccount = balanceAfterCancel.sub(balanceBeforeCancel)
-
-		console.log(balanceBeforeCancel.toString(), escrowBeforeCancel.toString(), feeBalanceBeforeCancel.toString())
-		console.log(balanceAfterCancel.toString(), escrowAfterCancel.toString(), feeBalanceAfterCancel.toString())
-
-		// console.log(volumeOfOrder.toString(), returnedToAccount.toString(), fee.toString())
-		// // expect(returnedToAccount.add(fee).toString()).toBe(volumeOfOrder.toString())
-		expect(balanceBeforeCancel.add(escrowBeforeCancel).add(feeBalanceBeforeCancel).sub(balanceAfterCancel).sub(escrowAfterCancel).sub(feeBalanceAfterCancel).toNumber()).toBe(0)
+		await cancelOrder(accounts[3], TEST_VALUES.token2, ORDER_HASHES[0])
 
 		done()
 	})
 })
 
-// function getAllLogs(blockNumber, contractAddress) {
-// 	return new Promise((resolve, reject) => {
-// 		web3.eth.subscribe('logs', {
-// 			address: contractAddress,
-// 			from: blockNumber,
-// 		}, function (err, result) {
-// 			if (err) {
-// 				reject(err)
-// 				return
-// 			} else {
-// 				resolve(result)
-// 			}
-// 		})
-// 	})
-// }
-
-function delay(timeInMillis) {
-	return new Promise((resolve, reject) => {
-		setTimeout(() => {
-			resolve()
-		}, timeInMillis)
-	})
+async function depositTokens(tokenAddress, toAccount, toDeposit) {
+	let beforeDeposit = await DEXChain.methods.balanceOf(tokenAddress, toAccount).call()
+	beforeDeposit = new BN(beforeDeposit, 10)
+	
+	let hash = TEST_VALUES.hashPrefix + Date.now() + '0';
+	await relayDepositTx(tokenAddress, toAccount, toDeposit, hash);
+	
+	let afterDeposit = await DEXChain.methods.balanceOf(tokenAddress, toAccount).call()
+	afterDeposit = new BN(afterDeposit, 10)
+	
+	expect(afterDeposit.sub(beforeDeposit.add(new BN(toDeposit, 10))).toNumber()).toBe(0)
 }
 
-async function depositToken(tokenAddress, targetAccount, balanceToDep, hash) {
+async function relayDepositTx(tokenAddress, targetAccount, balanceToDep, hash) {
 	await signDepositTx(tokenAddress, targetAccount, balanceToDep, hash, TEST_VALUES.node1Address)
 	await signDepositTx(tokenAddress, targetAccount, balanceToDep, hash, TEST_VALUES.node2Address)
 	await signDepositTx(tokenAddress, targetAccount, balanceToDep, hash, TEST_VALUES.node3Address)
@@ -206,6 +119,75 @@ async function depositToken(tokenAddress, targetAccount, balanceToDep, hash) {
 function signDepositTx(tokenAddress, targetAccount, balanceToDep, depositTransactionHash, authorityAddress) {
 	return DEXChain.methods.deposit(targetAccount, tokenAddress, balanceToDep, depositTransactionHash)
 		.send({ from: authorityAddress, gas: '9876543211234', gasPrice: 0 })
+}
+
+async function placeOrder(fromAddress, tokenAddress, baseAddress, price, quantity, isBid) {
+	let volume = new BN((price * quantity).toString(), 10)
+
+	let tokenToCheckBalance = (isBid) ? baseAddress : tokenAddress
+
+	let balanceBeforeOrder = await DEXChain.methods.balanceOf(tokenToCheckBalance, fromAddress).call()
+	balanceBeforeOrder = new BN(balanceBeforeOrder, 10)
+	let escrowBeforeOrder = await DEXChain.methods.escrowBalanceOf(tokenToCheckBalance, fromAddress).call()
+	escrowBeforeOrder = new BN(escrowBeforeOrder, 10)
+
+	let r = await CancelOrderContract.methods.placeOrder(tokenAddress, baseAddress, price, quantity, isBid, Date.now()).send({
+		from: fromAddress,
+		gasPrice: 0,
+		gas: '100000000'
+	})
+
+	expect(r.status).toBe(true)
+	expect(r.events.hasOwnProperty('PlaceOrder')).toBe(true)
+	
+	let balanceAfterOrder = await DEXChain.methods.balanceOf(tokenToCheckBalance, fromAddress).call()
+	balanceAfterOrder = new BN(balanceAfterOrder, 10)
+	let escrowAfterOrder = await DEXChain.methods.escrowBalanceOf(tokenToCheckBalance, fromAddress).call()
+	escrowAfterOrder = new BN(escrowAfterOrder, 10)
+
+	expect(balanceAfterOrder.sub(balanceBeforeOrder.sub(volume)).toNumber()).toBe(0)
+	expect(escrowAfterOrder.sub(escrowBeforeOrder.add(volume)).toNumber()).toBe(0)
+
+	return r.events.PlaceOrder.returnValues.orderHash
+}
+
+async function cancelOrder(fromAddress, tokenAddress, orderHash) {
+
+	let balanceBeforeCancel = await DEXChain.methods.balanceOf(tokenAddress, fromAddress).call()
+	balanceBeforeCancel = new BN(balanceBeforeCancel, 10)
+	let escrowBeforeCancel = await DEXChain.methods.escrowBalanceOf(tokenAddress, fromAddress).call()
+	escrowBeforeCancel = new BN(escrowBeforeCancel, 10)
+
+	let feeBalanceBeforeCancel = await DEXChain.methods.balanceOf(tokenAddress, networksConfig.feeAccount).call()
+	feeBalanceBeforeCancel = new BN(feeBalanceBeforeCancel, 10)
+
+	let r = await CancelOrderContract.methods.cancelOrder(orderHash).send({
+		from: fromAddress,
+		gasPrice: 0,
+		gas: '100000000'
+	})
+
+	expect(r.status).toBe(true)
+	expect(r.events.hasOwnProperty('CancelOrder')).toBe(true)
+	
+	let balanceAfterCancel = await DEXChain.methods.balanceOf(tokenAddress, fromAddress).call()
+	balanceAfterCancel = new BN(balanceAfterCancel, 10)
+	let escrowAfterCancel = await DEXChain.methods.escrowBalanceOf(tokenAddress, fromAddress).call()
+	escrowAfterCancel = new BN(escrowAfterCancel, 10)
+
+	let feeBalanceAfterCancel = await DEXChain.methods.balanceOf(tokenAddress, networksConfig.feeAccount).call()
+	feeBalanceAfterCancel = new BN(feeBalanceAfterCancel, 10)
+
+	// let volumeOfOrder = escrowBeforeCancel.sub(escrowAfterCancel)
+	// let fee = feeBalanceAfterCancel.sub(feeBalanceBeforeCancel)
+	// let returnedToAccount = balanceAfterCancel.sub(balanceBeforeCancel)
+
+	// console.log(balanceBeforeCancel.toString(), escrowBeforeCancel.toString(), feeBalanceBeforeCancel.toString())
+	// console.log(balanceAfterCancel.toString(), escrowAfterCancel.toString(), feeBalanceAfterCancel.toString())
+
+	// console.log(volumeOfOrder.toString(), returnedToAccount.toString(), fee.toString())
+	// // expect(returnedToAccount.add(fee).toString()).toBe(volumeOfOrder.toString())
+	expect(balanceBeforeCancel.add(escrowBeforeCancel).add(feeBalanceBeforeCancel).sub(balanceAfterCancel).sub(escrowAfterCancel).sub(feeBalanceAfterCancel).toNumber()).toBe(0)
 }
 
 function getAccounts() {

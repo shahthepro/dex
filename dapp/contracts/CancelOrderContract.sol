@@ -9,7 +9,6 @@ contract CancelOrderContract {
     using SafeMath for uint256;
 
     event PlaceOrder(bytes32 orderHash, address token, address base, uint256 price, uint256 quantity, bool is_bid, address owner);
-    event Trade(bytes32 buyOrderHash, bytes32 sellOrderHash, uint256 volume);
     event CancelOrder(bytes32 orderHash);
 
     address public ordersDBContract;
