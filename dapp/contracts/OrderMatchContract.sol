@@ -60,6 +60,8 @@ contract OrderMatchContract is DEXContract {
         address feeAccount = feeContract.getFeeAccount();
 
         tradeFunds(token, base, taker, maker, takeFee, makeFee, volumeToTrade, feeAccount);
+
+        emit Trade(buyOrderHash, sellOrderHash, volumeToTrade);
     }
 
     function tradeFunds(
