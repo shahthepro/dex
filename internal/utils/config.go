@@ -30,15 +30,25 @@ type ContractsInfo struct {
 		Topics  struct {
 			Deposit                    helpers.Hash `json:"Deposit"`
 			Withdraw                   helpers.Hash `json:"Withdraw"`
-			Transfer                   helpers.Hash `json:"Transfer"`
 			DepositConfirmation        helpers.Hash `json:"DepositConfirmation"`
 			WithdrawSignatureSubmitted helpers.Hash `json:"WithdrawSignatureSubmitted"`
 			CollectedSignatures        helpers.Hash `json:"CollectedSignatures"`
-			PlaceOrder                 helpers.Hash `json:"PlaceOrder"`
-			CancelOrder                helpers.Hash `json:"CancelOrder"`
 			BalanceUpdate              helpers.Hash `json:"BalanceUpdate"`
 		} `json:"topics"`
 	} `json:"exchange"`
+	Orderbook struct {
+		Address helpers.Address `json:"address"`
+		Topics  struct {
+			PlaceOrder  helpers.Hash `json:"PlaceOrder"`
+			CancelOrder helpers.Hash `json:"CancelOrder"`
+		} `json:"topics"`
+	} `json:"orderbook"`
+	OrderMatcher struct {
+		Address helpers.Address `json:"address"`
+		Topics  struct {
+			Trade helpers.Hash `json:"Trade"`
+		} `json:"topics"`
+	} `json:"ordermatch"`
 }
 
 func ReadNetworksInfo(filePath string) (*NetworksInfo, error) {

@@ -17,71 +17,86 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"hameid.net/cdex/dex/_abi/Exchange"
-	"hameid.net/cdex/dex/_abi/HomeBridge"
+	"hameid.net/cdex/dex/_abi/DEXChain"
+	"hameid.net/cdex/dex/_abi/OrderMatchContract"
+	"hameid.net/cdex/dex/_abi/Orderbook"
 	"hameid.net/cdex/dex/internal/utils"
 )
 
-type bridgeRef struct {
-	client   *ethclient.Client
-	instance *HomeBridge.HomeBridge
-	abi      *abi.ABI
-}
+// type bridgeRef struct {
+// 	client   *ethclient.Client
+// 	instance *HomeBridge.HomeBridge
+// 	abi      *abi.ABI
+// }
 
 type exchangeRef struct {
-	client   *ethclient.Client
-	instance *Exchange.Exchange
-	abi      *abi.ABI
+	client          *ethclient.Client
+	exchangeABI     *abi.ABI
+	orderbookABI    *abi.ABI
+	ordermatcherABI *abi.ABI
 }
 
 // Relayer struct
 type Relayer struct {
 	networks  *utils.NetworksInfo
 	contracts *utils.ContractsInfo
-	bridge    *bridgeRef
-	exchange  *exchangeRef
-	store     *store.DataStore
+	// bridge    *bridgeRef
+	exchange *exchangeRef
+	store    *store.DataStore
 }
 
 var channelSize = 10000
 
 // Initialize reads and decodes ABIs to be used for communicating with chain
 func (r *Relayer) Initialize() {
-	fmt.Printf("\nConnecting to %s...\n", r.networks.Bridge.WebSocketProvider)
-	homeClient, err := ethclient.Dial(r.networks.Bridge.WebSocketProvider)
-	if err != nil {
-		log.Panic(err)
-	}
-	bridge, err := HomeBridge.NewHomeBridge(r.contracts.Bridge.Address.Address, homeClient)
-	if err != nil {
-		log.Panic(err)
-	}
-	fmt.Printf("Decoding Bridge contract ABI...\n")
-	bridgeABI, err := abi.JSON(strings.NewReader(string(HomeBridge.HomeBridgeABI)))
-	if err != nil {
-		log.Fatal(err)
-	}
-	r.bridge.client = homeClient
-	r.bridge.instance = bridge
-	r.bridge.abi = &bridgeABI
+	// fmt.Printf("\nConnecting to %s...\n", r.networks.Bridge.WebSocketProvider)
+	// homeClient, err := ethclient.Dial(r.networks.Bridge.WebSocketProvider)
+	// if err != nil {
+	// 	log.Panic(err)
+	// }
+	// bridge, err := HomeBridge.NewHomeBridge(r.contracts.Bridge.Address.Address, homeClient)
+	// if err != nil {
+	// 	log.Panic(err)
+	// }
+	// fmt.Printf("Decoding Bridge contract ABI...\n")
+	// bridgeABI, err := abi.JSON(strings.NewReader(string(HomeBridge.HomeBridgeABI)))
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// r.bridge.client = homeClient
+	// r.bridge.instance = bridge
+	// r.bridge.abi = &bridgeABI
 
 	fmt.Printf("\nConnecting to %s...\n", r.networks.Exchange.WebSocketProvider)
 	exchangeClient, err := ethclient.Dial(r.networks.Exchange.WebSocketProvider)
 	if err != nil {
 		log.Panic(err)
 	}
-	exchange, err := Exchange.NewExchange(r.contracts.Exchange.Address.Address, exchangeClient)
-	if err != nil {
-		log.Panic(err)
-	}
+	// exchange, err := DEXChain.NewDEXChain(r.contracts.Exchange.Address.Address, exchangeClient)
+	// if err != nil {
+	// 	log.Panic(err)
+	// }
 	fmt.Printf("Decoding Exchange contract ABI...\n")
-	exchangeABI, err := abi.JSON(strings.NewReader(string(Exchange.ExchangeABI)))
+	exchangeABI, err := abi.JSON(strings.NewReader(string(DEXChain.DEXChainABI)))
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("Decoding Orderbook contract ABI...\n")
+	orderbookABI, err := abi.JSON(strings.NewReader(string(Orderbook.OrderbookABI)))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Decoding Order Matcher contract ABI...\n")
+	ordermatcherABI, err := abi.JSON(strings.NewReader(string(OrderMatchContract.OrderMatchContractABI)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	r.exchange.client = exchangeClient
-	r.exchange.instance = exchange
-	r.exchange.abi = &exchangeABI
+	// r.exchange.exchangeInstance = exchange
+	r.exchange.exchangeABI = &exchangeABI
+	r.exchange.orderbookABI = &orderbookABI
+	r.exchange.ordermatcherABI = &ordermatcherABI
 
 	fmt.Printf("\n")
 	r.store.Initialize()
@@ -89,54 +104,11 @@ func (r *Relayer) Initialize() {
 	fmt.Printf("\n\nRelayer initialization successful :)\n\n")
 }
 
-// // RunOnBridgeNetwork runs relayer on the bridge network
-// func (r *Relayer) RunOnBridgeNetwork() {
-// 	fmt.Printf("Trying to listen events on Bridge contract %s...\n", r.contracts.Bridge.Address.Address.String())
-// 	query := ethereum.FilterQuery{
-// 		Addresses: []common.Address{r.contracts.Bridge.Address.Address},
-// 		Topics:    [][]common.Hash{{r.contracts.Bridge.Topics.Deposit.Hash}},
-// 	}
-
-// 	logs := make(chan types.Log, channelSize)
-
-// 	sub, err := r.bridge.client.SubscribeFilterLogs(context.Background(), query, logs)
-// 	if err != nil {
-// 		log.Panic(err)
-// 	}
-
-// 	go func() {
-// 	eventListenerLoop:
-// 		for {
-// 			select {
-// 			case err := <-sub.Err():
-// 				log.Fatal("Home Network Subcription Error:", err)
-
-// 			case vLog := <-logs:
-// 				fmt.Println("--------------------")
-// 				// Unpack deposit event
-// 				fmt.Println("Received `Deposit` event from Home Network")
-// 				depositEvent := struct {
-// 					Recipient common.Address
-// 					Token     common.Address
-// 					Value     *big.Int
-// 				}{}
-// 				err := r.bridge.abi.Unpack(&depositEvent, "Deposit", vLog.Data)
-// 				if err != nil {
-// 					log.Fatal("Unpack: ", err)
-// 					continue eventListenerLoop
-// 				}
-// 				// depositEvent.Recipient, depositEvent.Token, depositEvent.Value, vLog.TxHash
-
-// 			}
-// 		}
-// 	}()
-// }
-
 // RunOnExchangeNetwork runs relayer on the exchange network
 func (r *Relayer) RunOnExchangeNetwork() {
 	fmt.Printf("Trying to listen events on Exchange contract %s...\n", r.contracts.Exchange.Address.Address.String())
 	query := ethereum.FilterQuery{
-		Addresses: []common.Address{r.contracts.Exchange.Address.Address},
+		Addresses: []common.Address{r.contracts.Exchange.Address.Address, r.contracts.Orderbook.Address.Address},
 		Topics: [][]common.Hash{
 			{
 				r.contracts.Exchange.Topics.BalanceUpdate.Hash,
@@ -158,36 +130,8 @@ func (r *Relayer) RunOnExchangeNetwork() {
 			case vLog := <-logs:
 				for _, topic := range vLog.Topics {
 					switch topic {
-					// case r.contracts.Exchange.Topics.Deposit.Hash:
-					// 	fmt.Println("Deposit")
-
-					// case r.contracts.Exchange.Topics.Withdraw.Hash:
-					// 	fmt.Println("Withdraw")
-
 					case r.contracts.Exchange.Topics.BalanceUpdate.Hash:
 						r.balanceUpdateLogCallback(vLog)
-						// buEvent := struct {
-						// 	Token   common.Address
-						// 	User    common.Address
-						// 	Balance *big.Int
-						// 	Escrow  *big.Int
-						// }{}
-						// err := r.exchange.abi.Unpack(&buEvent, "BalanceUpdate", vLog.Data)
-						// if err != nil {
-						// 	log.Fatal("Unpack: ", err)
-						// 	continue eventListenerLoop
-						// }
-						// wallet := models.Wallet{
-						// 	Token:         &helpers.Address{buEvent.Token},
-						// 	Address:       &helpers.Address{buEvent.User},
-						// 	Balance:       buEvent.Balance,
-						// 	EscrowBalance: buEvent.Escrow,
-						// }
-						// err = wallet.Save(r.store)
-						// if err != nil {
-						// 	log.Fatal("Commit: ", err)
-						// }
-						// fmt.Printf("\nUpdated %s token balance of wallet %s", buEvent.Token.Hex(), buEvent.User.Hex())
 					}
 				}
 			}
@@ -221,15 +165,17 @@ func NewRelayer(contractsFilePath, networksFilePath, connectionString string) *R
 	return &Relayer{
 		networks:  nwInfo,
 		contracts: contractsInfo,
-		bridge: &bridgeRef{
-			client:   nil,
-			instance: nil,
-			abi:      nil,
-		},
+		// bridge: &bridgeRef{
+		// 	client:   nil,
+		// 	instance: nil,
+		// 	abi:      nil,
+		// },
 		exchange: &exchangeRef{
-			client:   nil,
-			instance: nil,
-			abi:      nil,
+			client: nil,
+			// exchangeInstance: nil,
+			exchangeABI:     nil,
+			orderbookABI:    nil,
+			ordermatcherABI: nil,
 		},
 		store: store.NewDataStore(connectionString),
 	}
@@ -242,7 +188,7 @@ func (r *Relayer) balanceUpdateLogCallback(vLog types.Log) {
 		Balance *big.Int
 		Escrow  *big.Int
 	}{}
-	err := r.exchange.abi.Unpack(&buEvent, "BalanceUpdate", vLog.Data)
+	err := r.exchange.exchangeABI.Unpack(&buEvent, "BalanceUpdate", vLog.Data)
 	if err != nil {
 		log.Fatal("Unpack: ", err)
 		return

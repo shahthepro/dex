@@ -15,7 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"hameid.net/cdex/dex/_abi/Exchange"
+	"hameid.net/cdex/dex/_abi/DEXChain"
 	"hameid.net/cdex/dex/_abi/HomeBridge"
 	"hameid.net/cdex/dex/internal/utils"
 )
@@ -28,7 +28,7 @@ type bridgeRef struct {
 
 type exchangeRef struct {
 	client   *ethclient.Client
-	instance *Exchange.Exchange
+	instance *DEXChain.DEXChain
 	abi      *abi.ABI
 }
 
@@ -70,12 +70,12 @@ func (v *Validator) Initialize() {
 	if err != nil {
 		log.Panic(err)
 	}
-	exchange, err := Exchange.NewExchange(v.contracts.Exchange.Address.Address, exchangeClient)
+	exchange, err := DEXChain.NewDEXChain(v.contracts.Exchange.Address.Address, exchangeClient)
 	if err != nil {
 		log.Panic(err)
 	}
 	fmt.Printf("Decoding Exchange contract ABI...\n")
-	exchangeABI, err := abi.JSON(strings.NewReader(string(Exchange.ExchangeABI)))
+	exchangeABI, err := abi.JSON(strings.NewReader(string(DEXChain.DEXChainABI)))
 	if err != nil {
 		log.Fatal(err)
 	}

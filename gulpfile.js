@@ -87,7 +87,8 @@ gulp.task('clean-generated-abi', (done) => {
             '-p', 
             `_abi/${HOMEBRIDGE_CONTRACT_NAME}`, 
             `_abi/${DEXCHAIN_CONTRACT_NAME}`,
-            `_abi/${ORDERBOOK_CONTRACT_NAME}`
+            `_abi/${ORDERBOOK_CONTRACT_NAME}`,
+            `_abi/${ORDERMATCH_CONTRACT_NAME}`,
         ], {}, done);
     });
 });
@@ -118,6 +119,7 @@ gulp.task('generate-abi', async (done) => {
     const HomeBridgeABI = getABIPath(HOMEBRIDGE_CONTRACT_NAME);
     const DEXChainABI = getABIPath(DEXCHAIN_CONTRACT_NAME);
     const OrderbookABI = getABIPath(ORDERBOOK_CONTRACT_NAME);
+    const OrderMatchABI = getABIPath(ORDERMATCH_CONTRACT_NAME);
     const DataStoreABI = getABIPath(DATASTORE_CONTRACT_NAME);
     const FeeContractABI = getABIPath(FEE_CONTRACT_NAME);
 
@@ -125,9 +127,10 @@ gulp.task('generate-abi', async (done) => {
     await generateABIWithJSON(HomeBridgeABI, HOMEBRIDGE_CONTRACT_NAME, `_abi/${HOMEBRIDGE_CONTRACT_NAME}/${HOMEBRIDGE_CONTRACT_NAME}.go`);
     await generateABIWithJSON(DEXChainABI, DEXCHAIN_CONTRACT_NAME, `_abi/${DEXCHAIN_CONTRACT_NAME}/${DEXCHAIN_CONTRACT_NAME}.go`);
     await generateABIWithJSON(OrderbookABI, ORDERBOOK_CONTRACT_NAME, `_abi/${ORDERBOOK_CONTRACT_NAME}/${ORDERBOOK_CONTRACT_NAME}.go`);
+    await generateABIWithJSON(OrderMatchABI, ORDERMATCH_CONTRACT_NAME, `_abi/${ORDERMATCH_CONTRACT_NAME}/${ORDERMATCH_CONTRACT_NAME}.go`);
 
     // Copy abi json to public directory
-    return gulp.src([HomeBridgeABI, DEXChainABI, OrderbookABI, DataStoreABI, FeeContractABI])
+    return gulp.src([HomeBridgeABI, DEXChainABI, OrderbookABI, DataStoreABI, FeeContractABI, OrderMatchABI])
         .pipe(gulp.dest(`web/public/abi`));
 });
 
