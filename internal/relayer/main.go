@@ -108,10 +108,17 @@ func (r *Relayer) Initialize() {
 func (r *Relayer) RunOnExchangeNetwork() {
 	fmt.Printf("Trying to listen events on Exchange contract %s...\n", r.contracts.Exchange.Address.Address.String())
 	query := ethereum.FilterQuery{
-		Addresses: []common.Address{r.contracts.Exchange.Address.Address, r.contracts.Orderbook.Address.Address},
+		Addresses: []common.Address{
+			r.contracts.Exchange.Address.Address,
+			r.contracts.Orderbook.Address.Address,
+			r.contracts.OrderMatcher.Address.Address,
+		},
 		Topics: [][]common.Hash{
 			{
 				r.contracts.Exchange.Topics.BalanceUpdate.Hash,
+				r.contracts.Orderbook.Topics.PlaceOrder.Hash,
+				r.contracts.Orderbook.Topics.CancelOrder.Hash,
+				r.contracts.OrderMatcher.Topics.Trade.Hash,
 			},
 		},
 	}
@@ -132,6 +139,12 @@ func (r *Relayer) RunOnExchangeNetwork() {
 					switch topic {
 					case r.contracts.Exchange.Topics.BalanceUpdate.Hash:
 						r.balanceUpdateLogCallback(vLog)
+					case r.contracts.Orderbook.Topics.PlaceOrder.Hash:
+						fmt.Println("\n\nPlaceOrder")
+					case r.contracts.Orderbook.Topics.CancelOrder.Hash:
+						fmt.Println("\n\nCancelOrder")
+					case r.contracts.OrderMatcher.Topics.Trade.Hash:
+						fmt.Println("\n\nTrade")
 					}
 				}
 			}
