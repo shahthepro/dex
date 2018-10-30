@@ -44,7 +44,7 @@ interface IOrdersDB {
 
     function getOrderFilledVolume(bytes32 orderHash) external view returns (uint256);
     
-    function setOrderFilledVolume(bytes32 orderHash, uint256 value) external;
+    function addOrderFilledVolume(bytes32 orderHash, uint256 value) external;
 
     function getOrderAvailableVolume(bytes32 orderHash) external view returns (uint256);
 

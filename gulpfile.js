@@ -15,7 +15,7 @@ const ORDERBOOK_CONTRACT_NAME = 'Orderbook';
 const FEE_CONTRACT_NAME = 'FeeContract';
 const ORDERSDB_CONTRACT_NAME = 'OrdersDB';
 const NEWORDER_CONTRACT_NAME = 'NewOrderContract';
-const CANCELORDER_CONTRACT_NAME = 'CancelOrderContract';
+// const CANCELORDER_CONTRACT_NAME = 'CancelOrderContract';
 const ORDERMATCH_CONTRACT_NAME = 'OrderMatchContract';
 
 const GENERATED_CONFIG_FILE_NAME = 'contracts.g';
@@ -250,14 +250,8 @@ gulp.task('deploy-exchange-contracts', async (done) => {
     })
     console.log(`DEXChain deployed at ${DEXChain.options.address}`);
 
-    let FeeContractContractSource = JSON.parse(fs.readFileSync('dapp/build/FeeContract.json'));
-    // console.log(`\n\nDeploying FeeHelpers...`)
-    // let FeeHelpersJSON = FeeContractContractSource.contracts['lib/FeeHelpers.sol:FeeHelpers']; 
-    // // let FeeHelpersABI = JSON.parse(FeeHelpersJSON.abi);
-    // let FeeHelpers = await deployContract({ web3, contractJSON: FeeHelpersJSON, txOpts });
-    // console.log(`FeeHelpers deployed at ${FeeHelpers.options.address}`);
-
     console.log(`\n\nDeploying FeeContract...`)
+    let FeeContractContractSource = JSON.parse(fs.readFileSync('dapp/build/FeeContract.json'));
     let FeeContractJSON = FeeContractContractSource.contracts['FeeContract.sol:FeeContract']; 
     let FeeContractABI = JSON.parse(FeeContractJSON.abi);
     writeJSONFile(getABIPath(FEE_CONTRACT_NAME), FeeContractABI);
@@ -265,10 +259,7 @@ gulp.task('deploy-exchange-contracts', async (done) => {
         web3, 
         contractJSON: FeeContractJSON, 
         args: [DataStore.options.address], 
-        txOpts,
-        libraries: {
-            // 'lib/FeeHelpers.sol': FeeHelpers.options.address,
-        }
+        txOpts
     });
     appendToConfigFile({
         feecontract: {
@@ -298,94 +289,26 @@ gulp.task('deploy-exchange-contracts', async (done) => {
         }
     })
     console.log(`OrdersDB deployed at ${OrdersDB.options.address}`);
-
-    // let OrderbookContractSource = JSON.parse(fs.readFileSync('dapp/build/Orderbook.json'));
-    // console.log(`\n\nDeploying OrderHelpers...`)
-    // let OrderHelpersJSON = OrderbookContractSource.contracts['lib/OrderHelpers.sol:OrderHelpers']; 
-    // // let OrderHelpersABI = JSON.parse(OrderHelpersJSON.abi);
-    // let OrderHelpers = await deployContract({ web3, contractJSON: OrderHelpersJSON, txOpts });
-    // console.log(`OrderHelpers deployed at ${OrderHelpers.options.address}`);
-
-    // console.log(`\n\nDeploying OrderbookHelpers...`)
-    // let OrderbookHelpersJSON = OrderbookContractSource.contracts['lib/OrderbookHelpers.sol:OrderbookHelpers']; 
-    // // let OrderbookHelpersABI = JSON.parse(OrderbookHelpersJSON.abi);
-    // let OrderbookHelpers = await deployContract({
-    //     web3,
-    //     contractJSON: OrderbookHelpersJSON,
-    //     txOpts,
-    //     libraries: {
-    //         // 'lib/FeeHelpers.sol': FeeHelpers.options.address,
-    //         'lib/OrderHelpers.sol': OrderHelpers.options.address,
-    //     }
-    // });
-    // console.log(`OrderbookHelpers deployed at ${OrderbookHelpers.options.address}`);
     
-    // console.log(`\n\nDeploying Orderbook...`)
-    // let OrderbookJSON = OrderbookContractSource.contracts['Orderbook.sol:Orderbook']; 
-    // let OrderbookABI = JSON.parse(OrderbookJSON.abi);
-    // writeJSONFile(getABIPath(ORDERBOOK_CONTRACT_NAME), OrderbookABI);
-    // let Orderbook = await deployContract({
-    //     web3, 
-    //     contractJSON: OrderbookJSON, 
-    //     args: [DataStore.options.address, DEXChain.options.address], 
-    //     txOpts,
-    //     libraries: {
-    //         'lib/FeeHelpers.sol': FeeHelpers.options.address,
-    //         // 'lib/OrderHelpers.sol': OrderHelpers.options.address,
-    //         // 'lib/OrderbookHelpers.sol': OrderbookHelpers.options.address,
-    //     }
-    // });
-    // appendToConfigFile({
-    //     orderbook: {
-    //         network: networkID,
-    //         address: Orderbook.options.address,
-    //         topics: getAllTopicsFromABI(OrderbookABI)
-    //     }
-    // })
-    // console.log(`Orderbook deployed at ${Orderbook.options.address}`);
-    
-    // let NewOrderContractContractSource = JSON.parse(fs.readFileSync('dapp/build/NewOrderContract.json'));
-    // console.log(`\n\nDeploying NewOrderContract...`)
-    // let NewOrderContractJSON = NewOrderContractContractSource.contracts['NewOrderContract.sol:NewOrderContract']; 
-    // let NewOrderContractABI = JSON.parse(NewOrderContractJSON.abi);
-    // writeJSONFile(getABIPath(NEWORDER_CONTRACT_NAME), NewOrderContractABI);
-    // let NewOrderContract = await deployContract({
-    //     web3, 
-    //     contractJSON: NewOrderContractJSON, 
-    //     args: [OrdersDB.options.address, DEXChain.options.address], 
-    //     txOpts,
-    //     libraries: {
-    //         // 'lib/FeeHelpers.sol': FeeHelpers.options.address
-    //     }
-    // });
-    // appendToConfigFile({
-    //     neworder: {
-    //         network: networkID,
-    //         address: NewOrderContract.options.address,
-    //         topics: getAllTopicsFromABI(NewOrderContractABI)
-    //     }
-    // })
-    // console.log(`NewOrderContract deployed at ${NewOrderContract.options.address}`);
-    
-    let CancelOrderContractContractSource = JSON.parse(fs.readFileSync('dapp/build/CancelOrderContract.json'));
-    console.log(`\n\nDeploying CancelOrderContract...`)
-    let CancelOrderContractJSON = CancelOrderContractContractSource.contracts['CancelOrderContract.sol:CancelOrderContract']; 
-    let CancelOrderContractABI = JSON.parse(CancelOrderContractJSON.abi);
-    writeJSONFile(getABIPath(CANCELORDER_CONTRACT_NAME), CancelOrderContractABI);
-    let CancelOrderContract = await deployContract({
+    console.log(`\n\nDeploying Orderbook...`)
+    let OrderbookContractSource = JSON.parse(fs.readFileSync('dapp/build/Orderbook.json'));
+    let OrderbookJSON = OrderbookContractSource.contracts['Orderbook.sol:Orderbook']; 
+    let OrderbookABI = JSON.parse(OrderbookJSON.abi);
+    writeJSONFile(getABIPath(ORDERBOOK_CONTRACT_NAME), OrderbookABI);
+    let Orderbook = await deployContract({
         web3, 
-        contractJSON: CancelOrderContractJSON, 
+        contractJSON: OrderbookJSON, 
         args: [OrdersDB.options.address, DEXChain.options.address, FeeContract.options.address], 
         txOpts
     });
     appendToConfigFile({
-        cancelorder: {
+        orderbook: {
             network: networkID,
-            address: CancelOrderContract.options.address,
-            topics: getAllTopicsFromABI(CancelOrderContractABI)
+            address: Orderbook.options.address,
+            topics: getAllTopicsFromABI(OrderbookABI)
         }
     })
-    console.log(`CancelOrderContract deployed at ${CancelOrderContract.options.address}`);
+    console.log(`Orderbook deployed at ${Orderbook.options.address}`);
     
     let OrderMatchContractContractSource = JSON.parse(fs.readFileSync('dapp/build/OrderMatchContract.json'));
     console.log(`\n\nDeploying OrderMatchContract...`)
@@ -417,21 +340,13 @@ gulp.task('deploy-exchange-contracts', async (done) => {
         console.log("Whitelisting OrdersDB contract for DataStore...")
         return DataStore.methods.whitelistContract(OrdersDB.options.address).send(txOpts)
     })
-    // .then(function () {
-    //     console.log("Whitelisting NewOrderContract contract for OrdersDB...")
-    //     return OrdersDB.methods.whitelistContract(NewOrderContract.options.address).send(txOpts)
-    // })
-    // .then(function () {
-    //     console.log("Whitelisting NewOrderContract contract for DEXChain...")
-    //     return DEXChain.methods.whitelistContract(NewOrderContract.options.address).send(txOpts)
-    // })
     .then(function () {
-        console.log("Whitelisting CancelOrderContract contract for OrdersDB...")
-        return OrdersDB.methods.whitelistContract(CancelOrderContract.options.address).send(txOpts)
+        console.log("Whitelisting Orderbook contract for OrdersDB...")
+        return OrdersDB.methods.whitelistContract(Orderbook.options.address).send(txOpts)
     })
     .then(function () {
-        console.log("Whitelisting CancelOrderContract contract for DEXChain...")
-        return DEXChain.methods.whitelistContract(CancelOrderContract.options.address).send(txOpts)
+        console.log("Whitelisting Orderbook contract for DEXChain...")
+        return DEXChain.methods.whitelistContract(Orderbook.options.address).send(txOpts)
     })
     .then(function () {
         console.log("Whitelisting OrderMatchContract contract for OrdersDB...")

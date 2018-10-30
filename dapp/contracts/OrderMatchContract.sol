@@ -61,6 +61,9 @@ contract OrderMatchContract is DEXContract {
 
         tradeFunds(token, base, taker, maker, takeFee, makeFee, volumeToTrade, feeAccount);
 
+        ordersDB.addOrderFilledVolume(buyOrderHash, volumeToTrade);
+        ordersDB.addOrderFilledVolume(sellOrderHash, volumeToTrade);
+
         emit Trade(buyOrderHash, sellOrderHash, volumeToTrade);
     }
 

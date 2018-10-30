@@ -5,8 +5,10 @@ let contractsConfig = require('./../../configs/contracts.g.json');
 let DataStoreABI = require('./../../_tmp/DataStore.json');
 let DEXChainABI = require('./../../_tmp/DEXChain.json');
 // let OrderbookABI = require('./../../_tmp/Orderbook.json');
-let CancelOrderContractABI = require('./../../_tmp/CancelOrderContract.json');
+let OrdersDBABI = require('./../../_tmp/OrdersDB.json');
+let OrderbookABI = require('./../../_tmp/Orderbook.json');
 let OrderMatchContractABI = require('./../../_tmp/OrderMatchContract.json');
+let FeeContractABI = require('./../../_tmp/FeeContract.json');
 
 let BN = require('bn.js')
 
@@ -17,9 +19,10 @@ let accounts;
 
 let DataStore = new web3.eth.Contract(DataStoreABI, contractsConfig.datastore.address)
 let DEXChain = new web3.eth.Contract(DEXChainABI, contractsConfig.exchange.address)
-// let Orderbook = new web3.eth.Contract(OrderbookABI, contractsConfig.orderbook.address)
-let CancelOrderContract = new web3.eth.Contract(CancelOrderContractABI, contractsConfig.cancelorder.address)
+let OrdersDB = new web3.eth.Contract(OrdersDBABI, contractsConfig.ordersdb.address)
+let Orderbook = new web3.eth.Contract(OrderbookABI, contractsConfig.orderbook.address)
 let OrderMatchContract = new web3.eth.Contract(OrderMatchContractABI, contractsConfig.ordermatch.address)
+let FeeContract = new web3.eth.Contract(FeeContractABI, contractsConfig.ordermatch.address)
 
 let TEST_VALUES = {
     token1: "0x2222233333444445555566666777778888899999",
@@ -151,7 +154,7 @@ async function placeOrder(fromAddress, tokenAddress, baseAddress, price, quantit
 	let escrowBeforeOrder = await DEXChain.methods.escrowBalanceOf(tokenToCheckBalance, fromAddress).call()
 	escrowBeforeOrder = new BN(escrowBeforeOrder, 10)
 
-	let r = await CancelOrderContract.methods.placeOrder(tokenAddress, baseAddress, price, quantity, isBid, Date.now()).send({
+	let r = await Orderbook.methods.placeOrder(tokenAddress, baseAddress, price, quantity, isBid, Date.now()).send({
 		from: fromAddress,
 		gasPrice: 0,
 		gas: '100000000'
@@ -181,7 +184,12 @@ async function cancelOrder(fromAddress, tokenAddress, orderHash) {
 	let feeBalanceBeforeCancel = await DEXChain.methods.balanceOf(tokenAddress, networksConfig.feeAccount).call()
 	feeBalanceBeforeCancel = new BN(feeBalanceBeforeCancel, 10)
 
-	let r = await CancelOrderContract.methods.cancelOrder(orderHash).send({
+	let availableVolumeOfOrder = await OrdersDB.methods.getOrderAvailableVolume(orderHash).call()
+	availableVolumeOfOrder = new BN(availableVolumeOfOrder, 10)
+	
+	expect(escrowBeforeCancel.sub(availableVolumeOfOrder).toNumber()).toBeGreaterThanOrEqual(0)
+
+	let r = await Orderbook.methods.cancelOrder(orderHash).send({
 		from: fromAddress,
 		gasPrice: 0,
 		gas: '100000000'
@@ -206,7 +214,7 @@ async function cancelOrder(fromAddress, tokenAddress, orderHash) {
 	// console.log(balanceAfterCancel.toString(), escrowAfterCancel.toString(), feeBalanceAfterCancel.toString())
 
 	// console.log(volumeOfOrder.toString(), returnedToAccount.toString(), fee.toString())
-	// // expect(returnedToAccount.add(fee).toString()).toBe(volumeOfOrder.toString())
+	// expect(returnedToAccount.add(fee).toString()).toBe(volumeOfOrder.toString())
 	expect(balanceBeforeCancel.add(escrowBeforeCancel).add(feeBalanceBeforeCancel).sub(balanceAfterCancel).sub(escrowAfterCancel).sub(feeBalanceAfterCancel).toNumber()).toBe(0)
 }
 

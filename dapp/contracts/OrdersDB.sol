@@ -135,9 +135,9 @@ contract OrdersDB is DEXContract {
         return ds.getUIntValue(keccak256(abi.encodePacked(ORDER_PREFIX, orderHash, ORDER_VOLUME_FILLED_KEY)));
     }
     
-    function setOrderFilledVolume(bytes32 orderHash, uint256 value) public onlyAllowedContracts {
+    function addOrderFilledVolume(bytes32 orderHash, uint256 value) public onlyAllowedContracts {
         IDataStore ds = IDataStore(dataStoreContract);
-        ds.setUIntValue(keccak256(abi.encodePacked(ORDER_PREFIX, orderHash, ORDER_VOLUME_FILLED_KEY)), value);
+        ds.addUIntValue(keccak256(abi.encodePacked(ORDER_PREFIX, orderHash, ORDER_VOLUME_FILLED_KEY)), value);
     }
 
     function getOrderAvailableVolume(bytes32 orderHash) public view returns (uint256) {

@@ -5,7 +5,7 @@ import "./interfaces/IDEXChain.sol";
 import "./interfaces/IOrdersDB.sol";
 import "./interfaces/IFeeContract.sol";
 
-contract CancelOrderContract {
+contract Orderbook {
     using SafeMath for uint256;
 
     event PlaceOrder(bytes32 orderHash, address token, address base, uint256 price, uint256 quantity, bool is_bid, address owner);
@@ -99,7 +99,7 @@ contract CancelOrderContract {
 
         IFeeContract feeContract = IFeeContract(feeContractAddress);
         uint256 fee = 0;
-        if (now - ordersDB.getOrderTimestamp(orderHash) > 14 days) {
+        if ((now - ordersDB.getOrderTimestamp(orderHash)) < 2 days) {
             fee = feeContract.calculateCancelFee(volumeLeft);
         }
         address feeAccount = feeContract.getFeeAccount();
