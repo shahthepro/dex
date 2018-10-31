@@ -228,7 +228,7 @@ func (r *Relayer) placeOrderLogCallback(vLog types.Log) {
 		Quantity  *big.Int
 		IsBid     bool
 		Owner     common.Address
-		Timestamp float64
+		Timestamp *big.Int
 	}{}
 	err := r.exchange.orderbookABI.Unpack(&placeOrderEvent, "PlaceOrder", vLog.Data)
 	if err != nil {
@@ -243,12 +243,12 @@ func (r *Relayer) placeOrderLogCallback(vLog types.Log) {
 		Quantity:  placeOrderEvent.Quantity,
 		IsBid:     placeOrderEvent.IsBid,
 		CreatedBy: &helpers.Address{placeOrderEvent.Owner},
-		CreatedAt: placeOrderEvent.Timestamp,
+		CreatedAt: (*(placeOrderEvent.Timestamp)).Uint64(),
 		Volume:    big.NewInt(0).Mul(placeOrderEvent.Price, placeOrderEvent.Quantity),
 	}
 	err = order.Save(r.store)
 	if err != nil {
 		log.Fatal("Commit: ", err)
 	}
-	fmt.Printf("\n\nReceived order for pair %s/%s\n", placeOrderEvent.Token.Hex(), placeOrderEvent.Base.Hex())
+	fmt.Printf("\n\nReceived order at %s for pair %s/%s\n", placeOrderEvent.Timestamp.String(), placeOrderEvent.Token.Hex(), placeOrderEvent.Base.Hex())
 }

@@ -15,7 +15,7 @@ type Order struct {
 	Price        *big.Int         `json:"price"`
 	Quantity     *big.Int         `json:"quantity"`
 	IsBid        bool             `json:"is_bid"`
-	CreatedAt    float64          `json:"created_at"`
+	CreatedAt    uint64           `json:"created_at"`
 	CreatedBy    *helpers.Address `json:"created_by"`
 	Volume       *big.Int         `json:"volume"`
 	VolumeFilled *big.Int         `json:"volume_filled"`
