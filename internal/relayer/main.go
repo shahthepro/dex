@@ -140,7 +140,7 @@ func (r *Relayer) RunOnExchangeNetwork() {
 					case r.contracts.Exchange.Topics.BalanceUpdate.Hash:
 						r.balanceUpdateLogCallback(vLog)
 					case r.contracts.Orderbook.Topics.PlaceOrder.Hash:
-						fmt.Println("\n\nPlaceOrder")
+						r.placeOrderLogCallback(vLog)
 					case r.contracts.Orderbook.Topics.CancelOrder.Hash:
 						fmt.Println("\n\nCancelOrder")
 					case r.contracts.OrderMatcher.Topics.Trade.Hash:
@@ -216,5 +216,39 @@ func (r *Relayer) balanceUpdateLogCallback(vLog types.Log) {
 	if err != nil {
 		log.Fatal("Commit: ", err)
 	}
-	fmt.Printf("\nUpdated %s token balance of wallet %s", buEvent.Token.Hex(), buEvent.User.Hex())
+	fmt.Printf("\n\nUpdated %s token balance of wallet %s\n", buEvent.Token.Hex(), buEvent.User.Hex())
+}
+
+func (r *Relayer) placeOrderLogCallback(vLog types.Log) {
+	placeOrderEvent := struct {
+		OrderHash common.Hash
+		Token     common.Address
+		Base      common.Address
+		Price     *big.Int
+		Quantity  *big.Int
+		IsBid     bool
+		Owner     common.Address
+		Timestamp float64
+	}{}
+	err := r.exchange.orderbookABI.Unpack(&placeOrderEvent, "PlaceOrder", vLog.Data)
+	if err != nil {
+		log.Fatal("Unpack: ", err)
+		return
+	}
+	order := models.Order{
+		Hash:      &helpers.Hash{placeOrderEvent.OrderHash},
+		Token:     &helpers.Address{placeOrderEvent.Token},
+		Base:      &helpers.Address{placeOrderEvent.Base},
+		Price:     placeOrderEvent.Price,
+		Quantity:  placeOrderEvent.Quantity,
+		IsBid:     placeOrderEvent.IsBid,
+		CreatedBy: &helpers.Address{placeOrderEvent.Owner},
+		CreatedAt: placeOrderEvent.Timestamp,
+		Volume:    big.NewInt(0).Mul(placeOrderEvent.Price, placeOrderEvent.Quantity),
+	}
+	err = order.Save(r.store)
+	if err != nil {
+		log.Fatal("Commit: ", err)
+	}
+	fmt.Printf("\n\nReceived order for pair %s/%s\n", placeOrderEvent.Token.Hex(), placeOrderEvent.Base.Hex())
 }
