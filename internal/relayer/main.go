@@ -210,8 +210,8 @@ func (r *Relayer) balanceUpdateLogCallback(vLog types.Log) {
 	wallet := models.Wallet{
 		Token:         &helpers.Address{buEvent.Token},
 		Address:       &helpers.Address{buEvent.User},
-		Balance:       buEvent.Balance,
-		EscrowBalance: buEvent.Escrow,
+		Balance:       &helpers.BigInt{*buEvent.Balance},
+		EscrowBalance: &helpers.BigInt{*buEvent.Escrow},
 	}
 	err = wallet.Save(r.store)
 	if err != nil {
@@ -240,12 +240,12 @@ func (r *Relayer) placeOrderLogCallback(vLog types.Log) {
 		Hash:      &helpers.Hash{placeOrderEvent.OrderHash},
 		Token:     &helpers.Address{placeOrderEvent.Token},
 		Base:      &helpers.Address{placeOrderEvent.Base},
-		Price:     placeOrderEvent.Price,
-		Quantity:  placeOrderEvent.Quantity,
+		Price:     &helpers.BigInt{*placeOrderEvent.Price},
+		Quantity:  &helpers.BigInt{*placeOrderEvent.Quantity},
 		IsBid:     placeOrderEvent.IsBid,
 		CreatedBy: &helpers.Address{placeOrderEvent.Owner},
 		CreatedAt: (*(placeOrderEvent.Timestamp)).Uint64(),
-		Volume:    big.NewInt(0).Mul(placeOrderEvent.Price, placeOrderEvent.Quantity),
+		Volume:    &helpers.BigInt{*big.NewInt(0).Mul(placeOrderEvent.Price, placeOrderEvent.Quantity)},
 	}
 	err = order.Save(r.store)
 	if err != nil {
@@ -266,17 +266,26 @@ func (r *Relayer) tradeLogCallback(vLog types.Log) {
 		log.Fatal("Unpack: ", err)
 		return
 	}
-	order := models.Trade{
+	sellOrder := &models.Order{
+		Hash: &helpers.Hash{tradeEvent.SellOrderHash},
+	}
+	err = sellOrder.Get(r.store)
+	if err != nil {
+		log.Fatal("Cannot get sell order: ", err)
+		return
+	}
+
+	trade := models.Trade{
 		BuyOrderHash:  &helpers.Hash{tradeEvent.BuyOrderHash},
 		SellOrderHash: &helpers.Hash{tradeEvent.SellOrderHash},
-		Volume:        tradeEvent.Volume,
+		Volume:        &helpers.BigInt{*tradeEvent.Volume},
 		TradedAt:      (*(tradeEvent.Timestamp)).Uint64(),
 		TxHash:        &helpers.Hash{vLog.TxHash},
-		Token:         &helpers.Address{common.HexToAddress("0xee457955F8ee9BbFDf357B20c287A470ABB8012F")},
-		Base:          &helpers.Address{common.HexToAddress("0xee457955F8ee9BbFDf357B20c287A470ABB8012F")},
-		Price:         big.NewInt(0),
+		Token:         sellOrder.Token,
+		Base:          sellOrder.Base,
+		Price:         sellOrder.Price,
 	}
-	err = order.Save(r.store)
+	err = trade.Save(r.store)
 	if err != nil {
 		log.Fatal("Commit: ", err)
 	}

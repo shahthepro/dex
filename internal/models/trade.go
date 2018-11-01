@@ -1,8 +1,6 @@
 package models
 
 import (
-	"math/big"
-
 	"hameid.net/cdex/dex/internal/helpers"
 	"hameid.net/cdex/dex/internal/store"
 )
@@ -13,8 +11,8 @@ type Trade struct {
 	SellOrderHash *helpers.Hash    `json:"sell_order_hash"`
 	Token         *helpers.Address `json:"token"`
 	Base          *helpers.Address `json:"base"`
-	Price         *big.Int         `json:"price"`
-	Volume        *big.Int         `json:"volume"`
+	Price         *helpers.BigInt  `json:"price"`
+	Volume        *helpers.BigInt  `json:"volume"`
 	TradedAt      uint64           `json:"created_at"`
 	TxHash        *helpers.Hash    `json:"tx_hash"`
 }

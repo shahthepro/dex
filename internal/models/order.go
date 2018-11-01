@@ -1,8 +1,6 @@
 package models
 
 import (
-	"math/big"
-
 	"hameid.net/cdex/dex/internal/helpers"
 	"hameid.net/cdex/dex/internal/store"
 )
@@ -12,13 +10,13 @@ type Order struct {
 	Hash         *helpers.Hash    `json:"order_hash"`
 	Token        *helpers.Address `json:"token"`
 	Base         *helpers.Address `json:"base"`
-	Price        *big.Int         `json:"price"`
-	Quantity     *big.Int         `json:"quantity"`
+	Price        *helpers.BigInt  `json:"price"`
+	Quantity     *helpers.BigInt  `json:"quantity"`
 	IsBid        bool             `json:"is_bid"`
 	CreatedAt    uint64           `json:"created_at"`
 	CreatedBy    *helpers.Address `json:"created_by"`
-	Volume       *big.Int         `json:"volume"`
-	VolumeFilled *big.Int         `json:"volume_filled"`
+	Volume       *helpers.BigInt  `json:"volume"`
+	VolumeFilled *helpers.BigInt  `json:"volume_filled"`
 }
 
 // Save inserts Order
@@ -44,9 +42,11 @@ func (order *Order) Save(store *store.DataStore) error {
 }
 
 func (order *Order) Get(store *store.DataStore) error {
-	query := `SELECT order_hash, token, base, price, quantity, is_bid, extract(epoch from created_at::timestamp with time zone), created_by, volume, volume_filled FROM orders WHERE order_hash=$1`
+	query := `SELECT order_hash, token, base, price, quantity, is_bid, trunc(extract(epoch from created_at::timestamp with time zone)), created_by, volume, volume_filled FROM orders WHERE order_hash=$1`
 
 	row := store.DB.QueryRow(query, order.Hash)
+
+	var t float64
 
 	err := row.Scan(
 		&order.Hash,
@@ -55,11 +55,14 @@ func (order *Order) Get(store *store.DataStore) error {
 		&order.Price,
 		&order.Quantity,
 		&order.IsBid,
-		&order.CreatedAt,
+		// &order.CreatedAt,
+		&t,
 		&order.CreatedBy,
 		&order.Volume,
 		&order.VolumeFilled,
 	)
+
+	order.CreatedAt = uint64(t)
 
 	return err
 }

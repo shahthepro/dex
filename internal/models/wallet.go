@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"math/big"
 
 	"hameid.net/cdex/dex/internal/helpers"
 	"hameid.net/cdex/dex/internal/store"
@@ -12,8 +11,8 @@ import (
 type Wallet struct {
 	Address       *helpers.Address `json:"wallet"`
 	Token         *helpers.Address `json:"token"`
-	Balance       *big.Int         `json:"balance"`
-	EscrowBalance *big.Int         `json:"escrow"`
+	Balance       *helpers.BigInt  `json:"balance"`
+	EscrowBalance *helpers.BigInt  `json:"escrow"`
 }
 
 // Save upserts Wallet
