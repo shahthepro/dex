@@ -144,7 +144,8 @@ func (r *Relayer) RunOnExchangeNetwork() {
 					case r.contracts.Orderbook.Topics.CancelOrder.Hash:
 						fmt.Println("\n\nCancelOrder")
 					case r.contracts.OrderMatcher.Topics.Trade.Hash:
-						fmt.Println("\n\nTrade")
+						r.tradeLogCallback(vLog)
+						// fmt.Println("\n\nTrade")
 					}
 				}
 			}
@@ -251,4 +252,33 @@ func (r *Relayer) placeOrderLogCallback(vLog types.Log) {
 		log.Fatal("Commit: ", err)
 	}
 	fmt.Printf("\n\nReceived order at %s for pair %s/%s\n", placeOrderEvent.Timestamp.String(), placeOrderEvent.Token.Hex(), placeOrderEvent.Base.Hex())
+}
+
+func (r *Relayer) tradeLogCallback(vLog types.Log) {
+	tradeEvent := struct {
+		BuyOrderHash  common.Hash
+		SellOrderHash common.Hash
+		Volume        *big.Int
+		Timestamp     *big.Int
+	}{}
+	err := r.exchange.ordermatcherABI.Unpack(&tradeEvent, "Trade", vLog.Data)
+	if err != nil {
+		log.Fatal("Unpack: ", err)
+		return
+	}
+	order := models.Trade{
+		BuyOrderHash:  &helpers.Hash{tradeEvent.BuyOrderHash},
+		SellOrderHash: &helpers.Hash{tradeEvent.SellOrderHash},
+		Volume:        tradeEvent.Volume,
+		TradedAt:      (*(tradeEvent.Timestamp)).Uint64(),
+		TxHash:        &helpers.Hash{vLog.TxHash},
+		Token:         &helpers.Address{common.HexToAddress("0xee457955F8ee9BbFDf357B20c287A470ABB8012F")},
+		Base:          &helpers.Address{common.HexToAddress("0xee457955F8ee9BbFDf357B20c287A470ABB8012F")},
+		Price:         big.NewInt(0),
+	}
+	err = order.Save(r.store)
+	if err != nil {
+		log.Fatal("Commit: ", err)
+	}
+	fmt.Printf("\n\nReceived order match for %s/%s\n", tradeEvent.BuyOrderHash.Hex(), tradeEvent.SellOrderHash.Hex())
 }

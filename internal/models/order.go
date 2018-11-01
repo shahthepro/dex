@@ -42,3 +42,24 @@ func (order *Order) Save(store *store.DataStore) error {
 
 	return err
 }
+
+func (order *Order) Get(store *store.DataStore) error {
+	query := `SELECT order_hash, token, base, price, quantity, is_bid, extract(epoch from created_at::timestamp with time zone), created_by, volume, volume_filled FROM orders WHERE order_hash=$1`
+
+	row := store.DB.QueryRow(query, order.Hash)
+
+	err := row.Scan(
+		&order.Hash,
+		&order.Token,
+		&order.Base,
+		&order.Price,
+		&order.Quantity,
+		&order.IsBid,
+		&order.CreatedAt,
+		&order.CreatedBy,
+		&order.Volume,
+		&order.VolumeFilled,
+	)
+
+	return err
+}

@@ -9,7 +9,8 @@ CREATE TABLE public.orders
 	created_at TIMESTAMP without time zone NOT NULL,
 	created_by character varying(42) NOT NULL,
 	volume numeric NOT NULL CHECK (volume > 0),
-    volume_filled numeric DEFAULT 0 CHECK ((volume_filled >= 0) AND (volume_filled <= volume))
+    volume_filled numeric DEFAULT 0 CHECK ((volume_filled >= 0) AND (volume_filled <= volume)),
+	is_open boolean DEFAULT true
 );
 
 CREATE INDEX ON public.orders USING brin (base, token);

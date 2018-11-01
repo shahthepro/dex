@@ -9,7 +9,7 @@ import "./interfaces/IFeeContract.sol";
 contract OrderMatchContract is DEXContract {
     using SafeMath for uint256;
 
-    event Trade(bytes32 buyOrderHash, bytes32 sellOrderHash, uint256 volume);
+    event Trade(bytes32 buyOrderHash, bytes32 sellOrderHash, uint256 volume, uint256 timestamp);
 
     address public ordersDBContract;
     address public exchangeContract;
@@ -35,7 +35,7 @@ contract OrderMatchContract is DEXContract {
 
         require(ordersDB.getOrderBase(buyOrderHash) == ordersDB.getOrderBase(sellOrderHash), "ERR_ORDER_MISMATCH");
         require(ordersDB.getOrderToken(buyOrderHash) == ordersDB.getOrderToken(sellOrderHash), "ERR_ORDER_MISMATCH");
-        require(ordersDB.getOrderPrice(buyOrderHash) == ordersDB.getOrderPrice(sellOrderHash), "ERR_ORDER_MISMATCH");
+        require(ordersDB.getOrderPrice(buyOrderHash) >= ordersDB.getOrderPrice(sellOrderHash), "ERR_ORDER_MISMATCH");
     }
 
     // Matches buy and sell orders
@@ -59,12 +59,12 @@ contract OrderMatchContract is DEXContract {
 
         address feeAccount = feeContract.getFeeAccount();
 
-        tradeFunds(token, base, taker, maker, takeFee, makeFee, volumeToTrade, feeAccount);
-
         ordersDB.addOrderFilledVolume(buyOrderHash, volumeToTrade);
         ordersDB.addOrderFilledVolume(sellOrderHash, volumeToTrade);
 
-        emit Trade(buyOrderHash, sellOrderHash, volumeToTrade);
+        tradeFunds(token, base, taker, maker, takeFee, makeFee, volumeToTrade, feeAccount);
+
+        emit Trade(buyOrderHash, sellOrderHash, volumeToTrade, now);
     }
 
     function tradeFunds(
