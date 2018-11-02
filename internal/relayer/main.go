@@ -119,6 +119,7 @@ func (r *Relayer) RunOnExchangeNetwork() {
 				r.contracts.Orderbook.Topics.PlaceOrder.Hash,
 				r.contracts.Orderbook.Topics.CancelOrder.Hash,
 				r.contracts.OrderMatcher.Topics.Trade.Hash,
+				r.contracts.OrderMatcher.Topics.OrderFilledVolumeUpdate.Hash,
 			},
 		},
 	}
@@ -142,10 +143,11 @@ func (r *Relayer) RunOnExchangeNetwork() {
 					case r.contracts.Orderbook.Topics.PlaceOrder.Hash:
 						r.placeOrderLogCallback(vLog)
 					case r.contracts.Orderbook.Topics.CancelOrder.Hash:
-						fmt.Println("\n\nCancelOrder")
+						r.cancelOrderLogCallback(vLog)
 					case r.contracts.OrderMatcher.Topics.Trade.Hash:
 						r.tradeLogCallback(vLog)
-						// fmt.Println("\n\nTrade")
+					case r.contracts.OrderMatcher.Topics.OrderFilledVolumeUpdate.Hash:
+						r.updateFilledVolumeLogCallback(vLog)
 					}
 				}
 			}
@@ -254,6 +256,27 @@ func (r *Relayer) placeOrderLogCallback(vLog types.Log) {
 	fmt.Printf("\n\nReceived order at %s for pair %s/%s\n", placeOrderEvent.Timestamp.String(), placeOrderEvent.Token.Hex(), placeOrderEvent.Base.Hex())
 }
 
+func (r *Relayer) cancelOrderLogCallback(vLog types.Log) {
+	cancelOrderEvent := struct {
+		OrderHash common.Hash
+	}{}
+	err := r.exchange.orderbookABI.Unpack(&cancelOrderEvent, "CancelOrder", vLog.Data)
+	if err != nil {
+		log.Fatal("Unpack: ", err)
+		return
+	}
+	order := &models.Order{
+		Hash: &helpers.Hash{cancelOrderEvent.OrderHash},
+	}
+	err = order.Close(r.store)
+	if err != nil {
+		log.Fatal("Commit: ", err)
+		return
+	}
+
+	fmt.Printf("\n\nOrder cancelled/filled %s\n", cancelOrderEvent.OrderHash.Hex())
+}
+
 func (r *Relayer) tradeLogCallback(vLog types.Log) {
 	tradeEvent := struct {
 		BuyOrderHash  common.Hash
@@ -290,4 +313,29 @@ func (r *Relayer) tradeLogCallback(vLog types.Log) {
 		log.Fatal("Commit: ", err)
 	}
 	fmt.Printf("\n\nReceived order match for %s/%s\n", tradeEvent.BuyOrderHash.Hex(), tradeEvent.SellOrderHash.Hex())
+}
+
+func (r *Relayer) updateFilledVolumeLogCallback(vLog types.Log) {
+	updateFilledVolumeEvent := struct {
+		OrderHash common.Hash
+		Volume    *big.Int
+	}{}
+	err := r.exchange.ordermatcherABI.Unpack(&updateFilledVolumeEvent, "OrderFilledVolumeUpdate", vLog.Data)
+	if err != nil {
+		log.Fatal("Unpack: ", err)
+		return
+	}
+	order := &models.Order{
+		Hash: &helpers.Hash{updateFilledVolumeEvent.OrderHash},
+	}
+	order.Get(r.store)
+	order.VolumeFilled = &helpers.BigInt{*updateFilledVolumeEvent.Volume}
+
+	err = order.Update(r.store)
+	if err != nil {
+		log.Fatal("Commit: ", err)
+		return
+	}
+
+	fmt.Printf("\n\nUpdate filled volume of order %s to %s\n", updateFilledVolumeEvent.OrderHash.Hex(), updateFilledVolumeEvent.Volume.String())
 }

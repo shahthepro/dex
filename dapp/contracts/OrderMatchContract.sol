@@ -10,6 +10,7 @@ contract OrderMatchContract is DEXContract {
     using SafeMath for uint256;
 
     event Trade(bytes32 buyOrderHash, bytes32 sellOrderHash, uint256 volume, uint256 timestamp);
+    event OrderFilledVolumeUpdate(bytes32 orderHash, uint256 volume);
 
     address public ordersDBContract;
     address public exchangeContract;
@@ -61,6 +62,9 @@ contract OrderMatchContract is DEXContract {
 
         ordersDB.addOrderFilledVolume(buyOrderHash, volumeToTrade);
         ordersDB.addOrderFilledVolume(sellOrderHash, volumeToTrade);
+
+        emit OrderFilledVolumeUpdate(buyOrderHash, ordersDB.getOrderFilledVolume(buyOrderHash));
+        emit OrderFilledVolumeUpdate(sellOrderHash, ordersDB.getOrderFilledVolume(sellOrderHash));
 
         tradeFunds(token, base, taker, maker, takeFee, makeFee, volumeToTrade, feeAccount);
 

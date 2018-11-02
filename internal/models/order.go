@@ -17,6 +17,7 @@ type Order struct {
 	CreatedBy    *helpers.Address `json:"created_by"`
 	Volume       *helpers.BigInt  `json:"volume"`
 	VolumeFilled *helpers.BigInt  `json:"volume_filled"`
+	IsOpen       bool             `json:"is_open"`
 }
 
 // Save inserts Order
@@ -41,6 +42,7 @@ func (order *Order) Save(store *store.DataStore) error {
 	return err
 }
 
+// Get scans the order by hash from database
 func (order *Order) Get(store *store.DataStore) error {
 	query := `SELECT order_hash, token, base, price, quantity, is_bid, trunc(extract(epoch from created_at::timestamp with time zone)), created_by, volume, volume_filled FROM orders WHERE order_hash=$1`
 
@@ -63,6 +65,50 @@ func (order *Order) Get(store *store.DataStore) error {
 	)
 
 	order.CreatedAt = uint64(t)
+
+	return err
+}
+
+// Update order details
+func (order *Order) Update(store *store.DataStore) error {
+	query := `UPDATE orders SET volume_filled=$2, is_open=$3 WHERE order_hash=$1`
+
+	if order.Volume.Cmp(&order.VolumeFilled.Int) == 0 {
+		order.IsOpen = false
+	}
+
+	_, err := store.DB.Exec(
+		query,
+		order.Hash,
+		order.VolumeFilled.String(),
+		order.IsOpen,
+	)
+
+	return err
+}
+
+// StoreFilledVolume updates order's filled volume
+func (order *Order) StoreFilledVolume(store *store.DataStore) error {
+	query := `UPDATE orders SET volume_filled=$1 WHERE order_hash=$2`
+
+	_, err := store.DB.Exec(
+		query,
+		order.VolumeFilled.String(),
+		order.Hash,
+	)
+
+	return err
+}
+
+// Close updates order's filled volume
+func (order *Order) Close(store *store.DataStore) error {
+	query := `UPDATE orders SET is_open=$1 WHERE order_hash=$2`
+
+	_, err := store.DB.Exec(
+		query,
+		false,
+		order.Hash,
+	)
 
 	return err
 }

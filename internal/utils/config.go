@@ -46,7 +46,8 @@ type ContractsInfo struct {
 	OrderMatcher struct {
 		Address helpers.Address `json:"address"`
 		Topics  struct {
-			Trade helpers.Hash `json:"Trade"`
+			Trade                   helpers.Hash `json:"Trade"`
+			OrderFilledVolumeUpdate helpers.Hash `json:"OrderFilledVolumeUpdate"`
 		} `json:"topics"`
 	} `json:"ordermatch"`
 }
