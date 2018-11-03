@@ -34,11 +34,11 @@ describe('Deposits', () => {
 
 		let balanceToDep = '9876543211234';
 
-		for (let i = 0; i < 500; i++) {
+		for (let i = 0; i < 200; i++) {
 			hash = hashBase + (x + i);
 			p.push(signDepositTx(TEST_VALUES.token1, accounts[2], balanceToDep, hash, TEST_VALUES.node1Address))
 			p.push(signDepositTx(TEST_VALUES.token1, accounts[2], balanceToDep, hash, TEST_VALUES.node2Address))
-			p.push(signDepositTx(TEST_VALUES.token1, accounts[2], balanceToDep, hash, TEST_VALUES.node3Address))
+			// p.push(signDepositTx(TEST_VALUES.token1, accounts[2], balanceToDep, hash, TEST_VALUES.node3Address))
 		}
 
 		await Promise.all(p)
