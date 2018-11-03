@@ -3,16 +3,16 @@ package models
 import (
 	"database/sql"
 
-	"hameid.net/cdex/dex/internal/helpers"
 	"hameid.net/cdex/dex/internal/store"
+	"hameid.net/cdex/dex/internal/wrappers"
 )
 
 // Wallet record
 type Wallet struct {
-	Address       *helpers.Address `json:"wallet"`
-	Token         *helpers.Address `json:"token"`
-	Balance       *helpers.BigInt  `json:"balance"`
-	EscrowBalance *helpers.BigInt  `json:"escrow"`
+	Address       *wrappers.Address `json:"wallet"`
+	Token         *wrappers.Address `json:"token"`
+	Balance       *wrappers.BigInt  `json:"balance"`
+	EscrowBalance *wrappers.BigInt  `json:"escrow"`
 }
 
 // Save upserts Wallet
@@ -77,7 +77,7 @@ func (wallet *Wallet) UpdateEscrowBalance(store *store.DataStore) error {
 }
 
 // GetBalance returns balance of wallet/token
-func (wallet *Wallet) GetBalance(store *store.DataStore, user *helpers.Address, token *helpers.Address) error {
+func (wallet *Wallet) GetBalance(store *store.DataStore, user *wrappers.Address, token *wrappers.Address) error {
 	row := store.DB.QueryRow(
 		`SELECT balance, escrow FROM wallet_balances 
 		WHERE wallet=$1 AND token=$2`, user.Hex(), token.Hex())
@@ -99,7 +99,7 @@ func (wallet *Wallet) GetBalance(store *store.DataStore, user *helpers.Address, 
 }
 
 // GetTokenBalancesForWallet returns all token balances for a given address, if any.
-func GetTokenBalancesForWallet(store *store.DataStore, address *helpers.Address) ([]Wallet, error) {
+func GetTokenBalancesForWallet(store *store.DataStore, address *wrappers.Address) ([]Wallet, error) {
 	rows, err := store.DB.Query(
 		`SELECT wallet, token, balance, escrow FROM wallet_balances 
 		WHERE wallet=$1 AND (balance > 0 OR escrow > 0)`, address.Hex())

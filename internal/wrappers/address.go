@@ -1,4 +1,4 @@
-package helpers
+package wrappers
 
 import (
 	"database/sql/driver"
@@ -22,4 +22,9 @@ func (a *Address) Scan(value interface{}) error {
 // Value implements driver.Valuer interface
 func (a *Address) Value() (driver.Value, error) {
 	return a.Hex(), nil
+}
+
+// WrapAddress wraps common.Address
+func WrapAddress(a *common.Address) *Address {
+	return &Address{*a}
 }

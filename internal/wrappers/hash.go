@@ -1,4 +1,4 @@
-package helpers
+package wrappers
 
 import (
 	"database/sql/driver"
@@ -22,4 +22,9 @@ func (hash *Hash) Scan(value interface{}) error {
 // Value implements driver.Valuer interface
 func (hash *Hash) Value() (driver.Value, error) {
 	return hash.Hex(), nil
+}
+
+// WrapHash wraps common.Hash
+func WrapHash(hash *common.Hash) *Hash {
+	return &Hash{*hash}
 }

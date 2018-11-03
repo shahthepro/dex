@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"hameid.net/cdex/dex/internal/helpers"
+	"hameid.net/cdex/dex/internal/wrappers"
 )
 
 type NetworksInfo struct {
@@ -19,35 +19,35 @@ type NetworksInfo struct {
 
 type ContractsInfo struct {
 	Bridge struct {
-		Address helpers.Address `json:"address"`
+		Address wrappers.Address `json:"address"`
 		Topics  struct {
-			Deposit  helpers.Hash `json:"Deposit"`
-			Withdraw helpers.Hash `json:"Withdraw"`
+			Deposit  wrappers.Hash `json:"Deposit"`
+			Withdraw wrappers.Hash `json:"Withdraw"`
 		} `json:"topics"`
 	} `json:"bridge"`
 	Exchange struct {
-		Address helpers.Address `json:"address"`
+		Address wrappers.Address `json:"address"`
 		Topics  struct {
-			Deposit                    helpers.Hash `json:"Deposit"`
-			Withdraw                   helpers.Hash `json:"Withdraw"`
-			DepositConfirmation        helpers.Hash `json:"DepositConfirmation"`
-			WithdrawSignatureSubmitted helpers.Hash `json:"WithdrawSignatureSubmitted"`
-			CollectedSignatures        helpers.Hash `json:"CollectedSignatures"`
-			BalanceUpdate              helpers.Hash `json:"BalanceUpdate"`
+			Deposit                    wrappers.Hash `json:"Deposit"`
+			Withdraw                   wrappers.Hash `json:"Withdraw"`
+			DepositConfirmation        wrappers.Hash `json:"DepositConfirmation"`
+			WithdrawSignatureSubmitted wrappers.Hash `json:"WithdrawSignatureSubmitted"`
+			CollectedSignatures        wrappers.Hash `json:"CollectedSignatures"`
+			BalanceUpdate              wrappers.Hash `json:"BalanceUpdate"`
 		} `json:"topics"`
 	} `json:"exchange"`
 	Orderbook struct {
-		Address helpers.Address `json:"address"`
+		Address wrappers.Address `json:"address"`
 		Topics  struct {
-			PlaceOrder  helpers.Hash `json:"PlaceOrder"`
-			CancelOrder helpers.Hash `json:"CancelOrder"`
+			PlaceOrder  wrappers.Hash `json:"PlaceOrder"`
+			CancelOrder wrappers.Hash `json:"CancelOrder"`
 		} `json:"topics"`
 	} `json:"orderbook"`
 	OrderMatcher struct {
-		Address helpers.Address `json:"address"`
+		Address wrappers.Address `json:"address"`
 		Topics  struct {
-			Trade                   helpers.Hash `json:"Trade"`
-			OrderFilledVolumeUpdate helpers.Hash `json:"OrderFilledVolumeUpdate"`
+			Trade                   wrappers.Hash `json:"Trade"`
+			OrderFilledVolumeUpdate wrappers.Hash `json:"OrderFilledVolumeUpdate"`
 		} `json:"topics"`
 	} `json:"ordermatch"`
 }

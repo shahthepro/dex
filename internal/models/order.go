@@ -1,23 +1,23 @@
 package models
 
 import (
-	"hameid.net/cdex/dex/internal/helpers"
 	"hameid.net/cdex/dex/internal/store"
+	"hameid.net/cdex/dex/internal/wrappers"
 )
 
 // Order record
 type Order struct {
-	Hash         *helpers.Hash    `json:"order_hash"`
-	Token        *helpers.Address `json:"token"`
-	Base         *helpers.Address `json:"base"`
-	Price        *helpers.BigInt  `json:"price"`
-	Quantity     *helpers.BigInt  `json:"quantity"`
-	IsBid        bool             `json:"is_bid"`
-	CreatedAt    uint64           `json:"created_at"`
-	CreatedBy    *helpers.Address `json:"created_by"`
-	Volume       *helpers.BigInt  `json:"volume"`
-	VolumeFilled *helpers.BigInt  `json:"volume_filled"`
-	IsOpen       bool             `json:"is_open"`
+	Hash         *wrappers.Hash    `json:"order_hash"`
+	Token        *wrappers.Address `json:"token"`
+	Base         *wrappers.Address `json:"base"`
+	Price        *wrappers.BigInt  `json:"price"`
+	Quantity     *wrappers.BigInt  `json:"quantity"`
+	IsBid        bool              `json:"is_bid"`
+	CreatedAt    uint64            `json:"created_at"`
+	CreatedBy    *wrappers.Address `json:"created_by"`
+	Volume       *wrappers.BigInt  `json:"volume"`
+	VolumeFilled *wrappers.BigInt  `json:"volume_filled"`
+	IsOpen       bool              `json:"is_open"`
 }
 
 // Save inserts Order

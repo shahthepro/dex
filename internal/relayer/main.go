@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"hameid.net/cdex/dex/internal/store"
+	"hameid.net/cdex/dex/internal/wrappers"
 
-	"hameid.net/cdex/dex/internal/helpers"
 	"hameid.net/cdex/dex/internal/models"
 
 	ethereum "github.com/ethereum/go-ethereum"
@@ -210,10 +210,10 @@ func (r *Relayer) balanceUpdateLogCallback(vLog types.Log) {
 		return
 	}
 	wallet := models.Wallet{
-		Token:         &helpers.Address{buEvent.Token},
-		Address:       &helpers.Address{buEvent.User},
-		Balance:       &helpers.BigInt{*buEvent.Balance},
-		EscrowBalance: &helpers.BigInt{*buEvent.Escrow},
+		Token:         wrappers.WrapAddress(&buEvent.Token),
+		Address:       wrappers.WrapAddress(&buEvent.User),
+		Balance:       wrappers.WrapBigInt(buEvent.Balance),
+		EscrowBalance: wrappers.WrapBigInt(buEvent.Escrow),
 	}
 	err = wallet.Save(r.store)
 	if err != nil {
@@ -239,15 +239,15 @@ func (r *Relayer) placeOrderLogCallback(vLog types.Log) {
 		return
 	}
 	order := models.Order{
-		Hash:      &helpers.Hash{placeOrderEvent.OrderHash},
-		Token:     &helpers.Address{placeOrderEvent.Token},
-		Base:      &helpers.Address{placeOrderEvent.Base},
-		Price:     &helpers.BigInt{*placeOrderEvent.Price},
-		Quantity:  &helpers.BigInt{*placeOrderEvent.Quantity},
+		Hash:      wrappers.WrapHash(&placeOrderEvent.OrderHash),
+		Token:     wrappers.WrapAddress(&placeOrderEvent.Token),
+		Base:      wrappers.WrapAddress(&placeOrderEvent.Base),
+		Price:     wrappers.WrapBigInt(placeOrderEvent.Price),
+		Quantity:  wrappers.WrapBigInt(placeOrderEvent.Quantity),
 		IsBid:     placeOrderEvent.IsBid,
-		CreatedBy: &helpers.Address{placeOrderEvent.Owner},
+		CreatedBy: wrappers.WrapAddress(&placeOrderEvent.Owner),
 		CreatedAt: (*(placeOrderEvent.Timestamp)).Uint64(),
-		Volume:    &helpers.BigInt{*big.NewInt(0).Mul(placeOrderEvent.Price, placeOrderEvent.Quantity)},
+		Volume:    wrappers.WrapBigInt(big.NewInt(0).Mul(placeOrderEvent.Price, placeOrderEvent.Quantity)),
 	}
 	err = order.Save(r.store)
 	if err != nil {
@@ -266,7 +266,7 @@ func (r *Relayer) cancelOrderLogCallback(vLog types.Log) {
 		return
 	}
 	order := &models.Order{
-		Hash: &helpers.Hash{cancelOrderEvent.OrderHash},
+		Hash: wrappers.WrapHash(&cancelOrderEvent.OrderHash),
 	}
 	err = order.Close(r.store)
 	if err != nil {
@@ -290,7 +290,7 @@ func (r *Relayer) tradeLogCallback(vLog types.Log) {
 		return
 	}
 	sellOrder := &models.Order{
-		Hash: &helpers.Hash{tradeEvent.SellOrderHash},
+		Hash: wrappers.WrapHash(&tradeEvent.SellOrderHash),
 	}
 	err = sellOrder.Get(r.store)
 	if err != nil {
@@ -299,11 +299,11 @@ func (r *Relayer) tradeLogCallback(vLog types.Log) {
 	}
 
 	trade := models.Trade{
-		BuyOrderHash:  &helpers.Hash{tradeEvent.BuyOrderHash},
-		SellOrderHash: &helpers.Hash{tradeEvent.SellOrderHash},
-		Volume:        &helpers.BigInt{*tradeEvent.Volume},
+		BuyOrderHash:  wrappers.WrapHash(&tradeEvent.BuyOrderHash),
+		SellOrderHash: wrappers.WrapHash(&tradeEvent.SellOrderHash),
+		Volume:        wrappers.WrapBigInt(tradeEvent.Volume),
 		TradedAt:      (*(tradeEvent.Timestamp)).Uint64(),
-		TxHash:        &helpers.Hash{vLog.TxHash},
+		TxHash:        wrappers.WrapHash(&vLog.TxHash),
 		Token:         sellOrder.Token,
 		Base:          sellOrder.Base,
 		Price:         sellOrder.Price,
@@ -326,10 +326,10 @@ func (r *Relayer) updateFilledVolumeLogCallback(vLog types.Log) {
 		return
 	}
 	order := &models.Order{
-		Hash: &helpers.Hash{updateFilledVolumeEvent.OrderHash},
+		Hash: wrappers.WrapHash(&updateFilledVolumeEvent.OrderHash),
 	}
 	order.Get(r.store)
-	order.VolumeFilled = &helpers.BigInt{*updateFilledVolumeEvent.Volume}
+	order.VolumeFilled = wrappers.WrapBigInt(updateFilledVolumeEvent.Volume)
 
 	err = order.Update(r.store)
 	if err != nil {

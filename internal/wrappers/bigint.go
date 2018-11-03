@@ -1,4 +1,4 @@
-package helpers
+package wrappers
 
 import (
 	"errors"
@@ -34,4 +34,9 @@ func (i *BigInt) Scan(value interface{}) error {
 	}
 
 	return nil
+}
+
+// WrapBigInt wraps big.Int
+func WrapBigInt(i *big.Int) *BigInt {
+	return &BigInt{*i}
 }

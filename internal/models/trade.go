@@ -1,20 +1,20 @@
 package models
 
 import (
-	"hameid.net/cdex/dex/internal/helpers"
 	"hameid.net/cdex/dex/internal/store"
+	"hameid.net/cdex/dex/internal/wrappers"
 )
 
 // Trade record
 type Trade struct {
-	BuyOrderHash  *helpers.Hash    `json:"buy_order_hash"`
-	SellOrderHash *helpers.Hash    `json:"sell_order_hash"`
-	Token         *helpers.Address `json:"token"`
-	Base          *helpers.Address `json:"base"`
-	Price         *helpers.BigInt  `json:"price"`
-	Volume        *helpers.BigInt  `json:"volume"`
-	TradedAt      uint64           `json:"created_at"`
-	TxHash        *helpers.Hash    `json:"tx_hash"`
+	BuyOrderHash  *wrappers.Hash    `json:"buy_order_hash"`
+	SellOrderHash *wrappers.Hash    `json:"sell_order_hash"`
+	Token         *wrappers.Address `json:"token"`
+	Base          *wrappers.Address `json:"base"`
+	Price         *wrappers.BigInt  `json:"price"`
+	Volume        *wrappers.BigInt  `json:"volume"`
+	TradedAt      uint64            `json:"created_at"`
+	TxHash        *wrappers.Hash    `json:"tx_hash"`
 }
 
 // Save inserts Trade
