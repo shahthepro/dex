@@ -71,27 +71,17 @@ func (app *App) getWalletBalanceByTokenHandler(w http.ResponseWriter, r *http.Re
 }
 
 func (app *App) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
-	start, count, err := getOffsetAndCountFromRequest(r)
+	var params map[string]interface{}
+	params = make(map[string]interface{})
+
+	err := getOrderParamsFromRequest(r, &params)
 
 	if err != nil {
 		helpers.RespondWithError(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
-	var timestamp uint64
-	if len(r.FormValue("older_than")) > 0 {
-		var err error
-		var t int
-		t, err = strconv.Atoi(r.FormValue("older_than"))
-		if err != nil {
-			helpers.RespondWithError(w, http.StatusBadRequest, errInvalidOlderThanParam.Error())
-			return
-		}
-		timestamp = uint64(t)
-	} else {
-		timestamp = uint64(time.Now().Unix())
-	}
-
-	orders, err := models.GetOrders(app.store, start, count, timestamp)
+	orders, err := models.GetOrders(app.store, params)
 
 	switch err {
 	case nil:
@@ -123,10 +113,14 @@ func (app *App) getOrderByHashHandler(w http.ResponseWriter, r *http.Request) {
 
 var errInvalidCountParam = errors.New("Invalid value for `count` parameter")
 var errInvalidStartParam = errors.New("Invalid value for `start` parameter")
-var errInvalidOlderThanParam = errors.New("Invalid value for `older_than` parameter")
+var errInvalidBeforeParam = errors.New("Invalid value for `before` parameter")
+var errInvalidSideParam = errors.New("Invalid value for `side` parameter")
+var errInvalidStatusParam = errors.New("Invalid value for `status` parameter")
+var errInvalidTokenParam = errors.New("Invalid value for `token` parameter")
+var errInvalidBaseParam = errors.New("Invalid value for `base` parameter")
 
 func getOffsetAndCountFromRequest(r *http.Request) (int, int, error) {
-	count := 10
+	count := 50
 	start := 0
 	var err error
 
@@ -135,8 +129,8 @@ func getOffsetAndCountFromRequest(r *http.Request) (int, int, error) {
 		if err != nil {
 			return 0, 0, errInvalidCountParam
 		}
-		if count > 30 || count < 1 {
-			count = 10
+		if count > 50 || count < 1 {
+			count = 50
 		}
 	}
 
@@ -151,4 +145,63 @@ func getOffsetAndCountFromRequest(r *http.Request) (int, int, error) {
 	}
 
 	return start, count, nil
+}
+
+func getOrderParamsFromRequest(r *http.Request, params *map[string]interface{}) error {
+	var err error
+
+	(*params)["start"], (*params)["count"], err = getOffsetAndCountFromRequest(r)
+
+	if err != nil {
+		return err
+	}
+
+	if val := r.FormValue("before"); len(val) > 0 {
+		var t int
+		t, err = strconv.Atoi(val)
+		if err != nil {
+			return errInvalidBeforeParam
+		}
+		(*params)["before"] = uint64(t)
+	} else {
+		(*params)["before"] = uint64(time.Now().Unix())
+	}
+
+	if val := r.FormValue("side"); len(val) > 0 {
+		(*params)["side"], err = strconv.Atoi(val)
+		if err != nil {
+			return errInvalidSideParam
+		}
+		// } else {
+		// 	(*params)["side"] = nil
+	}
+
+	if val := r.FormValue("status"); len(val) > 0 {
+		(*params)["status"], err = strconv.Atoi(val)
+		if err != nil {
+			return errInvalidStatusParam
+		}
+		// } else {
+		// 	(*params)["status"] = nil
+	}
+
+	if val := r.FormValue("token"); len(val) > 0 {
+		if !common.IsHexAddress(val) {
+			return errInvalidTokenParam
+		}
+		(*params)["token"] = val
+		// } else {
+		// 	(*params)["token"] = nil
+	}
+
+	if val := r.FormValue("base"); len(val) > 0 {
+		if !common.IsHexAddress(val) {
+			return errInvalidBaseParam
+		}
+		(*params)["base"] = val
+		// } else {
+		// 	(*params)["base"] = nil
+	}
+
+	return nil
 }

@@ -1,6 +1,9 @@
 package models
 
 import (
+	"bytes"
+	"fmt"
+
 	"hameid.net/cdex/dex/internal/store"
 	"hameid.net/cdex/dex/internal/wrappers"
 )
@@ -114,10 +117,35 @@ func NewOrder() *Order {
 }
 
 // GetOrders returns the list of orders
-func GetOrders(store *store.DataStore, start int, count int, latest uint64) ([]Order, error) {
-	query := `SELECT order_hash, token, base, price, quantity, is_bid, trunc(extract(epoch from created_at::timestamp with time zone)), created_by, volume, volume_filled FROM orders WHERE created_at <= to_timestamp($3) ORDER BY created_at DESC LIMIT $1 OFFSET $2`
+func GetOrders(store *store.DataStore, params map[string]interface{}) ([]Order, error) {
+	var buffer bytes.Buffer
 
-	rows, err := store.DB.Query(query, count, start, latest)
+	if val, ok := params["token"]; ok {
+		buffer.WriteString(fmt.Sprintf(` AND token='%s'`, val))
+	}
+
+	if val, ok := params["base"]; ok {
+		buffer.WriteString(fmt.Sprintf(` AND base='%s'`, val))
+	}
+
+	if val, ok := params["side"]; ok {
+		isBid := false
+		if val == 0 {
+			isBid = true
+		}
+		buffer.WriteString(fmt.Sprintf(` AND is_bid=%t`, isBid))
+	}
+
+	if val, ok := params["status"]; ok {
+		isOpen := false
+		if val == 0 {
+			isOpen = true
+		}
+		buffer.WriteString(fmt.Sprintf(` AND is_open=%t`, isOpen))
+	}
+
+	query := fmt.Sprintf(`SELECT order_hash, token, base, price, quantity, is_bid, trunc(extract(epoch from created_at::timestamp with time zone)), created_by, volume, volume_filled FROM orders WHERE created_at <= to_timestamp($3)%s ORDER BY created_at DESC LIMIT $1 OFFSET $2`, buffer.String())
+	rows, err := store.DB.Query(query, params["count"], params["start"], params["before"])
 
 	if err != nil {
 		return nil, err
