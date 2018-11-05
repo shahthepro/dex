@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"hameid.net/cdex/dex/internal/models"
 
@@ -76,23 +77,28 @@ func (app *App) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
 		helpers.RespondWithError(w, http.StatusBadRequest, err.Error())
 	}
 
-	helpers.RespondWithJSON(w, http.StatusOK, map[string]int{"count": count, "start": start})
+	var timestamp uint64
+	if len(r.FormValue("older_than")) > 0 {
+		var err error
+		var t int
+		t, err = strconv.Atoi(r.FormValue("older_than"))
+		if err != nil {
+			helpers.RespondWithError(w, http.StatusBadRequest, errInvalidOlderThanParam.Error())
+			return
+		}
+		timestamp = uint64(t)
+	} else {
+		timestamp = uint64(time.Now().Unix())
+	}
 
-	// orders, err := models.GetOrders(app.Store, start, count)
-	// // if err != nil {
-	// switch err {
-	// case nil:
-	// 	utils.RespondWithJSON(w, http.StatusOK, orders)
+	orders, err := models.GetOrders(app.store, start, count, timestamp)
 
-	// case errors.InvalidOrderSignature:
-	// 	utils.RespondWithError(w, http.StatusBadRequest, err.Error())
-
-	// case errors.SignatureAddressMismatch:
-	// 	utils.RespondWithError(w, http.StatusBadRequest, err.Error())
-
-	// default:
-	// 	utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
-	// }
+	switch err {
+	case nil:
+		helpers.RespondWithJSON(w, http.StatusOK, orders)
+	default:
+		helpers.RespondWithJSON(w, http.StatusInternalServerError, "internal error")
+	}
 }
 
 func (app *App) getOrderByHashHandler(w http.ResponseWriter, r *http.Request) {
@@ -117,6 +123,7 @@ func (app *App) getOrderByHashHandler(w http.ResponseWriter, r *http.Request) {
 
 var errInvalidCountParam = errors.New("Invalid value for `count` parameter")
 var errInvalidStartParam = errors.New("Invalid value for `start` parameter")
+var errInvalidOlderThanParam = errors.New("Invalid value for `older_than` parameter")
 
 func getOffsetAndCountFromRequest(r *http.Request) (int, int, error) {
 	count := 10

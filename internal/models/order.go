@@ -48,8 +48,6 @@ func (order *Order) Get(store *store.DataStore) error {
 
 	row := store.DB.QueryRow(query, order.Hash)
 
-	// var t float64
-
 	err := row.Scan(
 		&order.Hash,
 		&order.Token,
@@ -58,13 +56,10 @@ func (order *Order) Get(store *store.DataStore) error {
 		&order.Quantity,
 		&order.IsBid,
 		&order.CreatedAt,
-		// &t,
 		&order.CreatedBy,
 		&order.Volume,
 		&order.VolumeFilled,
 	)
-
-	// order.CreatedAt = uint64(t)
 
 	return err
 }
@@ -118,44 +113,42 @@ func NewOrder() *Order {
 	return &Order{}
 }
 
-// // GetOrders returns the list of orders
-// func GetOrders(store *store.DataStore, start int, offset int) ([]Order, error) {
-// 	rows, err := store.DB.Query(
-// 		"SELECT token_id, base_id, is_bid, price, volume, volume_filled, status, expires_after, created_by, extract(epoch from created_at::timestamp with time zone), hash, signature FROM orders LIMIT $1 OFFSET $2",
-// 		count, start)
+// GetOrders returns the list of orders
+func GetOrders(store *store.DataStore, start int, count int, latest uint64) ([]Order, error) {
+	query := `SELECT order_hash, token, base, price, quantity, is_bid, trunc(extract(epoch from created_at::timestamp with time zone)), created_by, volume, volume_filled FROM orders WHERE created_at <= to_timestamp($3) ORDER BY created_at DESC LIMIT $1 OFFSET $2`
 
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	rows, err := store.DB.Query(query, count, start, latest)
 
-// 	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
 
-// 	orders := []Order{}
+	defer rows.Close()
 
-// 	for rows.Next() {
-// 		var order Order
+	orders := []Order{}
 
-// 		err := rows.Scan(
-// 			&order.TokenID,
-// 			&order.BaseID,
-// 			&order.IsBid,
-// 			&order.Price,
-// 			&order.Volume,
-// 			&order.VolumeFilled,
-// 			&order.Status,
-// 			&order.ExpiresAfter,
-// 			&order.CreatedBy,
-// 			&order.CreatedAt,
-// 			&order.Hash,
-// 			&order.Signature,
-// 		)
+	for rows.Next() {
+		var order Order
 
-// 		if err != nil {
-// 			return nil, err
-// 		}
+		err := rows.Scan(
+			&order.Hash,
+			&order.Token,
+			&order.Base,
+			&order.Price,
+			&order.Quantity,
+			&order.IsBid,
+			&order.CreatedAt,
+			&order.CreatedBy,
+			&order.Volume,
+			&order.VolumeFilled,
+		)
 
-// 		orders = append(orders, order)
-// 	}
+		if err != nil {
+			return nil, err
+		}
 
-// 	return orders, nil
-// }
+		orders = append(orders, order)
+	}
+
+	return orders, nil
+}
