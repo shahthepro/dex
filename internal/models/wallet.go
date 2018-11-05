@@ -77,10 +77,10 @@ func (wallet *Wallet) UpdateEscrowBalance(store *store.DataStore) error {
 }
 
 // GetBalance returns balance of wallet/token
-func (wallet *Wallet) GetBalance(store *store.DataStore, user *wrappers.Address, token *wrappers.Address) error {
+func (wallet *Wallet) GetBalance(store *store.DataStore) error {
 	row := store.DB.QueryRow(
 		`SELECT balance, escrow FROM wallet_balances 
-		WHERE wallet=$1 AND token=$2`, user.Hex(), token.Hex())
+		WHERE wallet=$1 AND token=$2`, wallet.Address.Hex(), wallet.Token.Hex())
 
 	err := row.Scan(
 		&wallet.Balance,
@@ -130,4 +130,12 @@ func GetTokenBalancesForWallet(store *store.DataStore, address *wrappers.Address
 	}
 
 	return wallets, nil
+}
+
+// NewWallet creates new instance of address/wallet pair
+func NewWallet(address *wrappers.Address, token *wrappers.Address) *Wallet {
+	return &Wallet{
+		Address: address,
+		Token:   token,
+	}
 }

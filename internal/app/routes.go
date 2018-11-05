@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"hameid.net/cdex/dex/internal/models"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
 	"hameid.net/cdex/dex/internal/helpers"
@@ -14,6 +16,8 @@ import (
 
 // InitializeRoutes initializes all modules
 func (app *App) InitializeRoutes() {
+	app.router.HandleFunc("/wallets/{address:0x[0-9A-Za-z]{40}}", app.getWalletBalancesHandler).Methods("GET")
+	app.router.HandleFunc("/wallets/{address:0x[0-9A-Za-z]{40}}/{token:0x[0-9A-Za-z]{40}}", app.getWalletBalanceByTokenHandler).Methods("GET")
 	app.router.HandleFunc("/orders", app.getOrdersHandler).Methods("GET")
 	app.router.HandleFunc("/orders/{hash:0x[0-9A-Za-z]{64}}", app.getOrderByHashHandler).Methods("GET")
 	app.router.NotFoundHandler = notFoundHandler()
@@ -21,8 +25,39 @@ func (app *App) InitializeRoutes() {
 
 func notFoundHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		helpers.RespondWithError(w, http.StatusNotFound, "Requested API endpoint not found")
+		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid API endpoint")
 	})
+}
+
+func (app *App) getWalletBalancesHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	unwrappedAddress := common.HexToAddress(strings.TrimPrefix(vars["address"], "0x"))
+	wallets, err := models.GetTokenBalancesForWallet(app.store, wrappers.WrapAddress(&unwrappedAddress))
+
+	if err != nil {
+		helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
+	}
+
+	helpers.RespondWithJSON(w, http.StatusOK, wallets)
+}
+
+func (app *App) getWalletBalanceByTokenHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	unwrappedAddress := common.HexToAddress(strings.TrimPrefix(vars["address"], "0x"))
+	unwrappedToken := common.HexToAddress(strings.TrimPrefix(vars["token"], "0x"))
+
+	wallet := models.NewWallet(
+		wrappers.WrapAddress(&unwrappedAddress),
+		wrappers.WrapAddress(&unwrappedToken),
+	)
+
+	err := wallet.GetBalance(app.store)
+
+	if err != nil {
+		helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
+	}
+
+	helpers.RespondWithJSON(w, http.StatusOK, wallet)
 }
 
 func (app *App) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
