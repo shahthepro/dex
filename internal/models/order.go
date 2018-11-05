@@ -7,17 +7,17 @@ import (
 
 // Order record
 type Order struct {
-	Hash         *wrappers.Hash    `json:"order_hash"`
-	Token        *wrappers.Address `json:"token"`
-	Base         *wrappers.Address `json:"base"`
-	Price        *wrappers.BigInt  `json:"price"`
-	Quantity     *wrappers.BigInt  `json:"quantity"`
-	IsBid        bool              `json:"is_bid"`
-	CreatedAt    uint64            `json:"created_at"`
-	CreatedBy    *wrappers.Address `json:"created_by"`
-	Volume       *wrappers.BigInt  `json:"volume"`
-	VolumeFilled *wrappers.BigInt  `json:"volume_filled"`
-	IsOpen       bool              `json:"is_open"`
+	Hash         *wrappers.Hash      `json:"order_hash"`
+	Token        *wrappers.Address   `json:"token"`
+	Base         *wrappers.Address   `json:"base"`
+	Price        *wrappers.BigInt    `json:"price"`
+	Quantity     *wrappers.BigInt    `json:"quantity"`
+	IsBid        bool                `json:"is_bid"`
+	CreatedAt    *wrappers.Timestamp `json:"created_at"`
+	CreatedBy    *wrappers.Address   `json:"created_by"`
+	Volume       *wrappers.BigInt    `json:"volume"`
+	VolumeFilled *wrappers.BigInt    `json:"volume_filled"`
+	IsOpen       bool                `json:"is_open"`
 }
 
 // Save inserts Order
@@ -48,7 +48,7 @@ func (order *Order) Get(store *store.DataStore) error {
 
 	row := store.DB.QueryRow(query, order.Hash)
 
-	var t float64
+	// var t float64
 
 	err := row.Scan(
 		&order.Hash,
@@ -57,14 +57,14 @@ func (order *Order) Get(store *store.DataStore) error {
 		&order.Price,
 		&order.Quantity,
 		&order.IsBid,
-		// &order.CreatedAt,
-		&t,
+		&order.CreatedAt,
+		// &t,
 		&order.CreatedBy,
 		&order.Volume,
 		&order.VolumeFilled,
 	)
 
-	order.CreatedAt = uint64(t)
+	// order.CreatedAt = uint64(t)
 
 	return err
 }
@@ -112,3 +112,50 @@ func (order *Order) Close(store *store.DataStore) error {
 
 	return err
 }
+
+// NewOrder returns new instance of Order struct
+func NewOrder() *Order {
+	return &Order{}
+}
+
+// // GetOrders returns the list of orders
+// func GetOrders(store *store.DataStore, start int, offset int) ([]Order, error) {
+// 	rows, err := store.DB.Query(
+// 		"SELECT token_id, base_id, is_bid, price, volume, volume_filled, status, expires_after, created_by, extract(epoch from created_at::timestamp with time zone), hash, signature FROM orders LIMIT $1 OFFSET $2",
+// 		count, start)
+
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	defer rows.Close()
+
+// 	orders := []Order{}
+
+// 	for rows.Next() {
+// 		var order Order
+
+// 		err := rows.Scan(
+// 			&order.TokenID,
+// 			&order.BaseID,
+// 			&order.IsBid,
+// 			&order.Price,
+// 			&order.Volume,
+// 			&order.VolumeFilled,
+// 			&order.Status,
+// 			&order.ExpiresAfter,
+// 			&order.CreatedBy,
+// 			&order.CreatedAt,
+// 			&order.Hash,
+// 			&order.Signature,
+// 		)
+
+// 		if err != nil {
+// 			return nil, err
+// 		}
+
+// 		orders = append(orders, order)
+// 	}
+
+// 	return orders, nil
+// }

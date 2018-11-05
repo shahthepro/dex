@@ -1,7 +1,9 @@
 package app
 
 import (
+	"database/sql"
 	"errors"
+	"math/big"
 	"net/http"
 	"strconv"
 	"strings"
@@ -16,6 +18,7 @@ import (
 
 // InitializeRoutes initializes all modules
 func (app *App) InitializeRoutes() {
+	app.router.StrictSlash(true)
 	app.router.HandleFunc("/wallets/{address:0x[0-9A-Za-z]{40}}", app.getWalletBalancesHandler).Methods("GET")
 	app.router.HandleFunc("/wallets/{address:0x[0-9A-Za-z]{40}}/{token:0x[0-9A-Za-z]{40}}", app.getWalletBalanceByTokenHandler).Methods("GET")
 	app.router.HandleFunc("/orders", app.getOrdersHandler).Methods("GET")
@@ -36,6 +39,7 @@ func (app *App) getWalletBalancesHandler(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	helpers.RespondWithJSON(w, http.StatusOK, wallets)
@@ -53,11 +57,16 @@ func (app *App) getWalletBalanceByTokenHandler(w http.ResponseWriter, r *http.Re
 
 	err := wallet.GetBalance(app.store)
 
-	if err != nil {
-		helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
+	switch err {
+	case nil:
+		helpers.RespondWithJSON(w, http.StatusOK, wallet)
+	case sql.ErrNoRows:
+		wallet.Balance = wrappers.WrapBigInt(big.NewInt(0))
+		wallet.EscrowBalance = wrappers.WrapBigInt(big.NewInt(0))
+		helpers.RespondWithJSON(w, http.StatusOK, wallet)
+	default:
+		helpers.RespondWithError(w, http.StatusInternalServerError, "internal error")
 	}
-
-	helpers.RespondWithJSON(w, http.StatusOK, wallet)
 }
 
 func (app *App) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
@@ -91,21 +100,19 @@ func (app *App) getOrderByHashHandler(w http.ResponseWriter, r *http.Request) {
 	unwrappedHash := common.HexToHash(strings.TrimPrefix(vars["hash"], "0x"))
 	hash := wrappers.WrapHash(&unwrappedHash)
 
-	helpers.RespondWithJSON(w, http.StatusOK, map[string]string{"hash": hash.Hex()})
+	order := models.NewOrder()
+	order.Hash = hash
 
-	// order, err := models.GetOrderByHash(app.Store, hash)
+	err := order.Get(app.store)
 
-	// switch err {
-	// case nil:
-	// 	utils.RespondWithJSON(w, http.StatusOK, order)
-
-	// case errors.NoOpenOrderFound:
-	// 	utils.RespondWithError(w, http.StatusNotFound, err.Error())
-
-	// default:
-	// 	utils.RespondWithError(w, http.StatusInternalServerError, errors.InternalServerError.Error())
-
-	// }
+	switch err {
+	case nil:
+		helpers.RespondWithJSON(w, http.StatusOK, order)
+	case sql.ErrNoRows:
+		helpers.RespondWithError(w, http.StatusNotFound, "Order not found")
+	default:
+		helpers.RespondWithError(w, http.StatusInternalServerError, "internal error")
+	}
 }
 
 var errInvalidCountParam = errors.New("Invalid value for `count` parameter")
