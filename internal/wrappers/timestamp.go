@@ -18,7 +18,7 @@ func (timestamp *Timestamp) Scan(value interface{}) error {
 
 // Value implements driver.Valuer interface
 func (timestamp *Timestamp) Value() (driver.Value, error) {
-	return timestamp.t, nil
+	return int64(timestamp.t), nil
 }
 
 // MarshalJSON marshals data

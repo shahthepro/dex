@@ -161,7 +161,14 @@ async function placeOrder(fromAddress, tokenAddress, baseAddress, price, quantit
 	})
 
 	expect(r.status).toBe(true)
-	expect(r.events.hasOwnProperty('PlaceOrder')).toBe(true)
+	let orderHash
+	if (isBid) {
+		expect(r.events.hasOwnProperty('PlaceBuyOrder')).toBe(true)
+		orderHash = r.events.PlaceBuyOrder.returnValues.orderHash
+	} else {
+		expect(r.events.hasOwnProperty('PlaceSellOrder')).toBe(true)
+		orderHash = r.events.PlaceSellOrder.returnValues.orderHash
+	}
 	
 	let balanceAfterOrder = await DEXChain.methods.balanceOf(tokenToCheckBalance, fromAddress).call()
 	balanceAfterOrder = new BN(balanceAfterOrder, 10)
@@ -171,7 +178,7 @@ async function placeOrder(fromAddress, tokenAddress, baseAddress, price, quantit
 	expect(balanceAfterOrder.sub(balanceBeforeOrder.sub(volume)).toNumber()).toBe(0)
 	expect(escrowAfterOrder.sub(escrowBeforeOrder.add(volume)).toNumber()).toBe(0)
 
-	return r.events.PlaceOrder.returnValues.orderHash
+	return orderHash
 }
 
 async function cancelOrder(fromAddress, tokenAddress, orderHash) {

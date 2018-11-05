@@ -39,8 +39,10 @@ type ContractsInfo struct {
 	Orderbook struct {
 		Address wrappers.Address `json:"address"`
 		Topics  struct {
-			PlaceOrder  wrappers.Hash `json:"PlaceOrder"`
-			CancelOrder wrappers.Hash `json:"CancelOrder"`
+			// PlaceOrder  wrappers.Hash `json:"PlaceOrder"`
+			PlaceBuyOrder  wrappers.Hash `json:"PlaceBuyOrder"`
+			PlaceSellOrder wrappers.Hash `json:"PlaceSellOrder"`
+			CancelOrder    wrappers.Hash `json:"CancelOrder"`
 		} `json:"topics"`
 	} `json:"orderbook"`
 	OrderMatcher struct {

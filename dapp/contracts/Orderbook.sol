@@ -8,10 +8,22 @@ import "./interfaces/IFeeContract.sol";
 contract Orderbook {
     using SafeMath for uint256;
 
-    event PlaceOrder(
+    // event PlaceOrder(
+    //     bytes32 orderHash,
+    //     address token, address base,
+    //     uint256 price, uint256 quantity, bool is_bid,
+    //     address owner, uint256 timestamp
+    // );
+    event PlaceBuyOrder(
         bytes32 orderHash,
         address token, address base,
-        uint256 price, uint256 quantity, bool is_bid,
+        uint256 price, uint256 quantity,
+        address owner, uint256 timestamp
+    );
+    event PlaceSellOrder(
+        bytes32 orderHash,
+        address token, address base,
+        uint256 price, uint256 quantity,
         address owner, uint256 timestamp
     );
     event CancelOrder(bytes32 orderHash);
@@ -46,7 +58,11 @@ contract Orderbook {
         createOrder(orderHash);
         storeOrder(orderHash, token, base, price, quantity, is_bid);
 
-        emit PlaceOrder(orderHash, token, base, price, quantity, is_bid, msg.sender, now);
+        if (is_bid) {
+            emit PlaceBuyOrder(orderHash, token, base, price, quantity, msg.sender, now);
+        } else {
+            emit PlaceSellOrder(orderHash, token, base, price, quantity, msg.sender, now);
+        }
     }
 
     function createOrder(bytes32 orderHash) private {

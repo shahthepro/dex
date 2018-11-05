@@ -116,7 +116,9 @@ func (r *Relayer) RunOnExchangeNetwork() {
 		Topics: [][]common.Hash{
 			{
 				r.contracts.Exchange.Topics.BalanceUpdate.Hash,
-				r.contracts.Orderbook.Topics.PlaceOrder.Hash,
+				// r.contracts.Orderbook.Topics.PlaceOrder.Hash,
+				r.contracts.Orderbook.Topics.PlaceBuyOrder.Hash,
+				r.contracts.Orderbook.Topics.PlaceSellOrder.Hash,
 				r.contracts.Orderbook.Topics.CancelOrder.Hash,
 				r.contracts.OrderMatcher.Topics.Trade.Hash,
 				r.contracts.OrderMatcher.Topics.OrderFilledVolumeUpdate.Hash,
@@ -140,8 +142,10 @@ func (r *Relayer) RunOnExchangeNetwork() {
 					switch topic {
 					case r.contracts.Exchange.Topics.BalanceUpdate.Hash:
 						r.balanceUpdateLogCallback(vLog)
-					case r.contracts.Orderbook.Topics.PlaceOrder.Hash:
-						r.placeOrderLogCallback(vLog)
+					case r.contracts.Orderbook.Topics.PlaceBuyOrder.Hash:
+						r.placeOrderLogCallback(vLog, true)
+					case r.contracts.Orderbook.Topics.PlaceSellOrder.Hash:
+						r.placeOrderLogCallback(vLog, false)
 					case r.contracts.Orderbook.Topics.CancelOrder.Hash:
 						r.cancelOrderLogCallback(vLog)
 					case r.contracts.OrderMatcher.Topics.Trade.Hash:
@@ -222,18 +226,22 @@ func (r *Relayer) balanceUpdateLogCallback(vLog types.Log) {
 	fmt.Printf("\n\nUpdated %s token balance of wallet %s\n", buEvent.Token.Hex(), buEvent.User.Hex())
 }
 
-func (r *Relayer) placeOrderLogCallback(vLog types.Log) {
+func (r *Relayer) placeOrderLogCallback(vLog types.Log, isBid bool) {
 	placeOrderEvent := struct {
 		OrderHash common.Hash
 		Token     common.Address
 		Base      common.Address
 		Price     *big.Int
 		Quantity  *big.Int
-		IsBid     bool
+		// IsBid     bool
 		Owner     common.Address
 		Timestamp *big.Int
 	}{}
-	err := r.exchange.orderbookABI.Unpack(&placeOrderEvent, "PlaceOrder", vLog.Data)
+	eventName := "PlaceBuyOrder"
+	if !isBid {
+		eventName = "PlaceSellOrder"
+	}
+	err := r.exchange.orderbookABI.Unpack(&placeOrderEvent, eventName, vLog.Data)
 	if err != nil {
 		log.Fatal("Unpack: ", err)
 		return
@@ -244,9 +252,9 @@ func (r *Relayer) placeOrderLogCallback(vLog types.Log) {
 		Base:      wrappers.WrapAddress(&placeOrderEvent.Base),
 		Price:     wrappers.WrapBigInt(placeOrderEvent.Price),
 		Quantity:  wrappers.WrapBigInt(placeOrderEvent.Quantity),
-		IsBid:     placeOrderEvent.IsBid,
+		IsBid:     isBid, // placeOrderEvent.IsBid.Cmp(big.NewInt(1)) == 0,
 		CreatedBy: wrappers.WrapAddress(&placeOrderEvent.Owner),
-		CreatedAt: (*(placeOrderEvent.Timestamp)).Uint64(),
+		CreatedAt: wrappers.WrapTimestamp((*(placeOrderEvent.Timestamp)).Uint64()),
 		Volume:    wrappers.WrapBigInt(big.NewInt(0).Mul(placeOrderEvent.Price, placeOrderEvent.Quantity)),
 	}
 	err = order.Save(r.store)
