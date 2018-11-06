@@ -24,6 +24,7 @@ func (app *App) InitializeRoutes() {
 	app.router.HandleFunc("/wallets/{address:0x[0-9A-Za-z]{40}}/{token:0x[0-9A-Za-z]{40}}", app.getWalletBalanceByTokenHandler).Methods("GET")
 	app.router.HandleFunc("/orders", app.getOrdersHandler).Methods("GET")
 	app.router.HandleFunc("/orders/{hash:0x[0-9A-Za-z]{64}}", app.getOrderByHashHandler).Methods("GET")
+	app.router.HandleFunc("/trades", app.getTradesHandler).Methods("GET")
 	app.router.NotFoundHandler = notFoundHandler()
 }
 
@@ -86,6 +87,27 @@ func (app *App) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	switch err {
 	case nil:
 		helpers.RespondWithJSON(w, http.StatusOK, orders)
+	default:
+		helpers.RespondWithJSON(w, http.StatusInternalServerError, "internal error")
+	}
+}
+
+func (app *App) getTradesHandler(w http.ResponseWriter, r *http.Request) {
+	var params map[string]interface{}
+	params = make(map[string]interface{})
+
+	err := getTradeParamsFromRequest(r, &params)
+
+	if err != nil {
+		helpers.RespondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	trades, err := models.GetTrades(app.store, params)
+
+	switch err {
+	case nil:
+		helpers.RespondWithJSON(w, http.StatusOK, trades)
 	default:
 		helpers.RespondWithJSON(w, http.StatusInternalServerError, "internal error")
 	}
@@ -172,8 +194,6 @@ func getOrderParamsFromRequest(r *http.Request, params *map[string]interface{}) 
 		if err != nil {
 			return errInvalidSideParam
 		}
-		// } else {
-		// 	(*params)["side"] = nil
 	}
 
 	if val := r.FormValue("status"); len(val) > 0 {
@@ -181,8 +201,6 @@ func getOrderParamsFromRequest(r *http.Request, params *map[string]interface{}) 
 		if err != nil {
 			return errInvalidStatusParam
 		}
-		// } else {
-		// 	(*params)["status"] = nil
 	}
 
 	if val := r.FormValue("token"); len(val) > 0 {
@@ -190,8 +208,6 @@ func getOrderParamsFromRequest(r *http.Request, params *map[string]interface{}) 
 			return errInvalidTokenParam
 		}
 		(*params)["token"] = val
-		// } else {
-		// 	(*params)["token"] = nil
 	}
 
 	if val := r.FormValue("base"); len(val) > 0 {
@@ -199,8 +215,24 @@ func getOrderParamsFromRequest(r *http.Request, params *map[string]interface{}) 
 			return errInvalidBaseParam
 		}
 		(*params)["base"] = val
-		// } else {
-		// 	(*params)["base"] = nil
+	}
+
+	return nil
+}
+
+func getTradeParamsFromRequest(r *http.Request, params *map[string]interface{}) error {
+	if val := r.FormValue("token"); len(val) > 0 {
+		if !common.IsHexAddress(val) {
+			return errInvalidTokenParam
+		}
+		(*params)["token"] = val
+	}
+
+	if val := r.FormValue("base"); len(val) > 0 {
+		if !common.IsHexAddress(val) {
+			return errInvalidBaseParam
+		}
+		(*params)["base"] = val
 	}
 
 	return nil
