@@ -40,7 +40,7 @@ type OrderbookResponse struct {
 func (order *Order) Save(store *store.DataStore) error {
 	query := `INSERT INTO orders (
 		order_hash, token, base, price, quantity, is_bid, created_at, created_by, volume)
-		VALUES (UPPER($1), UPPER($2), UPPER($3), $4, $5, $6, to_timestamp($7), UPPER($8), $9)`
+		VALUES (LOWER($1), LOWER($2), LOWER($3), $4, $5, $6, to_timestamp($7), LOWER($8), $9)`
 
 	_, err := store.DB.Exec(
 		query,
@@ -60,7 +60,7 @@ func (order *Order) Save(store *store.DataStore) error {
 
 // Get scans the order by hash from database
 func (order *Order) Get(store *store.DataStore) error {
-	query := `SELECT order_hash, token, base, price, quantity, is_bid, trunc(extract(epoch from created_at::timestamp with time zone)), created_by, volume, volume_filled, is_open FROM orders WHERE order_hash=UPPER($1)`
+	query := `SELECT order_hash, token, base, price, quantity, is_bid, trunc(extract(epoch from created_at::timestamp with time zone)), created_by, volume, volume_filled, is_open FROM orders WHERE order_hash=LOWER($1)`
 
 	row := store.DB.QueryRow(query, order.Hash.Hex())
 
@@ -83,7 +83,7 @@ func (order *Order) Get(store *store.DataStore) error {
 
 // Update order details
 func (order *Order) Update(store *store.DataStore) error {
-	query := `UPDATE orders SET volume_filled=$1, is_open=$2 WHERE order_hash=UPPER($3)`
+	query := `UPDATE orders SET volume_filled=$1, is_open=$2 WHERE order_hash=LOWER($3)`
 
 	if order.Volume.Cmp(order.VolumeFilled) == 0 {
 		order.IsOpen = false
@@ -101,7 +101,7 @@ func (order *Order) Update(store *store.DataStore) error {
 
 // StoreFilledVolume updates order's filled volume
 func (order *Order) StoreFilledVolume(store *store.DataStore) error {
-	query := `UPDATE orders SET volume_filled=$1 WHERE order_hash=UPPER($2)`
+	query := `UPDATE orders SET volume_filled=$1 WHERE order_hash=LOWER($2)`
 
 	_, err := store.DB.Exec(
 		query,
@@ -114,7 +114,7 @@ func (order *Order) StoreFilledVolume(store *store.DataStore) error {
 
 // Close updates order's filled volume
 func (order *Order) Close(store *store.DataStore) error {
-	query := `UPDATE orders SET is_open=$1 WHERE order_hash=UPPER($2)`
+	query := `UPDATE orders SET is_open=$1 WHERE order_hash=LOWER($2)`
 
 	_, err := store.DB.Exec(
 		query,
@@ -134,15 +134,15 @@ func buildWhereConstraintFromParams(params *map[string]interface{}) string {
 	var buffer bytes.Buffer
 
 	if val, ok := (*params)["token"]; ok {
-		buffer.WriteString(fmt.Sprintf(` AND token=UPPER('%s')`, val))
+		buffer.WriteString(fmt.Sprintf(` AND token=LOWER('%s')`, val))
 	}
 
 	if val, ok := (*params)["base"]; ok {
-		buffer.WriteString(fmt.Sprintf(` AND base=UPPER('%s')`, val))
+		buffer.WriteString(fmt.Sprintf(` AND base=LOWER('%s')`, val))
 	}
 
 	if val, ok := (*params)["creator"]; ok {
-		buffer.WriteString(fmt.Sprintf(` AND created_by=UPPER('%s')`, val))
+		buffer.WriteString(fmt.Sprintf(` AND created_by=LOWER('%s')`, val))
 	}
 
 	if val, ok := (*params)["side"]; ok {
@@ -248,7 +248,7 @@ func GetOrderbook(store *store.DataStore, params *map[string]interface{}) (*Orde
 	}
 
 	buyOrdersQuery := fmt.Sprintf(`SELECT price, sum(volume), sum(volume_filled) FROM orders 
-		WHERE created_at > now() - interval '14 days' AND is_open=TRUE AND is_bid=TRUE AND token=UPPER($1) AND base=UPPER($2)
+		WHERE created_at > now() - interval '14 days' AND is_open=TRUE AND is_bid=TRUE AND token=LOWER($1) AND base=LOWER($2)
 		GROUP BY price ORDER BY price DESC LIMIT 20`)
 
 	buyOrders, err := executeOrderbookQuery(store, buyOrdersQuery, token, base)
@@ -257,7 +257,7 @@ func GetOrderbook(store *store.DataStore, params *map[string]interface{}) (*Orde
 	}
 
 	sellOrdersQuery := fmt.Sprintf(`SELECT price, sum(volume), sum(volume_filled) FROM orders 
-		WHERE created_at > now() - interval '14 days' AND is_open=TRUE AND is_bid=FALSE AND token=UPPER($1) AND base=UPPER($2)
+		WHERE created_at > now() - interval '14 days' AND is_open=TRUE AND is_bid=FALSE AND token=LOWER($1) AND base=LOWER($2)
 		GROUP BY price ORDER BY price ASC LIMIT 20`)
 
 	sellOrders, err := executeOrderbookQuery(store, sellOrdersQuery, token, base)

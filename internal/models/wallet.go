@@ -19,7 +19,7 @@ type Wallet struct {
 func (wallet *Wallet) Save(store *store.DataStore) error {
 	query := `INSERT INTO wallet_balances (
 		wallet, token, balance, escrow)
-		VALUES (UPPER($1), UPPER($2), $3, $4)
+		VALUES (LOWER($1), LOWER($2), $3, $4)
 		ON CONFLICT (wallet, token) DO UPDATE
 		SET balance = $5, escrow = $6`
 
@@ -40,7 +40,7 @@ func (wallet *Wallet) Save(store *store.DataStore) error {
 func (wallet *Wallet) UpdateBalance(store *store.DataStore) error {
 	query := `INSERT INTO wallet_balances (
 		wallet, token, balance, escrow)
-		VALUES (UPPER($1), UPPER($2), $3, $4)
+		VALUES (LOWER($1), LOWER($2), $3, $4)
 		ON CONFLICT (wallet, token) DO UPDATE
 		SET balance = $5`
 
@@ -60,7 +60,7 @@ func (wallet *Wallet) UpdateBalance(store *store.DataStore) error {
 func (wallet *Wallet) UpdateEscrowBalance(store *store.DataStore) error {
 	query := `INSERT INTO wallet_balances (
 		wallet, token, balance, escrow)
-		VALUES (UPPER($1), UPPER($2), $3, $4)
+		VALUES (LOWER($1), LOWER($2), $3, $4)
 		ON CONFLICT (wallet, token) DO UPDATE
 		SET escrow = $5`
 
@@ -80,7 +80,7 @@ func (wallet *Wallet) UpdateEscrowBalance(store *store.DataStore) error {
 func (wallet *Wallet) GetBalance(store *store.DataStore) error {
 	row := store.DB.QueryRow(
 		`SELECT balance, escrow FROM wallet_balances 
-		WHERE wallet=UPPER($1) AND token=UPPER($2)`, wallet.Address.Hex(), wallet.Token.Hex())
+		WHERE wallet=LOWER($1) AND token=LOWER($2)`, wallet.Address.Hex(), wallet.Token.Hex())
 
 	err := row.Scan(
 		&wallet.Balance,
@@ -102,7 +102,7 @@ func (wallet *Wallet) GetBalance(store *store.DataStore) error {
 func GetTokenBalancesForWallet(store *store.DataStore, address *wrappers.Address) ([]Wallet, error) {
 	rows, err := store.DB.Query(
 		`SELECT wallet, token, balance, escrow FROM wallet_balances 
-		WHERE wallet=UPPER($1) AND (balance > 0 OR escrow > 0)`, address.Hex())
+		WHERE wallet=LOWER($1) AND (balance > 0 OR escrow > 0)`, address.Hex())
 
 	if err != nil {
 		return nil, err
