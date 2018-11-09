@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"math/big"
 
 	"hameid.net/cdex/dex/internal/store"
 	"hameid.net/cdex/dex/internal/wrappers"
@@ -25,15 +24,15 @@ type Order struct {
 	IsOpen       bool                `json:"is_open"`
 }
 
-type orderbookResponseItem struct {
+type OrderbookResponseItem struct {
 	Price        *wrappers.BigInt `json:"price"`
 	Volume       *wrappers.BigInt `json:"volume"`
 	VolumeFilled *wrappers.BigInt `json:"volume_filled"`
 }
 
-type orderbookResponse struct {
-	Bids      *[]orderbookResponseItem `json:"bids"`
-	Asks      *[]orderbookResponseItem `json:"asks"`
+type OrderbookResponse struct {
+	Bids      *[]OrderbookResponseItem `json:"bids"`
+	Asks      *[]OrderbookResponseItem `json:"asks"`
 	LastPrice *wrappers.BigInt         `json:"last_price"`
 }
 
@@ -205,7 +204,7 @@ func GetOrders(store *store.DataStore, params *map[string]interface{}) ([]Order,
 	return orders, nil
 }
 
-func executeOrderbookQuery(store *store.DataStore, query string, token string, base string) (*[]orderbookResponseItem, error) {
+func executeOrderbookQuery(store *store.DataStore, query string, token string, base string) (*[]OrderbookResponseItem, error) {
 	rows, err := store.DB.Query(query, token, base)
 
 	if err != nil {
@@ -214,10 +213,10 @@ func executeOrderbookQuery(store *store.DataStore, query string, token string, b
 
 	defer rows.Close()
 
-	orders := []orderbookResponseItem{}
+	orders := []OrderbookResponseItem{}
 
 	for rows.Next() {
-		var order orderbookResponseItem
+		var order OrderbookResponseItem
 
 		err := rows.Scan(
 			&order.Price,
@@ -236,7 +235,7 @@ func executeOrderbookQuery(store *store.DataStore, query string, token string, b
 }
 
 // GetOrderbook returns the list of buy and sell orders
-func GetOrderbook(store *store.DataStore, params *map[string]interface{}) (*orderbookResponse, error) {
+func GetOrderbook(store *store.DataStore, params *map[string]interface{}) (*OrderbookResponse, error) {
 
 	token, ok := (*params)["token"].(string)
 	if !ok {
@@ -266,11 +265,16 @@ func GetOrderbook(store *store.DataStore, params *map[string]interface{}) (*orde
 		return nil, err
 	}
 
-	orderbookResponse := &orderbookResponse{
-		Bids:      buyOrders,
-		Asks:      sellOrders,
-		LastPrice: wrappers.WrapBigInt(big.NewInt(0)),
+	lastPrice, err := getLastTradedPrice(store, token, base)
+	if err != nil {
+		return nil, err
 	}
 
-	return orderbookResponse, nil
+	OrderbookResponse := &OrderbookResponse{
+		Bids:      buyOrders,
+		Asks:      sellOrders,
+		LastPrice: lastPrice,
+	}
+
+	return OrderbookResponse, nil
 }

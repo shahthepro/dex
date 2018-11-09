@@ -3,6 +3,7 @@ package models
 import (
 	"bytes"
 	"fmt"
+	"math/big"
 
 	"hameid.net/cdex/dex/internal/store"
 	"hameid.net/cdex/dex/internal/wrappers"
@@ -34,7 +35,7 @@ type tradeJSONResp struct {
 func (trade *Trade) Save(store *store.DataStore) error {
 	query := `INSERT INTO trades (
 		buy_order_hash, sell_order_hash, token, base, price, volume, traded_at, tx_hash)
-		VALUES ($1, $2, $3, $4, $5, $6, to_timestamp($7), $8)`
+		VALUES (UPPER($1), UPPER($2), UPPER($3), UPPER($4), $5, $6, to_timestamp($7), UPPER($8))`
 
 	_, err := store.DB.Exec(
 		query,
@@ -107,4 +108,28 @@ func GetTrades(store *store.DataStore, params map[string]interface{}) ([]tradeJS
 	}
 
 	return trades, nil
+}
+
+func getLastTradedPrice(store *store.DataStore, token string, base string) (*wrappers.BigInt, error) {
+	query := `select last(price, traded_at) from trades where token=UPPER($1) AND base=UPPER($2) group by traded_at order by traded_at desc limit 1;`
+
+	rows, err := store.DB.Query(query, token, base)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	lastPrice := wrappers.WrapBigInt(big.NewInt(0))
+
+	if rows.Next() {
+		err := rows.Scan(&lastPrice)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return lastPrice, nil
 }
