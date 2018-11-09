@@ -25,6 +25,8 @@ func (app *App) InitializeRoutes() {
 	app.router.HandleFunc("/orders", app.getOrdersHandler).Methods("GET")
 	app.router.HandleFunc("/orders/{hash:0x[0-9A-Za-z]{64}}", app.getOrderByHashHandler).Methods("GET")
 	app.router.HandleFunc("/trades", app.getTradesHandler).Methods("GET")
+	app.router.HandleFunc("/trades/price_history", app.getPriceHistoryHandler).Methods("GET")
+	app.router.HandleFunc("/orderbook", app.getOrderbookHandler).Methods("GET")
 	app.router.NotFoundHandler = notFoundHandler()
 }
 
@@ -82,7 +84,7 @@ func (app *App) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orders, err := models.GetOrders(app.store, params)
+	orders, err := models.GetOrders(app.store, &params)
 
 	switch err {
 	case nil:
@@ -92,7 +94,49 @@ func (app *App) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (app *App) getOrderbookHandler(w http.ResponseWriter, r *http.Request) {
+	var params map[string]interface{}
+	params = make(map[string]interface{})
+
+	err := getOrderbookParamsFromRequest(r, &params)
+
+	if err != nil {
+		helpers.RespondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	resp, err := models.GetOrderbook(app.store, &params)
+
+	switch err {
+	case nil:
+		helpers.RespondWithJSON(w, http.StatusOK, resp)
+	default:
+		helpers.RespondWithJSON(w, http.StatusInternalServerError, "internal error")
+	}
+}
+
 func (app *App) getTradesHandler(w http.ResponseWriter, r *http.Request) {
+	var params map[string]interface{}
+	params = make(map[string]interface{})
+
+	err := getTradeParamsFromRequest(r, &params)
+
+	if err != nil {
+		helpers.RespondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	trades, err := models.GetTrades(app.store, params)
+
+	switch err {
+	case nil:
+		helpers.RespondWithJSON(w, http.StatusOK, trades)
+	default:
+		helpers.RespondWithJSON(w, http.StatusInternalServerError, "internal error")
+	}
+}
+
+func (app *App) getPriceHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	var params map[string]interface{}
 	params = make(map[string]interface{})
 
@@ -140,6 +184,8 @@ var errInvalidSideParam = errors.New("Invalid value for `side` parameter")
 var errInvalidStatusParam = errors.New("Invalid value for `status` parameter")
 var errInvalidTokenParam = errors.New("Invalid value for `token` parameter")
 var errInvalidBaseParam = errors.New("Invalid value for `base` parameter")
+var errMissingTokenParam = errors.New("Missing `token` parameter")
+var errMissingBaseParam = errors.New("Missing `base` parameter")
 
 func getOffsetAndCountFromRequest(r *http.Request) (int, int, error) {
 	count := 50
@@ -217,6 +263,13 @@ func getOrderParamsFromRequest(r *http.Request, params *map[string]interface{}) 
 		(*params)["base"] = val
 	}
 
+	if val := r.FormValue("creator"); len(val) > 0 {
+		if !common.IsHexAddress(val) {
+			return errInvalidBaseParam
+		}
+		(*params)["creator"] = val
+	}
+
 	return nil
 }
 
@@ -233,6 +286,28 @@ func getTradeParamsFromRequest(r *http.Request, params *map[string]interface{}) 
 			return errInvalidBaseParam
 		}
 		(*params)["base"] = val
+	}
+
+	return nil
+}
+
+func getOrderbookParamsFromRequest(r *http.Request, params *map[string]interface{}) error {
+	if val := r.FormValue("token"); len(val) > 0 {
+		if !common.IsHexAddress(val) {
+			return errInvalidTokenParam
+		}
+		(*params)["token"] = val
+	} else {
+		return errMissingTokenParam
+	}
+
+	if val := r.FormValue("base"); len(val) > 0 {
+		if !common.IsHexAddress(val) {
+			return errInvalidBaseParam
+		}
+		(*params)["base"] = val
+	} else {
+		return errMissingBaseParam
 	}
 
 	return nil

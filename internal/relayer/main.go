@@ -339,6 +339,8 @@ func (r *Relayer) updateFilledVolumeLogCallback(vLog types.Log) {
 	order.Get(r.store)
 	order.VolumeFilled = wrappers.WrapBigInt(updateFilledVolumeEvent.Volume)
 
+	fmt.Println(order.Hash.Hex(), order.VolumeFilled, order.Volume, order.IsOpen)
+
 	err = order.Update(r.store)
 	if err != nil {
 		log.Fatal("Commit: ", err)

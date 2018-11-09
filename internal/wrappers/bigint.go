@@ -25,6 +25,11 @@ func (i *BigInt) UnmarshalJSON(text []byte) error {
 	return nil
 }
 
+// Cmp compares two big ints
+func (i *BigInt) Cmp(y *BigInt) int {
+	return i.Int.Cmp(&y.Int)
+}
+
 func (i *BigInt) Scan(value interface{}) error {
 	v := string(value.([]uint8))
 	_, ok := i.SetString(v, 10)

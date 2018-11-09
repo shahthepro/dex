@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"hameid.net/cdex/dex/internal/store"
 )
@@ -23,9 +24,11 @@ func (app *App) Start() {
 
 	app.InitializeRoutes()
 
+	corsObj := handlers.AllowedOrigins([]string{"*"})
+
 	app.server = &http.Server{
 		Addr:    app.port,
-		Handler: app.router}
+		Handler: handlers.CompressHandler(handlers.CORS(corsObj)(app.router))}
 
 	fmt.Printf("Running app server on address %s\n", app.server.Addr)
 

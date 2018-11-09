@@ -14,7 +14,7 @@ type Hash struct {
 
 // Scan implements Scanner.Scan for common.Hash
 func (hash *Hash) Scan(value interface{}) error {
-	hex := strings.TrimPrefix(value.(string), "0x")
+	hex := strings.TrimPrefix(strings.TrimPrefix(value.(string), "0X"), "0x")
 	hash.SetBytes(common.Hex2Bytes(hex))
 	return nil
 }

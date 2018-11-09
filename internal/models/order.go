@@ -2,7 +2,9 @@ package models
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"math/big"
 
 	"hameid.net/cdex/dex/internal/store"
 	"hameid.net/cdex/dex/internal/wrappers"
@@ -23,11 +25,23 @@ type Order struct {
 	IsOpen       bool                `json:"is_open"`
 }
 
+type orderbookResponseItem struct {
+	Price        *wrappers.BigInt `json:"price"`
+	Volume       *wrappers.BigInt `json:"volume"`
+	VolumeFilled *wrappers.BigInt `json:"volume_filled"`
+}
+
+type orderbookResponse struct {
+	Bids      *[]orderbookResponseItem `json:"bids"`
+	Asks      *[]orderbookResponseItem `json:"asks"`
+	LastPrice *wrappers.BigInt         `json:"last_price"`
+}
+
 // Save inserts Order
 func (order *Order) Save(store *store.DataStore) error {
 	query := `INSERT INTO orders (
 		order_hash, token, base, price, quantity, is_bid, created_at, created_by, volume)
-		VALUES ($1, $2, $3, $4, $5, $6, to_timestamp($7), $8, $9)`
+		VALUES (UPPER($1), UPPER($2), UPPER($3), $4, $5, $6, to_timestamp($7), UPPER($8), $9)`
 
 	_, err := store.DB.Exec(
 		query,
@@ -47,9 +61,9 @@ func (order *Order) Save(store *store.DataStore) error {
 
 // Get scans the order by hash from database
 func (order *Order) Get(store *store.DataStore) error {
-	query := `SELECT order_hash, token, base, price, quantity, is_bid, trunc(extract(epoch from created_at::timestamp with time zone)), created_by, volume, volume_filled FROM orders WHERE order_hash=$1`
+	query := `SELECT order_hash, token, base, price, quantity, is_bid, trunc(extract(epoch from created_at::timestamp with time zone)), created_by, volume, volume_filled, is_open FROM orders WHERE order_hash=UPPER($1)`
 
-	row := store.DB.QueryRow(query, order.Hash)
+	row := store.DB.QueryRow(query, order.Hash.Hex())
 
 	err := row.Scan(
 		&order.Hash,
@@ -62,6 +76,7 @@ func (order *Order) Get(store *store.DataStore) error {
 		&order.CreatedBy,
 		&order.Volume,
 		&order.VolumeFilled,
+		&order.IsOpen,
 	)
 
 	return err
@@ -69,17 +84,17 @@ func (order *Order) Get(store *store.DataStore) error {
 
 // Update order details
 func (order *Order) Update(store *store.DataStore) error {
-	query := `UPDATE orders SET volume_filled=$2, is_open=$3 WHERE order_hash=$1`
+	query := `UPDATE orders SET volume_filled=$1, is_open=$2 WHERE order_hash=UPPER($3)`
 
-	if order.Volume.Cmp(&order.VolumeFilled.Int) == 0 {
+	if order.Volume.Cmp(order.VolumeFilled) == 0 {
 		order.IsOpen = false
 	}
 
 	_, err := store.DB.Exec(
 		query,
-		order.Hash,
 		order.VolumeFilled.String(),
 		order.IsOpen,
+		order.Hash.Hex(),
 	)
 
 	return err
@@ -87,12 +102,12 @@ func (order *Order) Update(store *store.DataStore) error {
 
 // StoreFilledVolume updates order's filled volume
 func (order *Order) StoreFilledVolume(store *store.DataStore) error {
-	query := `UPDATE orders SET volume_filled=$1 WHERE order_hash=$2`
+	query := `UPDATE orders SET volume_filled=$1 WHERE order_hash=UPPER($2)`
 
 	_, err := store.DB.Exec(
 		query,
 		order.VolumeFilled.String(),
-		order.Hash,
+		order.Hash.Hex(),
 	)
 
 	return err
@@ -100,12 +115,12 @@ func (order *Order) StoreFilledVolume(store *store.DataStore) error {
 
 // Close updates order's filled volume
 func (order *Order) Close(store *store.DataStore) error {
-	query := `UPDATE orders SET is_open=$1 WHERE order_hash=$2`
+	query := `UPDATE orders SET is_open=$1 WHERE order_hash=UPPER($2)`
 
 	_, err := store.DB.Exec(
 		query,
 		false,
-		order.Hash,
+		order.Hash.Hex(),
 	)
 
 	return err
@@ -116,19 +131,22 @@ func NewOrder() *Order {
 	return &Order{}
 }
 
-// GetOrders returns the list of orders
-func GetOrders(store *store.DataStore, params map[string]interface{}) ([]Order, error) {
+func buildWhereConstraintFromParams(params *map[string]interface{}) string {
 	var buffer bytes.Buffer
 
-	if val, ok := params["token"]; ok {
-		buffer.WriteString(fmt.Sprintf(` AND token='%s'`, val))
+	if val, ok := (*params)["token"]; ok {
+		buffer.WriteString(fmt.Sprintf(` AND token=UPPER('%s')`, val))
 	}
 
-	if val, ok := params["base"]; ok {
-		buffer.WriteString(fmt.Sprintf(` AND base='%s'`, val))
+	if val, ok := (*params)["base"]; ok {
+		buffer.WriteString(fmt.Sprintf(` AND base=UPPER('%s')`, val))
 	}
 
-	if val, ok := params["side"]; ok {
+	if val, ok := (*params)["creator"]; ok {
+		buffer.WriteString(fmt.Sprintf(` AND created_by=UPPER('%s')`, val))
+	}
+
+	if val, ok := (*params)["side"]; ok {
 		isBid := false
 		if val == 0 {
 			isBid = true
@@ -136,7 +154,7 @@ func GetOrders(store *store.DataStore, params map[string]interface{}) ([]Order, 
 		buffer.WriteString(fmt.Sprintf(` AND is_bid=%t`, isBid))
 	}
 
-	if val, ok := params["status"]; ok {
+	if val, ok := (*params)["status"]; ok {
 		isOpen := false
 		if val == 0 {
 			isOpen = true
@@ -144,8 +162,14 @@ func GetOrders(store *store.DataStore, params map[string]interface{}) ([]Order, 
 		buffer.WriteString(fmt.Sprintf(` AND is_open=%t`, isOpen))
 	}
 
-	query := fmt.Sprintf(`SELECT order_hash, token, base, price, quantity, is_bid, trunc(extract(epoch from created_at::timestamp with time zone)), created_by, volume, volume_filled FROM orders WHERE created_at <= to_timestamp($3)%s ORDER BY created_at DESC LIMIT $1 OFFSET $2`, buffer.String())
-	rows, err := store.DB.Query(query, params["count"], params["start"], params["before"])
+	return buffer.String()
+}
+
+// GetOrders returns the list of orders
+func GetOrders(store *store.DataStore, params *map[string]interface{}) ([]Order, error) {
+	constraints := buildWhereConstraintFromParams(params)
+	query := fmt.Sprintf(`SELECT order_hash, token, base, price, quantity, is_bid, trunc(extract(epoch from created_at::timestamp with time zone)), created_by, volume, volume_filled FROM orders WHERE created_at <= to_timestamp($3)%s ORDER BY created_at DESC LIMIT $1 OFFSET $2`, constraints)
+	rows, err := store.DB.Query(query, (*params)["count"], (*params)["start"], (*params)["before"])
 
 	if err != nil {
 		return nil, err
@@ -179,4 +203,74 @@ func GetOrders(store *store.DataStore, params map[string]interface{}) ([]Order, 
 	}
 
 	return orders, nil
+}
+
+func executeOrderbookQuery(store *store.DataStore, query string, token string, base string) (*[]orderbookResponseItem, error) {
+	rows, err := store.DB.Query(query, token, base)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	orders := []orderbookResponseItem{}
+
+	for rows.Next() {
+		var order orderbookResponseItem
+
+		err := rows.Scan(
+			&order.Price,
+			&order.Volume,
+			&order.VolumeFilled,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		orders = append(orders, order)
+	}
+
+	return &orders, nil
+}
+
+// GetOrderbook returns the list of buy and sell orders
+func GetOrderbook(store *store.DataStore, params *map[string]interface{}) (*orderbookResponse, error) {
+
+	token, ok := (*params)["token"].(string)
+	if !ok {
+		return nil, errors.New("`token` parameter is required")
+	}
+
+	base, ok := (*params)["base"].(string)
+	if !ok {
+		return nil, errors.New("`base` parameter is required")
+	}
+
+	buyOrdersQuery := fmt.Sprintf(`SELECT price, sum(volume), sum(volume_filled) FROM orders 
+		WHERE created_at > now() - interval '14 days' AND is_open=TRUE AND is_bid=TRUE AND token=UPPER($1) AND base=UPPER($2)
+		GROUP BY price ORDER BY price DESC LIMIT 20`)
+
+	buyOrders, err := executeOrderbookQuery(store, buyOrdersQuery, token, base)
+	if err != nil {
+		return nil, err
+	}
+
+	sellOrdersQuery := fmt.Sprintf(`SELECT price, sum(volume), sum(volume_filled) FROM orders 
+		WHERE created_at > now() - interval '14 days' AND is_open=TRUE AND is_bid=FALSE AND token=UPPER($1) AND base=UPPER($2)
+		GROUP BY price ORDER BY price ASC LIMIT 20`)
+
+	sellOrders, err := executeOrderbookQuery(store, sellOrdersQuery, token, base)
+	if err != nil {
+		return nil, err
+	}
+
+	orderbookResponse := &orderbookResponse{
+		Bids:      buyOrders,
+		Asks:      sellOrders,
+		LastPrice: wrappers.WrapBigInt(big.NewInt(0)),
+	}
+
+	return orderbookResponse, nil
 }

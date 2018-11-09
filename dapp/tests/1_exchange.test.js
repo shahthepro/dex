@@ -25,8 +25,8 @@ let OrderMatchContract = new web3.eth.Contract(OrderMatchContractABI, contractsC
 let FeeContract = new web3.eth.Contract(FeeContractABI, contractsConfig.ordermatch.address)
 
 let TEST_VALUES = {
-    token1: "0x2222233333444445555566666777778888899999",
-	token2: "0x9999922222333334444455555666667777788888",
+    token1: "0xf230b790e05390fc8295f4d3f60332c93bed42e2",
+	token2: "0xd850942ef8811f2a866692a623011bde52a462c1",
 	feeAccount: networksConfig.feeAccount,
 	node1Address: networksConfig.authorities[0],
 	node2Address: networksConfig.authorities[1],
@@ -76,7 +76,7 @@ describe('Deposits', () => {
 	test('should place a buy order for token1/token2 from account 2', async (done) => {
 		accounts = await getAccounts()
 
-		let price = 100;
+		let price = Math.max(180, 150 + parseInt((Math.random() * 100).toFixed(0)));
 		let quantity = 123456789;
 		
 		let orderHash = await placeOrder(accounts[3], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, true)
@@ -90,8 +90,36 @@ describe('Deposits', () => {
 	test('should place a sell order for token1/token2 from account 1', async (done) => {
 		accounts = await getAccounts()
 
-		let price = 100;
+		let price = Math.min(120 + parseInt((Math.random() * 100).toFixed(0)), 180);
 		let quantity = 100006789;
+		
+		let orderHash = await placeOrder(accounts[2], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, false)
+
+		ORDER_HASHES.push(orderHash);
+		console.log(`Created order ${orderHash}`);
+
+		done()
+	})
+
+	test('should place a buy order for token1/token2 from account 2', async (done) => {
+		accounts = await getAccounts()
+
+		let price = Math.max(180, 150 + parseInt((Math.random() * 100).toFixed(0)));
+		let quantity = 100006789;
+		
+		let orderHash = await placeOrder(accounts[3], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, true)
+
+		ORDER_HASHES.push(orderHash);
+		console.log(`Created order ${orderHash}`);
+		
+		done()
+	})
+
+	test('should place a sell order for token1/token2 from account 1', async (done) => {
+		accounts = await getAccounts()
+
+		let price = Math.min(120 + parseInt((Math.random() * 100).toFixed(0)), 180);
+		let quantity = 123456789;
 		
 		let orderHash = await placeOrder(accounts[2], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, false)
 
@@ -109,15 +137,23 @@ describe('Deposits', () => {
 		done()
 	})
 
-	test('should cancel buy order', async (done) => {
-		expect(ORDER_HASHES.length).toBeGreaterThanOrEqual(1)
-
+	test('should match buy and sell orders', async (done) => {
 		accounts = await getAccounts()
 
-		await cancelOrder(accounts[3], TEST_VALUES.token2, ORDER_HASHES[0])
-
+		await matchOrders(ORDER_HASHES[2], accounts[3], ORDER_HASHES[3], accounts[2], TEST_VALUES.token1, TEST_VALUES.token2)
+		
 		done()
 	})
+
+	// test('should cancel buy order', async (done) => {
+	// 	expect(ORDER_HASHES.length).toBeGreaterThanOrEqual(1)
+
+	// 	accounts = await getAccounts()
+
+	// 	await cancelOrder(accounts[3], TEST_VALUES.token2, ORDER_HASHES[0])
+
+	// 	done()
+	// })
 })
 
 async function depositTokens(tokenAddress, toAccount, toDeposit) {

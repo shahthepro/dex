@@ -14,7 +14,7 @@ type Address struct {
 
 // Scan implements Scanner.Scan for common.Address
 func (a *Address) Scan(value interface{}) error {
-	hex := strings.TrimPrefix(value.(string), "0x")
+	hex := strings.TrimPrefix(strings.TrimPrefix(value.(string), "0X"), "0x")
 	a.SetBytes(common.Hex2Bytes(hex))
 	return nil
 }
