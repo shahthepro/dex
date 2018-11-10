@@ -26,7 +26,7 @@ func (app *App) InitializeRoutes() {
 	app.router.HandleFunc("/orders", app.getOrdersHandler).Methods("GET")
 	app.router.HandleFunc("/orders/{hash:0x[0-9A-Za-z]{64}}", app.getOrderByHashHandler).Methods("GET")
 	app.router.HandleFunc("/trades", app.getTradesHandler).Methods("GET")
-	// app.router.HandleFunc("/trades/history", app.getTradesHandler).Methods("GET")
+	app.router.HandleFunc("/trades/history", app.getTradeHistoryHandler).Methods("GET")
 	app.router.HandleFunc("/trades/ohlc", app.getOHLCDataHandler).Methods("GET")
 	app.router.HandleFunc("/orderbook", app.getOrderbookHandler).Methods("GET")
 	app.router.NotFoundHandler = notFoundHandler()
@@ -158,23 +158,6 @@ func (app *App) getOHLCDataHandler(w http.ResponseWriter, r *http.Request) {
 		helpers.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf(err.Error(), "base"))
 		return
 	}
-	// token := r.FormValue("token")
-	// if len(token) == 0 {
-	// 	helpers.RespondWithError(w, http.StatusBadRequest, errMissingTokenParam.Error())
-	// 	return
-	// } else if !common.IsHexAddress(token) {
-	// 	helpers.RespondWithError(w, http.StatusBadRequest, errInvalidTokenParam.Error())
-	// 	return
-	// }
-
-	// base := r.FormValue("base")
-	// if len(base) == 0 {
-	// 	helpers.RespondWithError(w, http.StatusBadRequest, errMissingBaseParam.Error())
-	// 	return
-	// } else if !common.IsHexAddress(base) {
-	// 	helpers.RespondWithError(w, http.StatusBadRequest, errInvalidBaseParam.Error())
-	// 	return
-	// }
 
 	trades, err := models.GetOHLCData(app.store, token, base)
 
@@ -182,6 +165,30 @@ func (app *App) getOHLCDataHandler(w http.ResponseWriter, r *http.Request) {
 	case nil:
 		helpers.RespondWithJSON(w, http.StatusOK, trades)
 	default:
+		helpers.RespondWithJSON(w, http.StatusInternalServerError, "internal error")
+	}
+}
+
+func (app *App) getTradeHistoryHandler(w http.ResponseWriter, r *http.Request) {
+	token, err := helpers.GetAddressQueryParam(r, "token")
+	if err != nil {
+		helpers.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf(err.Error(), "token"))
+		return
+	}
+
+	base, err := helpers.GetAddressQueryParam(r, "base")
+	if err != nil {
+		helpers.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf(err.Error(), "base"))
+		return
+	}
+
+	trades, err := models.GetTradeHistory(app.store, token, base)
+
+	switch err {
+	case nil:
+		helpers.RespondWithJSON(w, http.StatusOK, trades)
+	default:
+		fmt.Println(err)
 		helpers.RespondWithJSON(w, http.StatusInternalServerError, "internal error")
 	}
 }

@@ -23,14 +23,19 @@ type Trade struct {
 
 // UserTradeResponse record
 type UserTradeResponse struct {
-	// BuyOrderHash  *wrappers.Hash   `json:"buy_order_hash"`
-	// SellOrderHash *wrappers.Hash   `json:"sell_order_hash"`
 	OrderHash *wrappers.Hash   `json:"order_hash"`
 	IsBuy     bool             `json:"is_buy_order"`
 	Price     *wrappers.BigInt `json:"price"`
 	Volume    *wrappers.BigInt `json:"volume"`
 	TradedAt  *time.Time       `json:"traded_at"`
 	TxHash    *wrappers.Hash   `json:"tx_hash"`
+}
+
+// TradeHistoryResponse record
+type TradeHistoryResponse struct {
+	Price     *wrappers.BigInt `json:"price"`
+	Volume    *wrappers.BigInt `json:"volume"`
+	Timestamp *time.Time       `json:"traded_at"`
 }
 
 // OHLCResponse record
@@ -125,34 +130,6 @@ func GetTradesOfUser(store *store.DataStore, token *common.Address, base *common
 
 // GetOHLCData returns the list of trades
 func GetOHLCData(store *store.DataStore, token *common.Address, base *common.Address) ([]OHLCResponse, error) {
-
-	// if val, ok := params["interval"]; ok {
-	// 	switch strings.TrimSpace((val.(string))) {
-	// 	case "1H":
-	// 		interval = "1 hour"
-	// 	case "6H":
-	// 		interval = "6 hours"
-	// 	case "12H":
-	// 		interval = "12 hours"
-	// 	case "1D":
-	// 		interval = "1 day"
-	// 	case "1W":
-	// 		interval = "1 week"
-	// 	case "1M":
-	// 		interval = "1 month"
-	// 	case "3M":
-	// 		interval = "3 months"
-	// 	case "6M":
-	// 		interval = "6 months"
-	// 	case "1Y":
-	// 		interval = "1 year"
-	// 	default:
-	// 		return nil, errors.New("Invalid value given for `interval`")
-	// 	}
-	// } else {
-	// 	interval = "1 month"
-	// }
-
 	query := `
 	SELECT time_bucket('5 minutes', traded_at) AS timeinterval,
 		first(price, traded_at) AS open,
@@ -186,6 +163,43 @@ func GetOHLCData(store *store.DataStore, token *common.Address, base *common.Add
 			&trade.Close,
 			&trade.High,
 			&trade.Low,
+			&trade.Volume,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		trades = append(trades, trade)
+	}
+
+	return trades, nil
+}
+
+// GetTradeHistory returns the list of P/V history of recent trades
+func GetTradeHistory(store *store.DataStore, token *common.Address, base *common.Address) ([]TradeHistoryResponse, error) {
+	query := `
+	SELECT traded_at, price, volume FROM trades
+	WHERE token=LOWER($1) AND base=LOWER($2)
+	ORDER BY traded_at DESC
+	LIMIT 20;
+	`
+	rows, err := store.DB.Query(query, token.Hex(), base.Hex())
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	trades := []TradeHistoryResponse{}
+
+	for rows.Next() {
+		var trade TradeHistoryResponse
+
+		err := rows.Scan(
+			&trade.Timestamp,
+			&trade.Price,
 			&trade.Volume,
 		)
 
