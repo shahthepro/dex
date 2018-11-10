@@ -1,6 +1,8 @@
-import { TOKEN_PAIR_SETTER } from '@/store/action-types'
+import { TOKEN_PAIR_SETTER, FETCH_OHLC_CHARTDATA, OHLC_CHARTDATA_GETTER } from '@/store/action-types'
 import { COMMIT_TOKEN_PAIR } from '@/store/mutation-types'
 import tradeForm from './modules/trade-form'
+import chartData from './modules/chart-data'
+import BN from 'bn.js'
 
 interface IStockChartData {
   time: Date
@@ -13,8 +15,8 @@ interface IStockChartData {
 
 interface IOrderMinimal {
   hash: string
-  price: string
-  amount: string
+  price: BN|string
+  amount: BN|string
 }
 
 interface IOrder extends IOrderMinimal {
@@ -29,18 +31,18 @@ interface ITradeHistoryData {
   time: Date
   price: string
   volume: string
-  isBuy: Boolean
 }
 
 interface IOrderbook {
-  buyOrders: IOrderMinimal[]
-  sellOrders: IOrderMinimal[]
+  bids: IOrderMinimal[]
+  asks: IOrderMinimal[]
+  lastPrice: BN|null
 }
 
 interface ITradePairInfo {
   token: string
   base: string
-  chartData: IStockChartData[]
+  // chartData: IStockChartData[]
   openOrders: IOrder[]
   orderbook: IOrderbook
   tradeHistory: ITradeHistoryData[]
@@ -50,19 +52,21 @@ interface ITradePairInfo {
 const state: ITradePairInfo = {
   token: '',
   base: '',
-  chartData: [],
+  // chartData: [],
   openOrders: [],
   orderbook: {
-    buyOrders: [],
-    sellOrders: []
+    bids: [],
+    asks: [],
+    lastPrice: null
   },
   tradeHistory: [],
   lastPrice: ''
 }
 
 const actions = {
-  [TOKEN_PAIR_SETTER] ({ commit }, args) {
+  async [TOKEN_PAIR_SETTER] ({ commit, dispatch }, args) {
     commit(COMMIT_TOKEN_PAIR, args)
+    dispatch(OHLC_CHARTDATA_GETTER, args)
   },
 }
 
@@ -82,6 +86,7 @@ export default {
   mutations,
   getters,
   modules: {
-    tradeForm
+    tradeForm,
+    chartData
   }
 }

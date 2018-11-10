@@ -1,5 +1,5 @@
 import Web3 from 'web3'
-import IWallet from '@/interfaces/iwallet'
+import IWallet from '@/interfaces/IWallet'
 import BLOCKCHAIN_INFO from '@/core/blockchain'
 
 async function readJSONFileAsString(jsonFile: File): Promise<any> {

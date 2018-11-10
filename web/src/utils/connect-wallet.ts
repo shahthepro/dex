@@ -1,4 +1,4 @@
-import IWallet from '@/interfaces/iwallet'
+import IWallet from '@/interfaces/IWallet'
 import EWalletTypes from '@/enums/wallet-types'
 import createNewKeystore from '@/utils/connectors/new-keystore.wallet'
 import connectSoftwareWallet from '@/utils/connectors/software.wallet'

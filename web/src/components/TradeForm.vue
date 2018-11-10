@@ -40,11 +40,11 @@ export default {
   },
   computed: {
     pairInfo () {
-      return this.$store.state[TOKEN_PAIR_NAMESPACE]
+      return this.$store.getters.pairInfo // .state[TOKEN_PAIR_NAMESPACE]
     },
     price: {
       get () {
-        return this.$store.state[TOKEN_PAIR_NAMESPACE].tradeForm.price
+        return this.$store.getters.tradeForm.price // .state[TOKEN_PAIR_NAMESPACE].tradeForm.price
       },
       set (value) {
         if (this.rules.number(value) === true && value > 0) {
@@ -54,7 +54,7 @@ export default {
     },
     amount: {
       get () {
-        return this.$store.state[TOKEN_PAIR_NAMESPACE].tradeForm.amount
+        return this.$store.getters.tradeForm.amount // .state[TOKEN_PAIR_NAMESPACE].tradeForm.amount
       },
       set (value) {
         if (this.rules.number(value) === true && value > 0) {
@@ -64,7 +64,7 @@ export default {
     },
     side: {
       get () {
-        return this.$store.state[TOKEN_PAIR_NAMESPACE].tradeForm.side
+        return this.$store.getters.tradeForm.side // .state[TOKEN_PAIR_NAMESPACE].tradeForm.side
       },
       set (value) {
         this.$store.dispatch(SET_TRADEFORM_SIDE, value);
@@ -94,7 +94,6 @@ export default {
       if (this.valid) {
         Exchange.placeOrder()
           .then(receipt => {
-            console.log(receipt)
             if (receipt.status == 1) {
               this.lastTxHash = receipt.transactionHash
             } else {

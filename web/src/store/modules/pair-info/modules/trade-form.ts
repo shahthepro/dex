@@ -1,6 +1,6 @@
 import { TRADEFORM_PRICE_SETTER, TRADEFORM_SIDE_SETTER, TRADEFORM_AMOUNT_SETTER } from '@/store/action-types'
 import { COMMIT_TRADEFORM_PRICE, COMMIT_TRADEFORM_SIDE, COMMIT_TRADEFORM_AMOUNT } from '@/store/mutation-types'
-import ITradeForm from '@/interfaces/itradeform'
+import ITradeForm from '@/interfaces/ITradeForm'
 
 const state = <ITradeForm> {
   side: 0,

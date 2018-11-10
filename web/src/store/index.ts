@@ -2,7 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import wallet from '@/store/modules/wallet/wallet';
 import { TOKEN_PAIR_NAMESPACE, WALLET_NAMESPACE, DEPOSIT_FORM_NAMESPACE } from '@/core/constants'
-import IWallet from '@/interfaces/iwallet';
+import IWallet from '@/interfaces/IWallet';
 
 Vue.use(Vuex)
 
@@ -11,6 +11,12 @@ export default new Vuex.Store({
   getters: {
     pairInfo (state) {
       return state[TOKEN_PAIR_NAMESPACE]
+    },
+    tradeForm (state) {
+      return state[TOKEN_PAIR_NAMESPACE].tradeForm
+    },
+    chartData (state) {
+      return state[TOKEN_PAIR_NAMESPACE].chartData.data
     },
     wallet (state) {
       return state[WALLET_NAMESPACE]

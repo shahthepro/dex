@@ -1,6 +1,6 @@
 import { DEPOSITFORM_AMOUNT_SETTER, DEPOSITFORM_GASPRICE_SETTER, DEPOSITFORM_TOKEN_SETTER } from '@/store/action-types'
 import { COMMIT_DEPOSITFORM_AMOUNT, COMMIT_DEPOSITFORM_GASPRICE, COMMIT_DEPOSITFORM_TOKEN } from '@/store/mutation-types'
-import IDepositForm from '@/interfaces/idepositform'
+import IDepositForm from '@/interfaces/IDepositForm'
 
 const state = <IDepositForm> {
 	token: '',

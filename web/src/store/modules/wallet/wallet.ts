@@ -1,4 +1,4 @@
-import IWallet from '@/interfaces/iwallet';
+import IWallet from '@/interfaces/IWallet';
 import connectWallet from '@/utils/connect-wallet';
 import { CONNECT, DISCONNECT } from '@/store/action-types';
 import { COMMIT_CONNECT_WALLET, COMMIT_DISCONNECT_WALLET } from '@/store/mutation-types';

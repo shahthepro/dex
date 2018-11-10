@@ -1,4 +1,5 @@
-import IToken from '@/interfaces/itoken'
+import IToken from '@/interfaces/IToken'
+import BN from 'bn.js'
 
 let tokenIndexMap = {};
 let tokensList = [];
@@ -8,7 +9,7 @@ const TOKENS = {
     token: 'TRX',
     base: 'ETH'
   },
-  load () {
+  load (): Promise<any> {
     return fetch('/tokens.json')
       .then(resp => resp.json())
       .then(tokens => {
@@ -24,12 +25,12 @@ const TOKENS = {
       })
   },
   getBySymbol (symbol): IToken {
-    return tokensList[tokenIndexMap[symbol]]
+    return tokensList[tokenIndexMap[symbol.toUpperCase()]]
   },
   get (): IToken[] {
     return tokensList
   },
-  getPairs (base: string) {
+  getPairs (base: string): string[] {
     let token: IToken
     let pairs: string[] = []
     for (let i = 0; i < tokensList.length; i++) {
@@ -42,7 +43,7 @@ const TOKENS = {
     }
     return pairs
   },
-  isPairValid (tokenSymbol: string, baseSymbol: string) {
+  isPairValid (tokenSymbol: string, baseSymbol: string): boolean {
     let token: IToken = this.getBySymbol(tokenSymbol)
     let base: IToken = this.getBySymbol(baseSymbol)
 
@@ -52,7 +53,32 @@ const TOKENS = {
 
     // TODO: compare base.address and token.address
     return (base.address < token.address)
-  }
+  },
+
+  convertToSmallestTokenUnit (amount: string, symbol: string): string {
+    let token = this.getBySymbol(symbol)
+    if (token == null) {
+      throw new Error("Invalid symbol")
+    }
+    let decimal = new BN(token.decimal, 10)
+    let factor = decimal.pow(new BN(10, 10))
+    let units = new BN(amount, 10)
+    
+    return units.mul(factor).toString()
+  },
+
+  convertToNormalTokenUnit (units: string, symbol: string): string {
+    let token = this.getBySymbol(symbol)
+    if (token == null) {
+      throw new Error("Invalid symbol")
+    }
+    let decimal = new BN(token.decimal, 10)
+    let factor = decimal.pow(new BN(10, 10))
+    let amount = new BN(units, 10)
+    
+    return amount.div(factor).toString()
+  },
+
 }
 
 export default TOKENS

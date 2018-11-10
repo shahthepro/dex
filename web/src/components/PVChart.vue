@@ -6,70 +6,43 @@
 </template>
 
 <script>
+import { FETCH_OHLC_CHARTDATA } from '@/store/action-types'
 export default {
   name: 'PVChart',
   data () {
     return {
       chart: null,
-      chartData: []
+      chartDataRef: []
+    }
+  },
+  computed: {
+    chartData: {
+      get () {
+        return this.$store.getters.chartData
+      }
+    },
+  },
+  watch: {
+    chartData (newData) {
+      // if (newData.length == 0) {
+      //   return
+      // }
+      this.chartDataRef.length = 0;
+      for (let i = 0; i < newData.length; i++) {
+        this.chartDataRef[i] = newData[i];
+      }
+      if (this.chart == null) {
+        this.initializeChart(this.chartDataRef)
+      }
+      this.chart.validateData()
     }
   },
   methods: {
-    generateChartData () {
-      setTimeout(() => {
-
-        // let chartData = [];
-        this.chartData.length = 0;
-        var firstDate = new Date();
-        firstDate.setHours( 0, 0, 0, 0 );
-        firstDate.setDate( firstDate.getDate() - 30 );
-  
-        for ( var i = 0; i < 30; i++ ) {
-          var newDate = new Date( firstDate );
-  
-          newDate.setDate( newDate.getDate() + i );
-  
-          var open = Math.round( Math.random() * ( 30 ) + 100 );
-          var close = open + Math.round( Math.random() * ( 15 ) - Math.random() * 10 );
-  
-          var low;
-          if ( open < close ) {
-            low = open - Math.round( Math.random() * 5 );
-          } else {
-            low = close - Math.round( Math.random() * 5 );
-          }
-  
-          var high;
-          if ( open < close ) {
-            high = close + Math.round( Math.random() * 5 );
-          } else {
-            high = open + Math.round( Math.random() * 5 );
-          }
-  
-          var volume = Math.round( Math.random() * ( 1000 + i ) ) + 100 + i;
-  
-  
-          this.chartData[ i ] = ( {
-            date: newDate,
-            open: open,
-            close: close,
-            high: high,
-            low: low,
-            volume: volume
-          } );
-        }
-        // this.chartData = chartData
-
-        this.chart.validateData()
-        // console.log(this.chartData, this.chart.validateData)
-      });
-    },
     initializeChart () {
 
       this.chart = AmCharts.makeChart("chartdiv", {
         type: "stock",
         theme: "black",
-
         //"color": "#fff",
         dataSets: [{
           title: "CDX",
@@ -91,7 +64,7 @@ export default {
           } ],
           compared: false,
           categoryField: "date",
-          dataProvider: this.chartData, // generateChartData()
+          dataProvider: this.chartDataRef,
         } ],
         dataDateFormat: "YYYY-MM-DDTHH:mm:ss",
 
@@ -270,9 +243,15 @@ export default {
     }
   },
   mounted () {
-    this.initializeChart()
-    this.generateChartData()
-  }
+    // this.$store.dispatch(FETCH_OHLC_CHARTDATA, {
+    //   token: this.$store.getters.pairInfo.token,
+    //   base: this.$store.getters.pairInfo.base,
+    // })
+    // this.initializeChart()
+    // this.generateChartData()
+  },
+  created () {
+  },
 }
 </script>
 
