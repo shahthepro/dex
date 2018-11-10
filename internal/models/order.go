@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"hameid.net/cdex/dex/internal/store"
 	"hameid.net/cdex/dex/internal/wrappers"
 )
@@ -134,15 +136,21 @@ func buildWhereConstraintFromParams(params *map[string]interface{}) string {
 	var buffer bytes.Buffer
 
 	if val, ok := (*params)["token"]; ok {
-		buffer.WriteString(fmt.Sprintf(` AND token=LOWER('%s')`, val))
+		if common.IsHexAddress(val.(string)) {
+			buffer.WriteString(fmt.Sprintf(` AND token=LOWER('%s')`, val.(string)))
+		}
 	}
 
 	if val, ok := (*params)["base"]; ok {
-		buffer.WriteString(fmt.Sprintf(` AND base=LOWER('%s')`, val))
+		if common.IsHexAddress(val.(string)) {
+			buffer.WriteString(fmt.Sprintf(` AND base=LOWER('%s')`, val.(string)))
+		}
 	}
 
 	if val, ok := (*params)["creator"]; ok {
-		buffer.WriteString(fmt.Sprintf(` AND created_by=LOWER('%s')`, val))
+		if common.IsHexAddress(val.(string)) {
+			buffer.WriteString(fmt.Sprintf(` AND created_by=LOWER('%s')`, val.(string)))
+		}
 	}
 
 	if val, ok := (*params)["side"]; ok {

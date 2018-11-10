@@ -90,7 +90,7 @@ describe('Deposits', () => {
 	test('should place a sell order for token1/token2 from account 1', async (done) => {
 		accounts = await getAccounts()
 
-		let price = Math.min(120 + parseInt((Math.random() * 100).toFixed(0)), 180);
+		let price = Math.min(120 + parseInt((Math.random() * 100).toFixed(2)), 180);
 		let quantity = 100006789;
 		
 		let orderHash = await placeOrder(accounts[2], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, false)

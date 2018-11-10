@@ -28,7 +28,7 @@ interface IOrder extends IOrderMinimal {
 interface ITradeHistoryData {
   time: Date
   price: string
-  quantity: string
+  volume: string
   isBuy: Boolean
 }
 

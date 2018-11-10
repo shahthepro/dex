@@ -1,10 +1,10 @@
 package models
 
 import (
-	"bytes"
-	"fmt"
 	"math/big"
+	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"hameid.net/cdex/dex/internal/store"
 	"hameid.net/cdex/dex/internal/wrappers"
 )
@@ -21,8 +21,20 @@ type Trade struct {
 	TxHash        *wrappers.Hash    `json:"tx_hash"`
 }
 
-// tradeJSONResp record
-type tradeJSONResp struct {
+// UserTradeResponse record
+type UserTradeResponse struct {
+	// BuyOrderHash  *wrappers.Hash   `json:"buy_order_hash"`
+	// SellOrderHash *wrappers.Hash   `json:"sell_order_hash"`
+	OrderHash *wrappers.Hash   `json:"order_hash"`
+	IsBuy     bool             `json:"is_buy_order"`
+	Price     *wrappers.BigInt `json:"price"`
+	Volume    *wrappers.BigInt `json:"volume"`
+	TradedAt  *time.Time       `json:"traded_at"`
+	TxHash    *wrappers.Hash   `json:"tx_hash"`
+}
+
+// OHLCResponse record
+type OHLCResponse struct {
 	Open   *wrappers.BigInt `json:"open"`
 	High   *wrappers.BigInt `json:"high"`
 	Low    *wrappers.BigInt `json:"low"`
@@ -52,33 +64,34 @@ func (trade *Trade) Save(store *store.DataStore) error {
 	return err
 }
 
-// GetTrades returns the list of trades
-func GetTrades(store *store.DataStore, params map[string]interface{}) ([]tradeJSONResp, error) {
-	var buffer bytes.Buffer
+// GetTradesOfUser returns the list of trades
+func GetTradesOfUser(store *store.DataStore, token *common.Address, base *common.Address, user *common.Address) ([]UserTradeResponse, error) {
 
-	if val, ok := params["token"]; ok {
-		buffer.WriteString(fmt.Sprintf(` AND token='%s'`, val))
-	}
+	query := `SELECT 
+		recent_orders.order_hash as order_hash, recent_orders.is_bid as is_buy, 
+		recent_trades.price, recent_trades.volume, 
+		recent_trades.traded_at, 
+		recent_trades.tx_hash
+	FROM
 
-	if val, ok := params["base"]; ok {
-		buffer.WriteString(fmt.Sprintf(` AND base='%s'`, val))
-	}
+		(SELECT order_hash, is_bid FROM orders 
+			WHERE created_at > now() - interval '3 months'
+			AND volume_filled > 0
+			AND base=LOWER($1) AND token=LOWER($2) AND created_by=LOWER($3) 
+			ORDER BY created_at DESC
+			LIMIT 50) as recent_orders
 
-	query := fmt.Sprintf(`
-	SELECT time_bucket('1 minute', traded_at) AS timeinterval,
-		first(price, traded_at) AS open,
-		last(price, traded_at) AS close,
-		max(price) AS high,
-		min(price) AS low,
-		sum(volume) AS volume
-	  FROM trades
-	  WHERE traded_at >= now() - interval '1 month'
-	  %s
-	  GROUP BY timeinterval
-	  ORDER BY timeinterval DESC;
-	`, buffer.String())
-	// query := fmt.Sprintf(`SELECT order_hash, token, base, price, quantity, is_bid, trunc(extract(epoch from created_at::timestamp with time zone)), created_by, volume, volume_filled FROM orders WHERE created_at <= to_timestamp($3)%s ORDER BY created_at DESC LIMIT $1 OFFSET $2`, buffer.String())
-	rows, err := store.DB.Query(query)
+	INNER JOIN 
+		(SELECT buy_order_hash, sell_order_hash, price, volume, traded_at, tx_hash FROM trades 
+			WHERE traded_at > now() - interval '1 month'
+			AND base=LOWER($1) AND token=LOWER($2) 
+			ORDER BY traded_at DESC
+			LIMIT 50) as recent_trades
+
+		ON recent_orders.order_hash IN (recent_trades.buy_order_hash, recent_trades.sell_order_hash) 
+	`
+
+	rows, err := store.DB.Query(query, base.Hex(), token.Hex(), user.Hex())
 
 	if err != nil {
 		return nil, err
@@ -86,10 +99,86 @@ func GetTrades(store *store.DataStore, params map[string]interface{}) ([]tradeJS
 
 	defer rows.Close()
 
-	trades := []tradeJSONResp{}
+	trades := []UserTradeResponse{}
 
 	for rows.Next() {
-		var trade tradeJSONResp
+		var trade UserTradeResponse
+
+		err := rows.Scan(
+			&trade.OrderHash,
+			&trade.IsBuy,
+			&trade.Price,
+			&trade.Volume,
+			&trade.TradedAt,
+			&trade.TxHash,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		trades = append(trades, trade)
+	}
+
+	return trades, nil
+}
+
+// GetOHLCData returns the list of trades
+func GetOHLCData(store *store.DataStore, token *common.Address, base *common.Address) ([]OHLCResponse, error) {
+
+	// if val, ok := params["interval"]; ok {
+	// 	switch strings.TrimSpace((val.(string))) {
+	// 	case "1H":
+	// 		interval = "1 hour"
+	// 	case "6H":
+	// 		interval = "6 hours"
+	// 	case "12H":
+	// 		interval = "12 hours"
+	// 	case "1D":
+	// 		interval = "1 day"
+	// 	case "1W":
+	// 		interval = "1 week"
+	// 	case "1M":
+	// 		interval = "1 month"
+	// 	case "3M":
+	// 		interval = "3 months"
+	// 	case "6M":
+	// 		interval = "6 months"
+	// 	case "1Y":
+	// 		interval = "1 year"
+	// 	default:
+	// 		return nil, errors.New("Invalid value given for `interval`")
+	// 	}
+	// } else {
+	// 	interval = "1 month"
+	// }
+
+	query := `
+	SELECT time_bucket('5 minutes', traded_at) AS timeinterval,
+		first(price, traded_at) AS open,
+		last(price, traded_at) AS close,
+		max(price) AS high,
+		min(price) AS low,
+		sum(volume) AS volume
+	  FROM trades
+	  WHERE traded_at >= now() - interval '1 month'
+		AND token=LOWER($1)
+		AND base=LOWER($2)
+	  GROUP BY timeinterval
+	  ORDER BY timeinterval DESC;
+	`
+	rows, err := store.DB.Query(query, token.Hex(), base.Hex())
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	trades := []OHLCResponse{}
+
+	for rows.Next() {
+		var trade OHLCResponse
 
 		err := rows.Scan(
 			&trade.Date,

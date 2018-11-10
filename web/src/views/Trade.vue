@@ -32,7 +32,7 @@
                     <thead>
                       <tr>
                         <th>Price</th>
-                        <th>Quantity</th>
+                        <th>Volume</th>
                       </tr>
                     </thead>
                   </table>
@@ -61,7 +61,7 @@
                       <tr>
                         <th>Time</th>
                         <th>Price</th>
-                        <th>Quantity</th>
+                        <th>Volume</th>
                       </tr>
                     </thead>
                   </table>

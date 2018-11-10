@@ -13,7 +13,6 @@ Vue.config.performance = process.env.NODE_ENV == "development"
 Vue.use(VueVirtualScroller)
 
 Vue.prototype.$APPSERVER_HOST = process.env.VUE_APP_DEX_APPSERVER_HOST
-console.log(process.env)
 
 Promise.all([TOKENS.load(), BLOCKCHAIN_INFO.load({ forExchange: true })])
   .then(_ => {

@@ -214,21 +214,21 @@ export default {
             //   count: 1,
             //   label: "1m"
             // },
-            // {
-            //   period: "mm",
-            //   count: 5,
-            //   label: "5m"
-            // },
-            // {
-            //   period: "mm",
-            //   count: 15,
-            //   label: "15m"
-            // },
-            // {
-            //   period: "mm",
-            //   count: 30,
-            //   label: "30m"
-            // },
+            {
+              period: "mm",
+              count: 5,
+              label: "5m"
+            },
+            {
+              period: "mm",
+              count: 15,
+              label: "15m"
+            },
+            {
+              period: "mm",
+              count: 30,
+              label: "30m"
+            },
             {
               period: "hh",
               count: 1,
@@ -250,6 +250,16 @@ export default {
               label: "1d"
             },
             {
+              period: "WW",
+              count: 1,
+              label: "1w"
+            },
+            {
+              period: "MM",
+              count: 1,
+              label: "1M"
+            },
+            {
               period: "MAX",
               count: 1,
               label: "MAX"
@@ -261,7 +271,7 @@ export default {
   },
   mounted () {
     this.initializeChart()
-    // this.generateChartData()
+    this.generateChartData()
   }
 }
 </script>

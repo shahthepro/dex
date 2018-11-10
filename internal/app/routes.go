@@ -3,6 +3,7 @@ package app
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"math/big"
 	"net/http"
 	"strconv"
@@ -25,7 +26,8 @@ func (app *App) InitializeRoutes() {
 	app.router.HandleFunc("/orders", app.getOrdersHandler).Methods("GET")
 	app.router.HandleFunc("/orders/{hash:0x[0-9A-Za-z]{64}}", app.getOrderByHashHandler).Methods("GET")
 	app.router.HandleFunc("/trades", app.getTradesHandler).Methods("GET")
-	app.router.HandleFunc("/trades/price_history", app.getPriceHistoryHandler).Methods("GET")
+	// app.router.HandleFunc("/trades/history", app.getTradesHandler).Methods("GET")
+	app.router.HandleFunc("/trades/ohlc", app.getOHLCDataHandler).Methods("GET")
 	app.router.HandleFunc("/orderbook", app.getOrderbookHandler).Methods("GET")
 	app.router.NotFoundHandler = notFoundHandler()
 }
@@ -116,17 +118,25 @@ func (app *App) getOrderbookHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) getTradesHandler(w http.ResponseWriter, r *http.Request) {
-	var params map[string]interface{}
-	params = make(map[string]interface{})
-
-	err := getTradeParamsFromRequest(r, &params)
-
+	token, err := helpers.GetAddressQueryParam(r, "token")
 	if err != nil {
-		helpers.RespondWithError(w, http.StatusBadRequest, err.Error())
+		helpers.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf(err.Error(), "token"))
 		return
 	}
 
-	trades, err := models.GetTrades(app.store, params)
+	base, err := helpers.GetAddressQueryParam(r, "base")
+	if err != nil {
+		helpers.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf(err.Error(), "base"))
+		return
+	}
+
+	user, err := helpers.GetAddressQueryParam(r, "user")
+	if err != nil {
+		helpers.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf(err.Error(), "user"))
+		return
+	}
+
+	trades, err := models.GetTradesOfUser(app.store, token, base, user)
 
 	switch err {
 	case nil:
@@ -136,18 +146,37 @@ func (app *App) getTradesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *App) getPriceHistoryHandler(w http.ResponseWriter, r *http.Request) {
-	var params map[string]interface{}
-	params = make(map[string]interface{})
-
-	err := getTradeParamsFromRequest(r, &params)
-
+func (app *App) getOHLCDataHandler(w http.ResponseWriter, r *http.Request) {
+	token, err := helpers.GetAddressQueryParam(r, "token")
 	if err != nil {
-		helpers.RespondWithError(w, http.StatusBadRequest, err.Error())
+		helpers.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf(err.Error(), "token"))
 		return
 	}
 
-	trades, err := models.GetTrades(app.store, params)
+	base, err := helpers.GetAddressQueryParam(r, "base")
+	if err != nil {
+		helpers.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf(err.Error(), "base"))
+		return
+	}
+	// token := r.FormValue("token")
+	// if len(token) == 0 {
+	// 	helpers.RespondWithError(w, http.StatusBadRequest, errMissingTokenParam.Error())
+	// 	return
+	// } else if !common.IsHexAddress(token) {
+	// 	helpers.RespondWithError(w, http.StatusBadRequest, errInvalidTokenParam.Error())
+	// 	return
+	// }
+
+	// base := r.FormValue("base")
+	// if len(base) == 0 {
+	// 	helpers.RespondWithError(w, http.StatusBadRequest, errMissingBaseParam.Error())
+	// 	return
+	// } else if !common.IsHexAddress(base) {
+	// 	helpers.RespondWithError(w, http.StatusBadRequest, errInvalidBaseParam.Error())
+	// 	return
+	// }
+
+	trades, err := models.GetOHLCData(app.store, token, base)
 
 	switch err {
 	case nil:
@@ -184,8 +213,10 @@ var errInvalidSideParam = errors.New("Invalid value for `side` parameter")
 var errInvalidStatusParam = errors.New("Invalid value for `status` parameter")
 var errInvalidTokenParam = errors.New("Invalid value for `token` parameter")
 var errInvalidBaseParam = errors.New("Invalid value for `base` parameter")
+var errInvalidUserParam = errors.New("Invalid value for `user` parameter")
 var errMissingTokenParam = errors.New("Missing `token` parameter")
 var errMissingBaseParam = errors.New("Missing `base` parameter")
+var errMissingUserParam = errors.New("Missing `user` parameter")
 
 func getOffsetAndCountFromRequest(r *http.Request) (int, int, error) {
 	count := 50

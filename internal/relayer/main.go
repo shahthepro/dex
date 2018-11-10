@@ -306,6 +306,15 @@ func (r *Relayer) tradeLogCallback(vLog types.Log) {
 		return
 	}
 
+	// buyOrder := &models.Order{
+	// 	Hash: wrappers.WrapHash(&tradeEvent.BuyOrderHash),
+	// }
+	// err = buyOrder.Get(r.store)
+	// if err != nil {
+	// 	log.Fatal("Cannot get buy order: ", err)
+	// 	return
+	// }
+
 	trade := models.Trade{
 		BuyOrderHash:  wrappers.WrapHash(&tradeEvent.BuyOrderHash),
 		SellOrderHash: wrappers.WrapHash(&tradeEvent.SellOrderHash),
@@ -338,8 +347,6 @@ func (r *Relayer) updateFilledVolumeLogCallback(vLog types.Log) {
 	}
 	order.Get(r.store)
 	order.VolumeFilled = wrappers.WrapBigInt(updateFilledVolumeEvent.Volume)
-
-	fmt.Println(order.Hash.Hex(), order.VolumeFilled, order.Volume, order.IsOpen)
 
 	err = order.Update(r.store)
 	if err != nil {
