@@ -55,29 +55,40 @@ const TOKENS = {
     return (base.address < token.address)
   },
 
-  convertToSmallestTokenUnit (amount: string, symbol: string): string {
-    let token = this.getBySymbol(symbol)
-    if (token == null) {
-      throw new Error("Invalid symbol")
+  convertBigIntToFixed (amount: string, decimals: number): string {
+    // console.log(amount, decimals)
+    if (amount.length <= decimals) {
+      return `0.${amount.padStart(decimals, '0').slice(0, 8)}`
     }
-    let decimal = new BN(token.decimal, 10)
-    let factor = decimal.pow(new BN(10, 10))
-    let units = new BN(amount, 10)
-    
-    return units.mul(factor).toString()
+
+    let offset = amount.length - decimals
+
+    return `${amount.slice(0, offset)}.${amount.slice(offset, 8)}`
   },
 
-  convertToNormalTokenUnit (units: string, symbol: string): string {
-    let token = this.getBySymbol(symbol)
-    if (token == null) {
-      throw new Error("Invalid symbol")
-    }
-    let decimal = new BN(token.decimal, 10)
-    let factor = decimal.pow(new BN(10, 10))
-    let amount = new BN(units, 10)
+  // convertToSmallestTokenUnit (amount: string, symbol: string): string {
+  //   let token = this.getBySymbol(symbol)
+  //   if (token == null) {
+  //     throw new Error("Invalid symbol")
+  //   }
+  //   let decimal = new BN(token.decimal, 10)
+  //   let factor = decimal.pow(new BN(10, 10))
+  //   let units = new BN(amount, 10)
     
-    return amount.div(factor).toString()
-  },
+  //   return units.mul(factor).toString()
+  // },
+
+  // convertToNormalTokenUnit (units: string, symbol: string): string {
+  //   let token = this.getBySymbol(symbol)
+  //   if (token == null) {
+  //     throw new Error("Invalid symbol")
+  //   }
+  //   let decimal = new BN(token.decimal, 10)
+  //   let factor = decimal.pow(new BN(10, 10))
+  //   let amount = new BN(units, 10)
+    
+  //   return amount.div(factor).toString()
+  // },
 
 }
 

@@ -1,16 +1,26 @@
 <template>
   <v-layout fill-height class="chart-layout">
-    <div id="chartdiv" class="chart-container">
+    <div v-show="!isLoading && !noData" id="chartdiv" class="chart-container">
+    </div>
+    <div v-show="!isLoading && noData" class="chart-container">
+      Not enough data
+    </div>
+    <div v-show="isLoading" class="chart-container">
+      Loading...
     </div>
   </v-layout>
 </template>
 
 <script>
 import { FETCH_OHLC_CHARTDATA } from '@/store/action-types'
+import TOKENS from '@/core/tokens'
+import BN from 'bn.js'
 export default {
   name: 'PVChart',
   data () {
     return {
+      isLoading: false,
+      noData: false,
       chart: null,
       chartDataRef: []
     }
@@ -21,25 +31,50 @@ export default {
         return this.$store.getters.chartData
       }
     },
+    pairInfo: {
+      get () {
+        return this.$store.getters.pairInfo
+      }
+    }
   },
   watch: {
     chartData (newData) {
-      // if (newData.length == 0) {
-      //   return
-      // }
-      this.chartDataRef.length = 0;
-      for (let i = 0; i < newData.length; i++) {
-        this.chartDataRef[i] = newData[i];
+    
+      let token = TOKENS.getBySymbol(this.pairInfo.base)
+      if (token == null) {
+        this.noData = true
+        this.isLoading = false
+        return
       }
+
+      let decimal = token.decimal
+      this.chartDataRef.length = 0
+
+      for (let i = 0; i < newData.length; i++) {
+        this.chartDataRef[i] = {
+          date: newData[i].date,
+          open: TOKENS.convertBigIntToFixed(newData[i].open, decimal),
+          high: TOKENS.convertBigIntToFixed(newData[i].high, decimal),
+          low: TOKENS.convertBigIntToFixed(newData[i].low, decimal),
+          close: TOKENS.convertBigIntToFixed(newData[i].close, decimal),
+          volume: TOKENS.convertBigIntToFixed(newData[i].volume, decimal),
+        }
+      }
+
+      this.isLoading = false
+      this.noData = this.chartDataRef.length == 0
+      if (this.noData) {
+        return
+      }
+
       if (this.chart == null) {
-        this.initializeChart(this.chartDataRef)
+        this.initializeChart()
       }
       this.chart.validateData()
     }
   },
   methods: {
     initializeChart () {
-
       this.chart = AmCharts.makeChart("chartdiv", {
         type: "stock",
         theme: "black",
@@ -112,7 +147,7 @@ export default {
               negativeLineColor: "#db4c3c",
               negativeFillColors: "#db4c3c",
               useDataSetColors: false
-            } ],
+            }],
 
             stockLegend: {
               markerType: "none",
@@ -127,14 +162,14 @@ export default {
           }
         ],
 
-        panelsSettings: {
-          plotAreaFillColors: "#333",
-          plotAreaFillAlphas: 1,
-          marginLeft: 40,
-          marginRight: 5,
-          marginTop: 5,
-          marginBottom: 5
-        },
+        // panelsSettings: {
+        //   plotAreaFillColors: "#333",
+        //   plotAreaFillAlphas: 1,
+        //   marginLeft: 40,
+        //   marginRight: 5,
+        //   marginTop: 5,
+        //   marginBottom: 5
+        // },
 
         chartScrollbarSettings: {
           graph: "g1",
@@ -158,7 +193,7 @@ export default {
         valueAxesSettings: {
           gridColor: "#555",
           gridAlpha: 1,
-          inside: false,
+          inside: true,
           showLastLabel: true
         },
 
