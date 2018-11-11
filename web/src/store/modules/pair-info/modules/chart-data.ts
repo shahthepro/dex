@@ -13,7 +13,7 @@ const state = <IChartDataState> {
 }
 
 const actions = {
-  async [OHLC_CHARTDATA_GETTER] ({ commit }, args: any) {
+  [OHLC_CHARTDATA_GETTER] ({ commit }, args: any) {
 	  let token = TOKENS.getBySymbol(args.token)
 	  let base = TOKENS.getBySymbol(args.base)
     
@@ -21,6 +21,7 @@ const actions = {
       .then(data => {
 
         let decimal = base.decimal
+        
         data = data.map(r => {
           return {
             date: r.date,

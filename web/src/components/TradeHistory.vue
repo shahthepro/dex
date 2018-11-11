@@ -2,95 +2,10 @@
   <v-layout>
     <table class="v-table">
       <tbody>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right success--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right error--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right error--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right success--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right success--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right success--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right error--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right success--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right success--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right success--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right success--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right error--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right success--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right success--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right success--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right success--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right error--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-        </tr>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-right success--text">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
+        <tr v-for="row in tradeHistory">
+          <td class="text-xs-left">{{ row.traded_at }}</td>
+          <td class="text-xs-right" v-bind:class="{ 'success--text': row.trend, 'error--text': !row.trend }">{{ row.price }}</td>
+          <td class="text-xs-right">{{ row.volume }}</td>
         </tr>
       </tbody>
     </table>
@@ -102,6 +17,13 @@ export default {
   name: 'TradeHistory',
   data () {
     return {
+    }
+  },
+  computed: {
+    tradeHistory: {
+      get () {
+        return this.$store.getters.tradeHistory
+      }
     }
   }
 }
