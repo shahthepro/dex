@@ -19,6 +19,19 @@ const actions = {
     
     APIService.getOHLCData(token.address, base.address)
       .then(data => {
+
+        let decimal = base.decimal
+        data = data.map(r => {
+          return {
+            date: r.date,
+            open: TOKENS.convertBigIntToFixed(r.open, decimal),
+            high: TOKENS.convertBigIntToFixed(r.high, decimal),
+            low: TOKENS.convertBigIntToFixed(r.low, decimal),
+            close: TOKENS.convertBigIntToFixed(r.close, decimal),
+            volume: TOKENS.convertBigIntToFixed(r.volume, decimal),
+          }
+        })
+
         commit(COMMIT_OHLC_CHARTDATA, data)
       })
   },

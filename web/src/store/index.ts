@@ -18,6 +18,9 @@ export default new Vuex.Store({
     chartData (state) {
       return state[TOKEN_PAIR_NAMESPACE].chartData.data
     },
+    tradeHistory (state) {
+      return state[TOKEN_PAIR_NAMESPACE].tradeHistory.data
+    },
     wallet (state) {
       return state[WALLET_NAMESPACE]
     },

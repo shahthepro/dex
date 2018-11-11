@@ -40,25 +40,26 @@ export default {
   watch: {
     chartData (newData) {
     
-      let token = TOKENS.getBySymbol(this.pairInfo.base)
-      if (token == null) {
-        this.noData = true
-        this.isLoading = false
-        return
-      }
+      // let token = TOKENS.getBySymbol(this.pairInfo.base)
+      // if (token == null) {
+      //   this.noData = true
+      //   this.isLoading = false
+      //   return
+      // }
 
-      let decimal = token.decimal
+      // let decimal = token.decimal
       this.chartDataRef.length = 0
 
       for (let i = 0; i < newData.length; i++) {
-        this.chartDataRef[i] = {
-          date: newData[i].date,
-          open: TOKENS.convertBigIntToFixed(newData[i].open, decimal),
-          high: TOKENS.convertBigIntToFixed(newData[i].high, decimal),
-          low: TOKENS.convertBigIntToFixed(newData[i].low, decimal),
-          close: TOKENS.convertBigIntToFixed(newData[i].close, decimal),
-          volume: TOKENS.convertBigIntToFixed(newData[i].volume, decimal),
-        }
+        this.chartDataRef[i] = newData[i]
+        // this.chartDataRef[i] = {
+        //   date: newData[i].date,
+        //   open: TOKENS.convertBigIntToFixed(newData[i].open, decimal),
+        //   high: TOKENS.convertBigIntToFixed(newData[i].high, decimal),
+        //   low: TOKENS.convertBigIntToFixed(newData[i].low, decimal),
+        //   close: TOKENS.convertBigIntToFixed(newData[i].close, decimal),
+        //   volume: TOKENS.convertBigIntToFixed(newData[i].volume, decimal),
+        // }
       }
 
       this.isLoading = false
@@ -80,7 +81,7 @@ export default {
         theme: "black",
         //"color": "#fff",
         dataSets: [{
-          title: "CDX",
+          title: "Token",
           fieldMappings: [ {
             fromField: "open",
             toField: "open"
@@ -104,8 +105,17 @@ export default {
         dataDateFormat: "YYYY-MM-DDTHH:mm:ss",
 
         panels: [ {
-            title: "Value",
+            title: "Price",
             percentHeight: 70,
+
+            usePrefixes: true,
+            prefixesOfSmallNumbers: [],
+            numberFormatter: {
+              precision: -1,
+              decimalSeparator: '.',
+              thousandsSeparator: '',
+            },
+            
             stockGraphs: [ {
               balloonText: "O:<b>[[open]]</b><br>H:<b>[[high]]</b><br>L:<b>[[low]]</b><br>C:<b>[[close]]</b>",
               type: "candlestick",
@@ -125,7 +135,7 @@ export default {
               useDataSetColors: false,
               comparable: false,
               showBalloon: true,
-              proCandlesticks: true
+              proCandlesticks: true,
             } ],
           },
 
@@ -135,6 +145,14 @@ export default {
             marginTop: 1,
             columnWidth: 0.6,
             showCategoryAxis: false,
+
+            usePrefixes: true,
+            prefixesOfSmallNumbers: [],
+            numberFormatter: {
+              precision: -1,
+              decimalSeparator: '.',
+              thousandsSeparator: '',
+            },
 
             stockGraphs: [ {
               valueField: "volume",
@@ -153,7 +171,7 @@ export default {
               markerType: "none",
               markerSize: 0,
               labelText: "",
-              periodValueTextRegular: "[[value.close]]"
+              periodValueTextRegular: "[[value.high]]"
             },
 
             valueAxes: [ {
@@ -194,7 +212,8 @@ export default {
           gridColor: "#555",
           gridAlpha: 1,
           inside: true,
-          showLastLabel: true
+          showLastLabel: true,
+          precision: 6
         },
 
         chartCursorSettings: {

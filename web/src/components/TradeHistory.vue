@@ -1,13 +1,6 @@
 <template>
   <v-layout>
     <table class="v-table">
-      <!--thead>
-        <tr>
-          <th>Time</th>
-          <th>Price</th>
-          <th>Volume</th>
-        </tr>
-      </thead-->
       <tbody>
         <tr>
           <td class="text-xs-left">10/12 10:45</td>
