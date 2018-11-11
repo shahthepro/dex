@@ -2,7 +2,6 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import wallet from '@/store/modules/wallet/wallet';
 import { TOKEN_PAIR_NAMESPACE, WALLET_NAMESPACE, DEPOSIT_FORM_NAMESPACE } from '@/core/constants'
-import IWallet from '@/interfaces/IWallet';
 
 Vue.use(Vuex)
 
