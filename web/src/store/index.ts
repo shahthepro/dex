@@ -20,6 +20,9 @@ export default new Vuex.Store({
     tradeHistory (state) {
       return state[TOKEN_PAIR_NAMESPACE].tradeHistory.data
     },
+    orderbook (state) {
+      return state[TOKEN_PAIR_NAMESPACE].orderbook
+    },
     wallet (state) {
       return state[WALLET_NAMESPACE]
     },

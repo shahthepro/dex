@@ -1,8 +1,9 @@
-import { TOKEN_PAIR_SETTER, OHLC_CHARTDATA_GETTER, TRADE_HISTORY_GETTER } from '@/store/action-types'
+import { TOKEN_PAIR_SETTER, OHLC_CHARTDATA_GETTER, TRADE_HISTORY_GETTER, PAIR_ORDERBOOK_GETTER } from '@/store/action-types'
 import { COMMIT_TOKEN_PAIR } from '@/store/mutation-types'
 import tradeForm from './modules/trade-form'
 import chartData from './modules/chart-data'
 import tradeHistory from './modules/trade-history'
+import orderbook from './modules/orderbook'
 import BN from 'bn.js'
 
 interface IStockChartData {
@@ -59,6 +60,7 @@ const actions = {
     commit(COMMIT_TOKEN_PAIR, args)
     dispatch(OHLC_CHARTDATA_GETTER, args)
     dispatch(TRADE_HISTORY_GETTER, args)
+    dispatch(PAIR_ORDERBOOK_GETTER, args)
   },
 }
 
@@ -80,6 +82,7 @@ export default {
   modules: {
     tradeForm,
     chartData,
-    tradeHistory
+    tradeHistory,
+    orderbook
   }
 }

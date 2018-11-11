@@ -22,16 +22,13 @@ const actions = {
 
         let decimal = base.decimal
         
-        data = data.map(r => {
-          return {
-            date: r.date,
-            open: TOKENS.convertBigIntToFixed(r.open, decimal),
-            high: TOKENS.convertBigIntToFixed(r.high, decimal),
-            low: TOKENS.convertBigIntToFixed(r.low, decimal),
-            close: TOKENS.convertBigIntToFixed(r.close, decimal),
-            volume: TOKENS.convertBigIntToFixed(r.volume, decimal),
-          }
-        })
+        for (let i = 0, len = data.length; i < len; i++) {
+          data[i].open = TOKENS.convertBigIntToFixed(data[i].open, decimal)
+          data[i].high = TOKENS.convertBigIntToFixed(data[i].high, decimal)
+          data[i].low = TOKENS.convertBigIntToFixed(data[i].low, decimal)
+          data[i].close = TOKENS.convertBigIntToFixed(data[i].close, decimal)
+          data[i].volume = TOKENS.convertBigIntToFixed(data[i].volume, decimal)
+        }
 
         commit(COMMIT_OHLC_CHARTDATA, data)
       })

@@ -27,29 +27,7 @@
           <v-flex d-flex md6 class="top-widget">
             <v-card class="ma-2 widget-container">
                 <v-card-title>Orderbook</v-card-title>
-                <div class="orderbook-header">
-                  <table class="v-table">
-                    <thead>
-                      <tr>
-                        <th>Price</th>
-                        <th>Volume</th>
-                      </tr>
-                    </thead>
-                  </table>
-                </div>
-                <div class="widget-content-wrapper">
-                  <div class="widget-content">
-                    <Orderbook/>
-                  </div>
-                </div>
-                <div class="last-price">
-                  0.000321
-                </div>
-                <div class="widget-content-wrapper">
-                  <div class="widget-content">
-                    <Orderbook/>
-                  </div>
-                </div>
+                <Orderbook/>
             </v-card>
           </v-flex>
           <v-flex d-flex md6 class="top-widget">

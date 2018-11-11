@@ -56,7 +56,6 @@ const TOKENS = {
   },
 
   convertBigIntToFixed (amount: string, decimals: number): string {
-    // console.log(amount, decimals)
     if (amount.length <= decimals) {
       return `0.${amount.padStart(decimals, '0').slice(0, 8)}`
     }

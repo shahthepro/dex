@@ -1,81 +1,42 @@
 <template>
-  <v-layout>
+  <v-layout class="widget-container">
+    <div class="orderbook-header">
+      <table class="v-table">
+        <thead>
+          <tr>
+            <th>Price</th>
+            <th>Volume</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+    <div class="widget-content-wrapper">
+      <div class="widget-content">
     <table class="v-table">
       <tbody>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
-        </tr>
-        <tr>
-          <td>0.000344334</td>
-          <td>0.000043323</td>
+        <tr v-for="ask in orderbook.asks">
+          <td class="error--text">{{ ask.price }}</td>
+          <td class="error--text">{{ ask.volume }}</td>
         </tr>
       </tbody>
     </table>
+      </div>
+    </div>
+    <div class="last-price">
+      {{ this.orderbook.last_price }}
+    </div>
+    <div class="widget-content-wrapper">
+      <div class="widget-content">
+    <table class="v-table">
+      <tbody>
+        <tr v-for="bid in orderbook.bids">
+          <td class="success--text">{{ bid.price }}</td>
+          <td class="success--text">{{ bid.volume }}</td>
+        </tr>
+      </tbody>
+    </table>
+      </div>
+    </div>
   </v-layout>
 </template>
 
@@ -84,6 +45,13 @@ export default {
   name: 'Orderbook',
   data () {
     return {
+    }
+  },
+  computed: {
+    orderbook: {
+      get () {
+        return this.$store.getters.orderbook
+      }
     }
   }
 }
@@ -101,6 +69,34 @@ table.v-table thead td:not(:nth-child(1)), table.v-table tbody td:not(:nth-child
   font-size: 0.8rem;
 }
 table.v-table thead tr, table.v-table tbody tr td {
+  height: 25px;
+}
+
+
+.widget-container {
+  display: flex;
+  flex-direction: column;
+}
+.widget-content-wrapper {
+  position: relative;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+.widget-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+.last-price {
+  padding: 3px;
+  font-size: 14px;
+  text-align: center;
+}
+table.v-table thead tr {
   height: 25px;
 }
 </style>
