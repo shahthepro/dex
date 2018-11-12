@@ -5,8 +5,9 @@ interface IContract {
 }
 
 interface IContractsInfo {
-  bridge: IContract,
+  bridge: IContract
   exchange: IContract
+  orderbook: IContract
 }
 
 interface INetwork {
@@ -27,37 +28,43 @@ interface INetworkInfo {
 const BLOCKCHAIN_INFO = {
   CONTRACTS_INFO: <IContractsInfo|null> null,
   NETWORK_INFO: <INetworkInfo|null> null,
-  CONTRACT_ABI: <any> null,
+  BRIDGE_CONTRACT_ABI: <any> null,
+  EXCHANGE_CONTRACT_ABI: <any> null,
+  ORDERBOOK_CONTRACT_ABI: <any> null,
   isExchange: <boolean> false,
   load ({ forExchange }) {
-    let contracts = fetch('/contracts.g.json')
+    fetch('/contracts.g.json')
       .then(resp => resp.json())
       .then(contracts => {
         this.CONTRACTS_INFO = Object.freeze(contracts)
       });
       
-    let network = fetch('/network.json')
+    fetch('/network.json')
       .then(resp => resp.json())
       .then(networks => {
         this.NETWORK_INFO = Object.freeze(networks)
       });
       
-    let abi
     if (forExchange === true) {
       this.isExchange = true
-      abi = fetch('/abi/Exchange.json')
+      fetch('/abi/DEXChain.json')
+        .then(resp => resp.json())
+        .then(contractABI => {
+          this.EXCHANGE_CONTRACT_ABI = Object.freeze(contractABI)
+        })
+      fetch('/abi/Orderbook.json')
+        .then(resp => resp.json())
+        .then(contractABI => {
+          this.ORDERBOOK_CONTRACT_ABI = Object.freeze(contractABI)
+        })
     } else {
       this.isExchange = false
-      abi = fetch('/abi/HomeBridge.json')
+      fetch('/abi/HomeBridge.json')
+        .then(resp => resp.json())
+        .then(contractABI => {
+          this.BRIDGE_CONTRACT_ABI = Object.freeze(contractABI)
+        })
     }
-
-    abi
-      .then(resp => resp.json())
-      .then(contractABI => {
-        this.CONTRACT_ABI = Object.freeze(contractABI)
-      })
-
-    return [contracts, network, abi]
   },
   getNetworkInfo(): INetwork {
     if (this.isExchange) {
@@ -65,14 +72,23 @@ const BLOCKCHAIN_INFO = {
     }
     return this.NETWORK_INFO!.bridge
   },
-  getContractInfo(): IContract {
-    if (this.isExchange) {
-      return this.CONTRACTS_INFO!.exchange
-    }
+  getBridgeContractInfo(): IContract {
     return this.CONTRACTS_INFO!.bridge
   },
-  getABI() {
-    return this.CONTRACT_ABI
+  getExchangeContractInfo(): IContract {
+    return this.CONTRACTS_INFO!.exchange
+  },
+  getOrderbookContractInfo(): IContract {
+    return this.CONTRACTS_INFO!.orderbook
+  },
+  getBridgeABI() {
+    return this.BRIDGE_CONTRACT_ABI
+  },
+  getExchangeABI() {
+    return this.EXCHANGE_CONTRACT_ABI
+  },
+  getOrderbookABI() {
+    return this.ORDERBOOK_CONTRACT_ABI
   },
   getAuthorities(): string[] {
     return this.NETWORK_INFO!.authorities

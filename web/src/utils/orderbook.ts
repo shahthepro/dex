@@ -11,31 +11,32 @@ async function placeOrder() {
 
   const { token: tokenSymbol, base: baseSymbol, tradeForm: { side, price, amount } } = store.getters.pairInfo
 
-  const EXCHANGE_ABI = BLOCKCHAIN_INFO.getABI()
-  const EXCHANGE_CONTRACT_ADDRESS = BLOCKCHAIN_INFO.getContractInfo().address
+  const ORDERBOOK_ABI = BLOCKCHAIN_INFO.getOrderbookABI()
+  const ORDERBOOK_CONTRACT_ADDRESS = BLOCKCHAIN_INFO.getOrderbookContractInfo().address
 
   const web3 = wallet.web3()
 
   const token = TOKENS.getBySymbol(tokenSymbol)
   const base = TOKENS.getBySymbol(baseSymbol)
 
-  const ExchangeContract = new web3.eth.Contract(EXCHANGE_ABI, EXCHANGE_CONTRACT_ADDRESS)
+  let unitPrice = TOKENS.convertFixedToBigInt(price, base.decimal)
+  let unitAmount = TOKENS.convertFixedToBigInt(amount, token.decimal)
 
-  // const tokenData = TOKENS_INFO
+  const OrderbookContract = new web3.eth.Contract(ORDERBOOK_ABI, ORDERBOOK_CONTRACT_ADDRESS)
 
-  const data = ExchangeContract.methods.placeOrder(
+  const data = OrderbookContract.methods.placeOrder(
     token.address,
     base.address,
-    price,
-    amount,
+    unitPrice,
+    unitAmount,
     side === 0,
     Date.now()
   ).encodeABI()
 
   return wallet.sendTx({
-    to: EXCHANGE_CONTRACT_ADDRESS,
+    to: ORDERBOOK_CONTRACT_ADDRESS,
     value: 0,
-    gas: 300000,
+    gas: 500000,
     gasPrice: 0,
     data
   })

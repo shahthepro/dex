@@ -65,6 +65,26 @@ const TOKENS = {
     return `${amount.slice(0, offset)}.${amount.slice(offset, 8)}`
   },
 
+  convertFixedToBigInt (amount: string, decimals: number): string {
+    let s = amount.split('.')
+    let whole = s[0]
+    let frac = s[1] || ''
+
+    if (frac.length == decimals) {
+      return `${whole}${frac}`
+    } else if (frac.length < decimals) {
+      return `${whole}${frac.padEnd(decimals, '0')}`
+    }
+    return ''
+    // let d = new BN(decimals, 10)
+    // let f = new BN(10, 10)
+    // f = f.pow(d)
+    // let t = new BN(amount, 10)
+    // console.log(f.toString(), t.toString())
+    // t = t.mul(f)
+    // return t
+  },
+
   // convertToSmallestTokenUnit (amount: string, symbol: string): string {
   //   let token = this.getBySymbol(symbol)
   //   if (token == null) {

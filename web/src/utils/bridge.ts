@@ -11,8 +11,8 @@ async function deposit() {
 
   const { token: tokenSymbol, gasPrice, amount: amountToDeposit } = store.getters.depositForm
 
-  const BRIDGE_ABI = BLOCKCHAIN_INFO.getABI()
-  const BRIDGE_CONTRACT_ADDRESS = BLOCKCHAIN_INFO.getContractInfo().address
+  const BRIDGE_ABI = BLOCKCHAIN_INFO.getBridgeABI()
+  const BRIDGE_CONTRACT_ADDRESS = BLOCKCHAIN_INFO.getBridgeContractInfo().address
 
   const web3 = wallet.web3()
 

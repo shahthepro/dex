@@ -73,87 +73,87 @@ describe('Deposits', () => {
 		done()
 	})
 
-	test('should place a buy order for token1/token2 from account 2', async (done) => {
-		accounts = await getAccounts()
-
-		let price = Math.max(180, 150 + parseInt((Math.random() * 100).toFixed(0)));
-		let quantity = 123456789;
-		
-		let orderHash = await placeOrder(accounts[3], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, true)
-
-		ORDER_HASHES.push(orderHash);
-		console.log(`Created order ${orderHash}`);
-		
-		done()
-	})
-
-	test('should place a sell order for token1/token2 from account 1', async (done) => {
-		accounts = await getAccounts()
-
-		let price = Math.min(120 + parseInt((Math.random() * 100).toFixed(2)), 180);
-		let quantity = 100006789;
-		
-		let orderHash = await placeOrder(accounts[2], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, false)
-
-		ORDER_HASHES.push(orderHash);
-		console.log(`Created order ${orderHash}`);
-
-		done()
-	})
-
-	test('should place a buy order for token1/token2 from account 2', async (done) => {
-		accounts = await getAccounts()
-
-		let price = Math.max(180, 150 + parseInt((Math.random() * 100).toFixed(0)));
-		let quantity = 100006789;
-		
-		let orderHash = await placeOrder(accounts[3], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, true)
-
-		ORDER_HASHES.push(orderHash);
-		console.log(`Created order ${orderHash}`);
-		
-		done()
-	})
-
-	test('should place a sell order for token1/token2 from account 1', async (done) => {
-		accounts = await getAccounts()
-
-		let price = Math.min(120 + parseInt((Math.random() * 100).toFixed(0)), 180);
-		let quantity = 123456789;
-		
-		let orderHash = await placeOrder(accounts[2], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, false)
-
-		ORDER_HASHES.push(orderHash);
-		console.log(`Created order ${orderHash}`);
-
-		done()
-	})
-
-	test('should match buy and sell orders', async (done) => {
-		accounts = await getAccounts()
-
-		await matchOrders(ORDER_HASHES[0], accounts[3], ORDER_HASHES[1], accounts[2], TEST_VALUES.token1, TEST_VALUES.token2)
-		
-		done()
-	})
-
-	test('should match buy and sell orders', async (done) => {
-		accounts = await getAccounts()
-
-		await matchOrders(ORDER_HASHES[2], accounts[3], ORDER_HASHES[3], accounts[2], TEST_VALUES.token1, TEST_VALUES.token2)
-		
-		done()
-	})
-
-	// test('should cancel buy order', async (done) => {
-	// 	expect(ORDER_HASHES.length).toBeGreaterThanOrEqual(1)
-
+	// test('should place a buy order for token1/token2 from account 2', async (done) => {
 	// 	accounts = await getAccounts()
 
-	// 	await cancelOrder(accounts[3], TEST_VALUES.token2, ORDER_HASHES[0])
+	// 	let price = Math.max(180, 150 + parseInt((Math.random() * 100).toFixed(0)));
+	// 	let quantity = 123456789;
+		
+	// 	let orderHash = await placeOrder(accounts[3], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, true)
+
+	// 	ORDER_HASHES.push(orderHash);
+	// 	console.log(`Created order ${orderHash}`);
+		
+	// 	done()
+	// })
+
+	// test('should place a sell order for token1/token2 from account 1', async (done) => {
+	// 	accounts = await getAccounts()
+
+	// 	let price = Math.min(120 + parseInt((Math.random() * 100).toFixed(2)), 180);
+	// 	let quantity = 100006789;
+		
+	// 	let orderHash = await placeOrder(accounts[2], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, false)
+
+	// 	ORDER_HASHES.push(orderHash);
+	// 	console.log(`Created order ${orderHash}`);
 
 	// 	done()
 	// })
+
+	// test('should place a buy order for token1/token2 from account 2', async (done) => {
+	// 	accounts = await getAccounts()
+
+	// 	let price = Math.max(180, 150 + parseInt((Math.random() * 100).toFixed(0)));
+	// 	let quantity = 100006789;
+		
+	// 	let orderHash = await placeOrder(accounts[3], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, true)
+
+	// 	ORDER_HASHES.push(orderHash);
+	// 	console.log(`Created order ${orderHash}`);
+		
+	// 	done()
+	// })
+
+	// test('should place a sell order for token1/token2 from account 1', async (done) => {
+	// 	accounts = await getAccounts()
+
+	// 	let price = Math.min(120 + parseInt((Math.random() * 100).toFixed(0)), 180);
+	// 	let quantity = 123456789;
+		
+	// 	let orderHash = await placeOrder(accounts[2], TEST_VALUES.token1, TEST_VALUES.token2, price, quantity, false)
+
+	// 	ORDER_HASHES.push(orderHash);
+	// 	console.log(`Created order ${orderHash}`);
+
+	// 	done()
+	// })
+
+	// test('should match buy and sell orders', async (done) => {
+	// 	accounts = await getAccounts()
+
+	// 	await matchOrders(ORDER_HASHES[0], accounts[3], ORDER_HASHES[1], accounts[2], TEST_VALUES.token1, TEST_VALUES.token2)
+		
+	// 	done()
+	// })
+
+	// test('should match buy and sell orders', async (done) => {
+	// 	accounts = await getAccounts()
+
+	// 	await matchOrders(ORDER_HASHES[2], accounts[3], ORDER_HASHES[3], accounts[2], TEST_VALUES.token1, TEST_VALUES.token2)
+		
+	// 	done()
+	// })
+
+	// // test('should cancel buy order', async (done) => {
+	// // 	expect(ORDER_HASHES.length).toBeGreaterThanOrEqual(1)
+
+	// // 	accounts = await getAccounts()
+
+	// // 	await cancelOrder(accounts[3], TEST_VALUES.token2, ORDER_HASHES[0])
+
+	// // 	done()
+	// // })
 })
 
 async function depositTokens(tokenAddress, toAccount, toDeposit) {
