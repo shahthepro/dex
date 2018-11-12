@@ -139,10 +139,10 @@ export default {
     flex: 0 0 560px;
   }
   .bottom-widget {
-    height: 275px;
+    height: 280px;
   }
   .top-widget {
-    height: calc(100% - 275px);
+    height: calc(100% - 280px);
     &.expanded {
       height: calc(100% - 225px);
 

@@ -18,8 +18,8 @@
           <td class="text-xs-left">{{ order.is_bid ? 'Buy' : 'Sell' }}</td>
           <td class="text-xs-right">{{ order.price }}</td>
           <td class="text-xs-right">{{ order.quantity }}</td>
-          <td class="text-xs-right">{{ order.volume }}</td>
           <td class="text-xs-right">{{ order.volume_filled }}</td>
+          <td class="text-xs-right">{{ order.volume }}</td>
           <td class="text-xs-center"><v-btn small flat color="error">Cancel</v-btn></td>
         </tr>
       </tbody>

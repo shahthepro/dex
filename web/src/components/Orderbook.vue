@@ -10,7 +10,7 @@
         </thead>
       </table>
     </div>
-    <div class="widget-content-wrapper">
+    <div class="widget-content-wrapper" ref="askOrderbookWrapper">
       <div class="widget-content">
     <table class="v-table">
       <tbody>
@@ -53,7 +53,17 @@ export default {
         return this.$store.getters.orderbook
       }
     }
-  }
+  },
+  watch: {
+    orderbook (_) {
+      let wrapper = this.$refs.askOrderbookWrapper
+      wrapper.scrollTop = wrapper.scrollHeight
+    }
+  },
+  updated() {
+    let wrapper = this.$refs.askOrderbookWrapper
+    wrapper.scrollTop = wrapper.scrollHeight
+  },
 }
 </script>
 
