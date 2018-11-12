@@ -4,7 +4,7 @@ import tradeForm from './modules/trade-form'
 import chartData from './modules/chart-data'
 import tradeHistory from './modules/trade-history'
 import orderbook from './modules/orderbook'
-import myOrders from './modules/my-orders'
+import myOrders from '@/store/modules/pair-info/modules/open-orders'
 
 interface ITradePairInfo {
   token: string
