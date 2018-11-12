@@ -21,7 +21,16 @@ const APIService = {
 		url.searchParams.set('base', base)
 		return fetch(url.toJSON())
 			.then(resp => resp.json())
-	},
+  },
+  getOpenOrders (token: string, base: string, user: string) {
+		let url = getAbsoluteEndpoint('orders')
+		url.searchParams.set('token', token)
+		url.searchParams.set('base', base)
+		url.searchParams.set('creator', user)
+		url.searchParams.set('status', '0')
+		return fetch(url.toJSON())
+			.then(resp => resp.json())
+  },
 }
 
 function getAbsoluteEndpoint(endpoint: string): URL {

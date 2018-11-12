@@ -14,7 +14,7 @@ interface IOrderbookState {
   bids: IOrderbookEntry[]
   last_price: string
 
-};
+}
 
 const state = <IOrderbookState> {
   asks: [],

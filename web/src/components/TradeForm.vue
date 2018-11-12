@@ -7,7 +7,7 @@
     <v-form ref="form" v-model="valid" class="pa-2">
       <v-text-field v-model="price" label="Price" :suffix="pairInfo.base" required :rules="[rules.number]"></v-text-field>
       <v-text-field v-model="amount" label="Amount" :suffix="pairInfo.token" required :rules="[rules.number]"></v-text-field>
-      <div class="mt-3 mb-3">Total &cong; {{ volume }} {{ pairInfo.base }}</div>
+      <div class="total-volume-label">Total &cong; {{ volume }} {{ pairInfo.base }}</div>
 
       <v-card-text 
           v-if="lastTxError.length > 0" 
@@ -40,11 +40,11 @@ export default {
   },
   computed: {
     pairInfo () {
-      return this.$store.getters.pairInfo // .state[TOKEN_PAIR_NAMESPACE]
+      return this.$store.getters.pairInfo
     },
     price: {
       get () {
-        return this.$store.getters.tradeForm.price // .state[TOKEN_PAIR_NAMESPACE].tradeForm.price
+        return this.$store.getters.tradeForm.price
       },
       set (value) {
         if (this.rules.number(value) === true && value > 0) {
@@ -54,7 +54,7 @@ export default {
     },
     amount: {
       get () {
-        return this.$store.getters.tradeForm.amount // .state[TOKEN_PAIR_NAMESPACE].tradeForm.amount
+        return this.$store.getters.tradeForm.amount
       },
       set (value) {
         if (this.rules.number(value) === true && value > 0) {
@@ -64,7 +64,7 @@ export default {
     },
     side: {
       get () {
-        return this.$store.getters.tradeForm.side // .state[TOKEN_PAIR_NAMESPACE].tradeForm.side
+        return this.$store.getters.tradeForm.side
       },
       set (value) {
         this.$store.dispatch(SET_TRADEFORM_SIDE, value);
@@ -117,5 +117,15 @@ export default {
     padding: 0 2rem;
     width: 100%;
     display: block;
+  }
+
+  .v-text-field__slot {
+    input {
+      padding: 0;
+    }
+  }
+
+  .total-volume-label {
+    font-size: 0.7rem;
   }
 </style>

@@ -13,13 +13,13 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td class="text-xs-left">10/12 10:45</td>
-          <td class="text-xs-left">Buy</td>
-          <td class="text-xs-right">0.000344334</td>
-          <td class="text-xs-right">0.000043323</td>
-          <td class="text-xs-right">0.000002323</td>
-          <td class="text-xs-right">0.0023323</td>
+        <tr v-for="order in openOrders">
+          <td class="text-xs-left">{{ order.created_at }}</td>
+          <td class="text-xs-left">{{ order.is_bid ? 'Buy' : 'Sell' }}</td>
+          <td class="text-xs-right">{{ order.price }}</td>
+          <td class="text-xs-right">{{ order.quantity }}</td>
+          <td class="text-xs-right">{{ order.volume }}</td>
+          <td class="text-xs-right">{{ order.volume_filled }}</td>
           <td class="text-xs-center"><v-btn small flat color="error">Cancel</v-btn></td>
         </tr>
       </tbody>
@@ -32,6 +32,13 @@ export default {
   name: 'OpenOrders',
   data () {
     return {
+    }
+  },
+  computed: {
+    openOrders: {
+      get () {
+        return this.$store.getters.openOrders.data
+      }
     }
   }
 }

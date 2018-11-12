@@ -37,7 +37,7 @@
                   <table class="v-table">
                     <thead>
                       <tr>
-                        <th>Time</th>
+                        <th width="110px">Time</th>
                         <th>Price</th>
                         <th>Volume</th>
                       </tr>
@@ -76,7 +76,7 @@ import PriceChart from '@/components/PVChart.vue'
 import store from '@/store'
 import { TOKEN_PAIR_NAMESPACE } from '@/core/constants'
 import TOKEN_PAIR_INFO_MODULE from '@/store/modules/pair-info/pair-info'
-import { SET_TOKEN_PAIR } from '@/store/action-types'
+import { SET_TOKEN_PAIR, FETCH_USER_PAIR_ORDERS } from '@/store/action-types'
 
 if (!store.state[TOKEN_PAIR_NAMESPACE]) {
   store.registerModule(TOKEN_PAIR_NAMESPACE, TOKEN_PAIR_INFO_MODULE)
@@ -97,7 +97,20 @@ export default {
   },
   computed: {
     pairInfo () {
-      return store.state[TOKEN_PAIR_NAMESPACE]
+      return store.getters.pairInfo
+    },
+    wallet () {
+      return store.getters.wallet.current
+    },
+  },
+  watch: {
+    wallet (newWallet) {
+      let walletAddress = (newWallet) ? newWallet.address : null
+      store.dispatch(FETCH_USER_PAIR_ORDERS, {
+        token: store.getters.pairInfo.token,
+        base: store.getters.pairInfo.base,
+        walletAddress
+      })
     }
   },
   beforeRouteEnter (to, from, next) {
@@ -109,15 +122,16 @@ export default {
     next()
   },
   methods: {
-    setTokenPair (token, base) {
-      console.log(token, base)
-    }
   }
   
 }
 </script>
 
 <style lang="scss" scoped>
+  .container {
+    padding: 0px
+  }
+
   .left-widget-area {
     flex: 1 1 auto;
   }
@@ -125,15 +139,15 @@ export default {
     flex: 0 0 560px;
   }
   .bottom-widget {
-    height: 325px;
+    height: 275px;
   }
   .top-widget {
-    height: calc(100% - 325px);
+    height: calc(100% - 275px);
     &.expanded {
-      height: calc(100% - 220px);
+      height: calc(100% - 225px);
 
       & + .bottom-widget {
-        height: 220px;
+        height: 225px;
       }
     }
   }

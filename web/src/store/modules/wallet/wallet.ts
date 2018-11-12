@@ -1,6 +1,6 @@
 import IWallet from '@/interfaces/IWallet';
 import connectWallet from '@/utils/connect-wallet';
-import { CONNECT, DISCONNECT } from '@/store/action-types';
+import { CONNECT, DISCONNECT, USER_PAIR_ORDERS_GETTER } from '@/store/action-types';
 import { COMMIT_CONNECT_WALLET, COMMIT_DISCONNECT_WALLET } from '@/store/mutation-types';
 
 interface IWalletState {
@@ -14,7 +14,7 @@ const state: IWalletState = {
 }
 
 const actions = {
-  async [CONNECT]({ commit }, args) {
+  async [CONNECT]({ commit, dispatch, rootGetters }, args) {
     return new Promise(async (resolve, reject) => {
       try {
         const wallet = await connectWallet(args);

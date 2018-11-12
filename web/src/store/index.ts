@@ -23,6 +23,9 @@ export default new Vuex.Store({
     orderbook (state) {
       return state[TOKEN_PAIR_NAMESPACE].orderbook
     },
+    openOrders (state) {
+      return state[TOKEN_PAIR_NAMESPACE].myOrders
+    },
     wallet (state) {
       return state[WALLET_NAMESPACE]
     },

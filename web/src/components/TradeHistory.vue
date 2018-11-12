@@ -3,7 +3,7 @@
     <table class="v-table">
       <tbody>
         <tr v-for="row in tradeHistory">
-          <td class="text-xs-left">{{ row.traded_at }}</td>
+          <td width="110px" class="text-xs-left">{{ row.traded_at }}</td>
           <td class="text-xs-right" v-bind:class="{ 'success--text': row.trend, 'error--text': !row.trend }">{{ row.price }}</td>
           <td class="text-xs-right">{{ row.volume }}</td>
         </tr>
