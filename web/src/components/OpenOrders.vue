@@ -20,7 +20,7 @@
           <td class="text-xs-right">{{ order.quantity }}</td>
           <td class="text-xs-right">{{ order.volume_filled }}</td>
           <td class="text-xs-right">{{ order.volume }}</td>
-          <td class="text-xs-center"><v-btn small flat color="error">Cancel</v-btn></td>
+          <td class="text-xs-center"><v-btn small flat color="error" :loading="isLoading[order.order_hash]" @click="cancelOrder(order.order_hash)">Cancel</v-btn></td>
         </tr>
       </tbody>
     </table>
@@ -28,10 +28,15 @@
 </template>
 
 <script>
+import { REMOVE_ORDER_FROM_OPEN_ORDERS } from '@/store/action-types'
+
+import Orderbook from '@/utils/orderbook'
+
 export default {
   name: 'OpenOrders',
   data () {
     return {
+      isLoading: {}
     }
   },
   computed: {
@@ -39,6 +44,29 @@ export default {
       get () {
         return this.$store.getters.openOrders.data
       }
+    }
+  },
+  methods: {
+    cancelOrder (orderHash) {
+      this.$set(this.isLoading, orderHash, true)
+      Orderbook.cancelOrder(orderHash)
+        .then(receipt => {
+          if (receipt.status == 1) {
+            // remove hash from data
+            console.log('Cancelled order')
+            this.$store.dispatch(REMOVE_ORDER_FROM_OPEN_ORDERS, { orderHash })
+          } else {
+            this.lastTxError = `Something went wrong, Do you have sufficient funds?`
+            console.log('Does the order exists? Are you owner?')
+          }
+        })
+        .catch(err => {
+          this.lastTxError = err.message
+          console.log(err.message)
+        })
+        .then(_ => {
+          delete this.isLoading[orderHash]
+        })
     }
   }
 }

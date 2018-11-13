@@ -1,4 +1,4 @@
-import { USER_PAIR_ORDERS_GETTER } from '@/store/action-types'
+import { USER_PAIR_ORDERS_GETTER, PAIR_ORDERS_ORDER_REMOVER } from '@/store/action-types'
 import { COMMIT_USER_PAIR_ORDERS } from '@/store/mutation-types'
 import TOKENS from '@/core/tokens'
 import APIService from '@/core/api-service'
@@ -52,6 +52,15 @@ const actions = {
 
         commit(COMMIT_USER_PAIR_ORDERS, data)
       })
+  },
+
+  [PAIR_ORDERS_ORDER_REMOVER] ({ commit, state }, args: any) {
+    let hash: string = args.orderHash
+    let data = state.data.filter((order) => {
+      return order.order_hash != hash
+    })
+
+    commit(COMMIT_USER_PAIR_ORDERS, data)
   },
 }
 

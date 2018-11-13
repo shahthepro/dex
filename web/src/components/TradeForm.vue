@@ -26,6 +26,7 @@ import FORM_RULES from '@/utils/form-rules'
 import { TOKEN_PAIR_NAMESPACE } from '@/core/constants'
 import { SET_TRADEFORM_PRICE, SET_TRADEFORM_SIDE, SET_TRADEFORM_AMOUNT } from '@/store/action-types'
 import Orderbook from '@/utils/orderbook'
+
 export default {
   name: 'TradeForm',
   data () {
@@ -97,8 +98,7 @@ export default {
             if (receipt.status == 1) {
               this.lastTxHash = receipt.transactionHash
             } else {
-              this.lastTxError = `Something went wrong, Do you have sufficient funds?`;
-              console.log(receipt.transactionHash)
+              this.lastTxError = `Something went wrong, Do you have sufficient funds?`
             }
           })
           .catch(err => {
