@@ -1,7 +1,6 @@
 package socketserver
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,8 +8,6 @@ import (
 
 	"github.com/go-redis/redis"
 	"hameid.net/cdex/dex/internal/store"
-
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/gorilla/mux"
 
@@ -47,24 +44,27 @@ func (socketServer *SocketServer) Start() {
 		header := w.Header()
 		header.Set("Content-Security-Policy", fmt.Sprintf("content-src: '%s'", socketServer.webappHost))
 
-		trimmedToken := strings.TrimPrefix(vars["token"], "0x")
-		trimmedBase := strings.TrimPrefix(vars["base"], "0x")
+		// trimmedToken := strings.TrimPrefix(vars["token"], "0x")
+		// trimmedBase := strings.TrimPrefix(vars["base"], "0x")
 
-		token := common.HexToAddress(trimmedToken)
-		base := common.HexToAddress(trimmedBase)
+		// token := common.HexToAddress(trimmedToken)
+		// base := common.HexToAddress(trimmedBase)
 
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Println("CONN", err)
 		}
 
-		if bytes.Compare(token.Bytes(), base.Bytes()) >= 0 {
-			_ = conn.WriteMessage(1, []byte("{\"error\":\"Invalid token pair\"}"))
-			conn.Close()
-			return
-		}
+		// if bytes.Compare(token.Bytes(), base.Bytes()) >= 0 {
+		// 	_ = conn.WriteMessage(1, []byte("{\"error\":\"Invalid token pair\"}"))
+		// 	conn.Close()
+		// 	return
+		// }
 
-		channelKey := token.Hex() + "/" + base.Hex()
+		// channelKey := token.Hex() + "/" + base.Hex()
+		channelKey := strings.ToLower(vars["token"] + "/" + vars["base"])
+
+		fmt.Println(channelKey)
 
 		hub, ok := socketServer.hubs[channelKey]
 

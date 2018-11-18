@@ -124,6 +124,10 @@ func (order *Order) Close(store *store.DataStore) error {
 		order.Hash.Hex(),
 	)
 
+	if err == nil {
+		order.IsOpen = false
+	}
+
 	return err
 }
 

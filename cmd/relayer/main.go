@@ -13,6 +13,8 @@ func main() {
 		os.Getenv("DEX_VALIDATOR_CONTRACTS_FILE"),
 		os.Getenv("DEX_VALIDATOR_NETWORKS_FILE"),
 		os.Getenv("CDEX_DB_CONNECTION_STRING"),
+		os.Getenv("CDEX_REDIS_HOST"),
+		os.Getenv("CDEX_REDIS_PASSWORD"),
 	)
 
 	c := make(chan os.Signal, 1)

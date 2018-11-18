@@ -7,6 +7,8 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/go-redis/redis"
+
 	"hameid.net/cdex/dex/internal/store"
 	"hameid.net/cdex/dex/internal/wrappers"
 
@@ -41,8 +43,14 @@ type Relayer struct {
 	networks  *utils.NetworksInfo
 	contracts *utils.ContractsInfo
 	// bridge    *bridgeRef
-	exchange *exchangeRef
-	store    *store.DataStore
+	exchange    *exchangeRef
+	store       *store.DataStore
+	redisClient *redis.Client
+}
+
+type redisChannelMessage struct {
+	messageType string
+	payload     interface{}
 }
 
 var channelSize = 10000
@@ -93,7 +101,6 @@ func (r *Relayer) Initialize() {
 	}
 
 	r.exchange.client = exchangeClient
-	// r.exchange.exchangeInstance = exchange
 	r.exchange.exchangeABI = &exchangeABI
 	r.exchange.orderbookABI = &orderbookABI
 	r.exchange.ordermatcherABI = &ordermatcherABI
@@ -116,7 +123,6 @@ func (r *Relayer) RunOnExchangeNetwork() {
 		Topics: [][]common.Hash{
 			{
 				r.contracts.Exchange.Topics.BalanceUpdate.Hash,
-				// r.contracts.Orderbook.Topics.PlaceOrder.Hash,
 				r.contracts.Orderbook.Topics.PlaceBuyOrder.Hash,
 				r.contracts.Orderbook.Topics.PlaceSellOrder.Hash,
 				r.contracts.Orderbook.Topics.CancelOrder.Hash,
@@ -167,7 +173,7 @@ func (r *Relayer) Quit() {
 }
 
 // NewRelayer creates and populates a Relayer struct object
-func NewRelayer(contractsFilePath, networksFilePath, connectionString string) *Relayer {
+func NewRelayer(contractsFilePath, networksFilePath, connectionString, redisHostAddress, redisPassword string) *Relayer {
 	fmt.Printf("Starting relayer...\n")
 	fmt.Printf("Reading config files...\n")
 	fmt.Printf("Reading %s...\n", contractsFilePath)
@@ -197,7 +203,8 @@ func NewRelayer(contractsFilePath, networksFilePath, connectionString string) *R
 			orderbookABI:    nil,
 			ordermatcherABI: nil,
 		},
-		store: store.NewDataStore(connectionString),
+		store:       store.NewDataStore(connectionString),
+		redisClient: store.NewRedisClient(redisHostAddress, redisPassword),
 	}
 }
 
@@ -261,6 +268,14 @@ func (r *Relayer) placeOrderLogCallback(vLog types.Log, isBid bool) {
 	if err != nil {
 		log.Fatal("Commit: ", err)
 	}
+
+	channelKey := strings.ToLower(placeOrderEvent.Token.Hex() + "/" + placeOrderEvent.Base.Hex())
+	fmt.Println(channelKey)
+	r.redisClient.Publish(channelKey, &redisChannelMessage{
+		messageType: "NEW_ORDER",
+		payload:     order,
+	})
+
 	fmt.Printf("\n\nReceived order at %s for pair %s/%s\n", placeOrderEvent.Timestamp.String(), placeOrderEvent.Token.Hex(), placeOrderEvent.Base.Hex())
 }
 
@@ -276,11 +291,25 @@ func (r *Relayer) cancelOrderLogCallback(vLog types.Log) {
 	order := &models.Order{
 		Hash: wrappers.WrapHash(&cancelOrderEvent.OrderHash),
 	}
+
 	err = order.Close(r.store)
 	if err != nil {
 		log.Fatal("Commit: ", err)
 		return
 	}
+
+	err = order.Get(r.store)
+	if err != nil {
+		log.Fatal("Cannot get order: ", err)
+		return
+	}
+
+	channelKey := strings.ToLower(order.Token.Hex() + "/" + order.Base.Hex())
+	fmt.Println(channelKey)
+	r.redisClient.Publish(channelKey, &redisChannelMessage{
+		messageType: "CANCEL_ORDER",
+		payload:     order,
+	})
 
 	fmt.Printf("\n\nOrder cancelled/filled %s\n", cancelOrderEvent.OrderHash.Hex())
 }
@@ -329,6 +358,14 @@ func (r *Relayer) tradeLogCallback(vLog types.Log) {
 	if err != nil {
 		log.Fatal("Commit: ", err)
 	}
+
+	channelKey := strings.ToLower(trade.Token.Hex() + "/" + trade.Base.Hex())
+	fmt.Println(channelKey)
+	r.redisClient.Publish(channelKey, &redisChannelMessage{
+		messageType: "TRADE",
+		payload:     trade,
+	})
+
 	fmt.Printf("\n\nReceived order match for %s/%s\n", tradeEvent.BuyOrderHash.Hex(), tradeEvent.SellOrderHash.Hex())
 }
 
@@ -353,6 +390,13 @@ func (r *Relayer) updateFilledVolumeLogCallback(vLog types.Log) {
 		log.Fatal("Commit: ", err)
 		return
 	}
+
+	channelKey := strings.ToLower(order.Token.Hex() + "/" + order.Base.Hex())
+	fmt.Println(channelKey)
+	r.redisClient.Publish(channelKey, &redisChannelMessage{
+		messageType: "ORDER_FILL",
+		payload:     order,
+	})
 
 	fmt.Printf("\n\nUpdate filled volume of order %s to %s\n", updateFilledVolumeEvent.OrderHash.Hex(), updateFilledVolumeEvent.Volume.String())
 }
