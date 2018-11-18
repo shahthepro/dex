@@ -2,7 +2,6 @@ package socketserver
 
 import (
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -114,7 +113,7 @@ func (c *Client) writePump() {
 }
 
 // serveWs handles websocket requests from the peer.
-func serveWs(hub *Hub, conn *websocket.Conn, w http.ResponseWriter, r *http.Request) {
+func serveWsToConnection(hub *Hub, conn *websocket.Conn) {
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client
 

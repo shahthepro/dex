@@ -16,10 +16,11 @@ func main() {
 		port = 7424
 	}
 
-	socketServer := socketserver.NewSocketServer(port,
+	socketServer := socketserver.NewSocketServer(
+		port,
 		os.Getenv("CDEX_WEBAPP_HOST"),
-		os.Getenv("DEX_VALIDATOR_CONTRACTS_FILE"),
-		os.Getenv("DEX_VALIDATOR_NETWORKS_FILE"),
+		os.Getenv("CDEX_REDIS_HOST"),
+		os.Getenv("CDEX_REDIS_PASSWORD"),
 	)
 
 	// socketServer.Initialize()
