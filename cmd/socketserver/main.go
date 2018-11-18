@@ -16,7 +16,13 @@ func main() {
 		port = 7424
 	}
 
-	socketServer := socketserver.NewSocketServer(port, os.Getenv("CDEX_WEBAPP_HOST"))
+	socketServer := socketserver.NewSocketServer(port,
+		os.Getenv("CDEX_WEBAPP_HOST"),
+		os.Getenv("DEX_VALIDATOR_CONTRACTS_FILE"),
+		os.Getenv("DEX_VALIDATOR_NETWORKS_FILE"),
+	)
+
+	// socketServer.Initialize()
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)

@@ -1,61 +1,49 @@
 package socketserver
 
-import (
-	"time"
-
-	"github.com/gorilla/websocket"
-)
-
-const (
-	writeWait = 5 * time.Second
-	pongWait  = 2 * time.Second
-)
-
-// Hub is a collection of clients of similar interests
+// Hub maintains the set of active clients and broadcasts messages to the
+// clients.
 type Hub struct {
-	clients    map[*websocket.Conn]bool
-	broadcast  chan []byte
-	register   chan *websocket.Conn
-	unregister chan *websocket.Conn
-	done       chan bool
+	// Registered clients.
+	clients map[*Client]bool
+
+	// Inbound messages from the clients.
+	broadcast chan []byte
+
+	// Register requests from the clients.
+	register chan *Client
+
+	// Unregister requests from clients.
+	unregister chan *Client
 }
 
-// Run hub
-func (hub *Hub) Run() {
+func newHub() *Hub {
+	return &Hub{
+		broadcast:  make(chan []byte),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+		clients:    make(map[*Client]bool),
+	}
+}
+
+func (h *Hub) run() {
 	for {
 		select {
-		case client := <-hub.register:
-			hub.clients[client] = true
-		case client := <-hub.register:
-			delete(hub.clients, client)
-		case message := <-hub.broadcast:
-			for client := range hub.clients {
-				go hub.sendMessageToClient(client, &message)
+		case client := <-h.register:
+			h.clients[client] = true
+		case client := <-h.unregister:
+			if _, ok := h.clients[client]; ok {
+				delete(h.clients, client)
+				close(client.send)
+			}
+		case message := <-h.broadcast:
+			for client := range h.clients {
+				select {
+				case client.send <- message:
+				default:
+					close(client.send)
+					delete(h.clients, client)
+				}
 			}
 		}
-	}
-}
-
-func (hub *Hub) sendMessageToClient(client *websocket.Conn, message *[]byte) {
-	client.SetWriteDeadline(time.Now().Add(writeWait))
-
-	writer, err := client.NextWriter(websocket.TextMessage)
-	if err != nil {
-		hub.unregister <- client
-		return
-	}
-
-	if _, err := writer.Write(*message); err != nil {
-		hub.unregister <- client
-	}
-}
-
-// NewHub creates and returns new instance of hub
-func NewHub() *Hub {
-	return &Hub{
-		clients:    map[*websocket.Conn]bool{},
-		broadcast:  make(chan []byte),
-		register:   make(chan *websocket.Conn),
-		unregister: make(chan *websocket.Conn),
 	}
 }
