@@ -70,6 +70,7 @@ func (socketServer *SocketServer) Start() {
 
 		if !ok {
 			pubsub := socketServer.redisClient.Subscribe(channelKey)
+			// pubsub.Receive
 			hub = newHub(pubsub.Channel())
 			socketServer.hubs[channelKey] = hub
 			go hub.run()

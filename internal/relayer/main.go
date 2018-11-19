@@ -2,6 +2,7 @@ package relayer
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/big"
@@ -49,8 +50,8 @@ type Relayer struct {
 }
 
 type redisChannelMessage struct {
-	messageType string
-	payload     interface{}
+	MessageType string      `json:"messageType"`
+	Payload     interface{} `json:"payload"`
 }
 
 var channelSize = 10000
@@ -263,18 +264,23 @@ func (r *Relayer) placeOrderLogCallback(vLog types.Log, isBid bool) {
 		CreatedBy: wrappers.WrapAddress(&placeOrderEvent.Owner),
 		CreatedAt: wrappers.WrapTimestamp((*(placeOrderEvent.Timestamp)).Uint64()),
 		Volume:    wrappers.WrapBigInt(big.NewInt(0).Mul(placeOrderEvent.Price, placeOrderEvent.Quantity)),
+		IsOpen:    true,
 	}
 	err = order.Save(r.store)
 	if err != nil {
 		log.Fatal("Commit: ", err)
 	}
 
-	channelKey := strings.ToLower(placeOrderEvent.Token.Hex() + "/" + placeOrderEvent.Base.Hex())
-	fmt.Println(channelKey)
-	r.redisClient.Publish(channelKey, &redisChannelMessage{
-		messageType: "NEW_ORDER",
-		payload:     order,
-	})
+	channelKey := strings.ToLower(order.Token.Hex() + "/" + order.Base.Hex())
+	pubCache := &redisChannelMessage{
+		MessageType: "NEW_ORDER",
+		Payload:     order,
+	}
+	marshalledResp, err := json.Marshal(pubCache)
+	if err != nil {
+		fmt.Println("MARSHAL:", err)
+	}
+	r.redisClient.Publish(channelKey, marshalledResp)
 
 	fmt.Printf("\n\nReceived order at %s for pair %s/%s\n", placeOrderEvent.Timestamp.String(), placeOrderEvent.Token.Hex(), placeOrderEvent.Base.Hex())
 }
@@ -305,11 +311,15 @@ func (r *Relayer) cancelOrderLogCallback(vLog types.Log) {
 	}
 
 	channelKey := strings.ToLower(order.Token.Hex() + "/" + order.Base.Hex())
-	fmt.Println(channelKey)
-	r.redisClient.Publish(channelKey, &redisChannelMessage{
-		messageType: "CANCEL_ORDER",
-		payload:     order,
-	})
+	pubCache := &redisChannelMessage{
+		MessageType: "CANCEL_ORDER",
+		Payload:     order,
+	}
+	marshalledResp, err := json.Marshal(pubCache)
+	if err != nil {
+		fmt.Println("MARSHAL:", err)
+	}
+	r.redisClient.Publish(channelKey, marshalledResp)
 
 	fmt.Printf("\n\nOrder cancelled/filled %s\n", cancelOrderEvent.OrderHash.Hex())
 }
@@ -360,11 +370,15 @@ func (r *Relayer) tradeLogCallback(vLog types.Log) {
 	}
 
 	channelKey := strings.ToLower(trade.Token.Hex() + "/" + trade.Base.Hex())
-	fmt.Println(channelKey)
-	r.redisClient.Publish(channelKey, &redisChannelMessage{
-		messageType: "TRADE",
-		payload:     trade,
-	})
+	pubCache := &redisChannelMessage{
+		MessageType: "TRADE",
+		Payload:     trade,
+	}
+	marshalledResp, err := json.Marshal(pubCache)
+	if err != nil {
+		fmt.Println("MARSHAL:", err)
+	}
+	r.redisClient.Publish(channelKey, marshalledResp)
 
 	fmt.Printf("\n\nReceived order match for %s/%s\n", tradeEvent.BuyOrderHash.Hex(), tradeEvent.SellOrderHash.Hex())
 }
@@ -392,11 +406,15 @@ func (r *Relayer) updateFilledVolumeLogCallback(vLog types.Log) {
 	}
 
 	channelKey := strings.ToLower(order.Token.Hex() + "/" + order.Base.Hex())
-	fmt.Println(channelKey)
-	r.redisClient.Publish(channelKey, &redisChannelMessage{
-		messageType: "ORDER_FILL",
-		payload:     order,
-	})
+	pubCache := &redisChannelMessage{
+		MessageType: "ORDER_FILL",
+		Payload:     order,
+	}
+	marshalledResp, err := json.Marshal(pubCache)
+	if err != nil {
+		fmt.Println("MARSHAL:", err)
+	}
+	r.redisClient.Publish(channelKey, marshalledResp)
 
 	fmt.Printf("\n\nUpdate filled volume of order %s to %s\n", updateFilledVolumeEvent.OrderHash.Hex(), updateFilledVolumeEvent.Volume.String())
 }
