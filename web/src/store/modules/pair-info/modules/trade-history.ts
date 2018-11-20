@@ -1,5 +1,5 @@
 import { TRADE_HISTORY_GETTER, TRADE_HISTORY_APPENDER } from '@/store/action-types'
-import { COMMIT_TRADE_HISTORY, COMMIT_NEW_TRADE } from '@/store/mutation-types'
+import { COMMIT_TRADE_HISTORY, COMMIT_NEW_TRADE, COMMIT_ORDERBOOK_LAST_PRICE } from '@/store/mutation-types'
 import ITradeHistory from '@/interfaces/ITradeHistory'
 import TOKENS from '@/core/tokens'
 import APIService from '@/core/api-service'
@@ -37,19 +37,22 @@ const actions = {
 	  let base = TOKENS.getBySymbol(rootGetters.pairInfo.base)
     let decimal = base.decimal
 
+    let price = TOKENS.convertBigIntToFixed(tradeMessage.price, decimal)
+
     let trend = true
-    if (state.data.length > 0 && state.data[0].price > tradeMessage.price) {
+    if (state.data.length > 0 && state.data[0].price > price) {
       trend = false
     }
 
     let newTradeData = {
       traded_at: getShortDate(new Date(tradeMessage.traded_at * 1000)),
-      price: TOKENS.convertBigIntToFixed(tradeMessage.price, decimal),
+      price,
       volume: TOKENS.convertBigIntToFixed(tradeMessage.volume, decimal),
       trend,
     }
 
     commit(COMMIT_NEW_TRADE, newTradeData)
+    commit(COMMIT_ORDERBOOK_LAST_PRICE, price)
   },
 }
 

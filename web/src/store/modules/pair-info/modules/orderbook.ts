@@ -1,5 +1,5 @@
-import { PAIR_ORDERBOOK_GETTER } from '@/store/action-types'
-import { COMMIT_PAIR_ORDERBOOK } from '@/store/mutation-types'
+import { PAIR_ORDERBOOK_GETTER, ORDERBOOK_LAST_PRICE_SETTER } from '@/store/action-types'
+import { COMMIT_PAIR_ORDERBOOK, COMMIT_ORDERBOOK_LAST_PRICE } from '@/store/mutation-types'
 import TOKENS from '@/core/tokens'
 import APIService from '@/core/api-service'
 
@@ -51,6 +51,11 @@ const actions = {
         commit(COMMIT_PAIR_ORDERBOOK, data)
       })
   },
+  // [ORDERBOOK_LAST_PRICE_SETTER] ({ commit, rootGetters }, args: any) {
+  //   let base = TOKENS.getBySymbol(rootGetters.pairInfo.base)
+  //   let decimal = base.decimal
+
+  // }
 }
 
 const mutations = {
@@ -58,6 +63,9 @@ const mutations = {
     state.asks = value.asks
     state.bids = value.bids
     state.last_price = value.last_price
+  },
+  [COMMIT_ORDERBOOK_LAST_PRICE] (state: IOrderbookState, value) {
+    state.last_price = value
   }
 }
 
