@@ -1,4 +1,4 @@
-import { TOKEN_PAIR_SETTER, OHLC_CHARTDATA_GETTER, TRADE_HISTORY_GETTER, PAIR_ORDERBOOK_GETTER, USER_PAIR_ORDERS_GETTER, SOCKET_SERVER_DIALER, SOCKET_SERVER_CLOSER } from '@/store/action-types'
+import { TOKEN_PAIR_SETTER, OHLC_CHARTDATA_GETTER, TRADE_HISTORY_GETTER, PAIR_ORDERBOOK_GETTER, USER_PAIR_ORDERS_GETTER, SOCKET_SERVER_DIALER, SOCKET_SERVER_CLOSER, CONNECT_SOCKET_SERVER, DISCONNECT_SOCKET_SERVER } from '@/store/action-types'
 import { COMMIT_TOKEN_PAIR, COMMIT_CONNECT_SOCKET_SERVER, COMMIT_DISCONNECT_SOCKET_SERVER } from '@/store/mutation-types'
 import tradeForm from './modules/trade-form'
 import chartData from './modules/chart-data'
@@ -21,6 +21,11 @@ const state: ITradePairInfo = {
   socketInstance: null
 }
 
+interface ISocketMessage {
+  messageType: "TRADE"|"NEW_ORDER"|"CANCEL_ORDER"|"ORDER_FILL"
+  messageContent: any
+}
+
 const actions = {
   async [TOKEN_PAIR_SETTER] ({ commit, dispatch, rootGetters }, args) {
     commit(COMMIT_TOKEN_PAIR, args)
@@ -35,7 +40,9 @@ const actions = {
       })
     }
   },
-  [SOCKET_SERVER_DIALER] ({ commit }, args) {
+  async [SOCKET_SERVER_DIALER] ({ commit, dispatch }, args) {
+    await dispatch(SOCKET_SERVER_CLOSER)
+
 	  let token = TOKENS.getBySymbol(args.token)
     let base = TOKENS.getBySymbol(args.base)
     
@@ -45,17 +52,24 @@ const actions = {
       commit(COMMIT_CONNECT_SOCKET_SERVER, { socketInstance })
     }
 
-    socketInstance.onclose = function () {
-      commit(COMMIT_DISCONNECT_SOCKET_SERVER)
-    }
-
     socketInstance.onmessage = function (message) {
-      console.log(message)
+      let data = <ISocketMessage>JSON.parse(message.data)
+      let content = data.messageContent
+      switch (data.messageType) {
+        case "TRADE":
+          break;
+        case "NEW_ORDER":
+          break;
+        case "CANCEL_ORDER":
+          break;
+        case "ORDER_FILL":
+          break;
+      }
     }
 
   },
-  [SOCKET_SERVER_CLOSER] ({ commit }) {
-    if (state.socketConnected && state.socketInstance && state.socketInstance.readyState <= 1) {
+  async [SOCKET_SERVER_CLOSER] ({ commit }) {
+    if (state.socketInstance) {
       state.socketInstance!.close()
     }
     commit(COMMIT_DISCONNECT_SOCKET_SERVER)

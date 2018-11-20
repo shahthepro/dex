@@ -27,6 +27,7 @@ let FeeContract = new web3.eth.Contract(FeeContractABI, contractsConfig.ordermat
 let TEST_VALUES = {
     token1: "0xf230b790e05390fc8295f4d3f60332c93bed42e2",
 	token2: "0xd850942ef8811f2a866692a623011bde52a462c1",
+	// token2: "0x0000000000000000000000000000000000000000",
 	feeAccount: networksConfig.feeAccount,
 	node1Address: networksConfig.authorities[0],
 	node2Address: networksConfig.authorities[1],

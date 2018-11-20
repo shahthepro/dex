@@ -51,7 +51,7 @@ type Relayer struct {
 
 type redisChannelMessage struct {
 	MessageType string      `json:"messageType"`
-	Payload     interface{} `json:"payload"`
+	Payload     interface{} `json:"messageContent"`
 }
 
 var channelSize = 10000
