@@ -1,5 +1,5 @@
-import { TRADE_HISTORY_GETTER } from '@/store/action-types'
-import { COMMIT_TRADE_HISTORY } from '@/store/mutation-types'
+import { TRADE_HISTORY_GETTER, TRADE_HISTORY_APPENDER } from '@/store/action-types'
+import { COMMIT_TRADE_HISTORY, COMMIT_NEW_TRADE } from '@/store/mutation-types'
 import ITradeHistory from '@/interfaces/ITradeHistory'
 import TOKENS from '@/core/tokens'
 import APIService from '@/core/api-service'
@@ -33,12 +33,33 @@ const actions = {
         commit(COMMIT_TRADE_HISTORY, data)
       })
   },
+  [TRADE_HISTORY_APPENDER] ({ state, commit, rootGetters }, { tradeMessage }) {
+	  let base = TOKENS.getBySymbol(rootGetters.pairInfo.base)
+    let decimal = base.decimal
+
+    let trend = true
+    if (state.data.length > 0 && state.data[0].price > tradeMessage.price) {
+      trend = false
+    }
+
+    let newTradeData = {
+      traded_at: getShortDate(new Date(tradeMessage.traded_at * 1000)),
+      price: TOKENS.convertBigIntToFixed(tradeMessage.price, decimal),
+      volume: TOKENS.convertBigIntToFixed(tradeMessage.volume, decimal),
+      trend,
+    }
+
+    commit(COMMIT_NEW_TRADE, newTradeData)
+  },
 }
 
 const mutations = {
   [COMMIT_TRADE_HISTORY] (state: ITradeHistoryState, value) {
     state.data = value
-  }
+  },
+  [COMMIT_NEW_TRADE] (state: ITradeHistoryState, newTradeData) {
+    state.data.unshift(newTradeData)
+  },
 }
 
 const getters = {}

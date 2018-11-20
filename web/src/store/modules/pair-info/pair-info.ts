@@ -1,4 +1,4 @@
-import { TOKEN_PAIR_SETTER, OHLC_CHARTDATA_GETTER, TRADE_HISTORY_GETTER, PAIR_ORDERBOOK_GETTER, USER_PAIR_ORDERS_GETTER, SOCKET_SERVER_DIALER, SOCKET_SERVER_CLOSER, CONNECT_SOCKET_SERVER, DISCONNECT_SOCKET_SERVER } from '@/store/action-types'
+import { TOKEN_PAIR_SETTER, OHLC_CHARTDATA_GETTER, TRADE_HISTORY_GETTER, PAIR_ORDERBOOK_GETTER, USER_PAIR_ORDERS_GETTER, SOCKET_SERVER_DIALER, SOCKET_SERVER_CLOSER, CONNECT_SOCKET_SERVER, DISCONNECT_SOCKET_SERVER, APPEND_TRADE_HISTORY, TRADE_HISTORY_APPENDER } from '@/store/action-types'
 import { COMMIT_TOKEN_PAIR, COMMIT_CONNECT_SOCKET_SERVER, COMMIT_DISCONNECT_SOCKET_SERVER } from '@/store/mutation-types'
 import tradeForm from './modules/trade-form'
 import chartData from './modules/chart-data'
@@ -40,7 +40,7 @@ const actions = {
       })
     }
   },
-  async [SOCKET_SERVER_DIALER] ({ commit, dispatch }, args) {
+  async [SOCKET_SERVER_DIALER] ({ commit, dispatch, rootGetters }, args) {
     await dispatch(SOCKET_SERVER_CLOSER)
 
 	  let token = TOKENS.getBySymbol(args.token)
@@ -55,8 +55,10 @@ const actions = {
     socketInstance.onmessage = function (message) {
       let data = <ISocketMessage>JSON.parse(message.data)
       let content = data.messageContent
+      console.log(data.messageType, content)
       switch (data.messageType) {
         case "TRADE":
+          dispatch(TRADE_HISTORY_APPENDER, { tradeMessage: content })
           break;
         case "NEW_ORDER":
           break;
