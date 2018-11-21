@@ -59,7 +59,8 @@ const actions = {
 
       switch (data.messageType) {
         case "TRADE":
-          dispatch(TRADE_HISTORY_APPENDER, { tradeMessage: content })
+          dispatch(TRADE_HISTORY_APPENDER, { trade: content })
+          dispatch(FILL_ORDERBOOK_ORDER, { trade: content })
           break
 
         case "NEW_ORDER":
@@ -77,14 +78,12 @@ const actions = {
           break
 
         case "ORDER_FILL":
-          dispatch(FILL_ORDERBOOK_ORDER, { order: content })
           if (wallet.isConnected && wallet.current.address.toLowerCase() == content.created_by.toLowerCase()) {
             dispatch(FILL_OPENORDER_ORDER, content)
           }
           break
       }
     }
-
   },
   async [SOCKET_SERVER_CLOSER] ({ commit }) {
     if (state.socketInstance) {

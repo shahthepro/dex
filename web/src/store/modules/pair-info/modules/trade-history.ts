@@ -33,11 +33,11 @@ const actions = {
         commit(COMMIT_TRADE_HISTORY, data)
       })
   },
-  [TRADE_HISTORY_APPENDER] ({ state, commit, rootGetters }, { tradeMessage }) {
+  [TRADE_HISTORY_APPENDER] ({ state, commit, rootGetters }, { trade }) {
 	  let base = TOKENS.getBySymbol(rootGetters.pairInfo.base)
     let decimal = base.decimal
 
-    let price = TOKENS.convertBigIntToFixed(tradeMessage.price, decimal)
+    let price = TOKENS.convertBigIntToFixed(trade.price, decimal)
 
     let trend = true
     if (state.data.length > 0 && state.data[0].price > price) {
@@ -45,9 +45,9 @@ const actions = {
     }
 
     let newTradeData = {
-      traded_at: getShortDate(new Date(tradeMessage.traded_at * 1000)),
+      traded_at: getShortDate(new Date(trade.traded_at * 1000)),
       price,
-      volume: TOKENS.convertBigIntToFixed(tradeMessage.volume, decimal),
+      volume: TOKENS.convertBigIntToFixed(trade.volume, decimal),
       trend,
     }
 

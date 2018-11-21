@@ -130,21 +130,21 @@ describe('Deposits', () => {
 		done()
 	})
 
-	test('should match buy and sell orders', async (done) => {
-		accounts = await getAccounts()
+	// test('should match buy and sell orders', async (done) => {
+	// 	accounts = await getAccounts()
 
-		await matchOrders(ORDER_HASHES[0], accounts[3], ORDER_HASHES[1], accounts[2], TEST_VALUES.token1, TEST_VALUES.token2)
+	// 	await matchOrders(ORDER_HASHES[0], accounts[3], ORDER_HASHES[1], accounts[2], TEST_VALUES.token1, TEST_VALUES.token2)
 		
-		done()
-	})
+	// 	done()
+	// })
 
-	test('should match buy and sell orders', async (done) => {
-		accounts = await getAccounts()
+	// test('should match buy and sell orders', async (done) => {
+	// 	accounts = await getAccounts()
 
-		await matchOrders(ORDER_HASHES[2], accounts[3], ORDER_HASHES[3], accounts[2], TEST_VALUES.token1, TEST_VALUES.token2)
+	// 	await matchOrders(ORDER_HASHES[2], accounts[3], ORDER_HASHES[3], accounts[2], TEST_VALUES.token1, TEST_VALUES.token2)
 		
-		done()
-	})
+	// 	done()
+	// })
 
 	test('should cancel buy order', async (done) => {
 		expect(ORDER_HASHES.length).toBeGreaterThanOrEqual(1)
