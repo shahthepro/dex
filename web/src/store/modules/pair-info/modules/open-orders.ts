@@ -1,5 +1,5 @@
-import { USER_PAIR_ORDERS_GETTER, PAIR_ORDERS_ORDER_REMOVER } from '@/store/action-types'
-import { COMMIT_USER_PAIR_ORDERS } from '@/store/mutation-types'
+import { USER_PAIR_ORDERS_GETTER, PAIR_ORDERS_ORDER_REMOVER, FILL_OPENORDER_ORDER, ADD_OPENORDER_ORDER, CANCEL_OPENORDER_ORDER } from '@/store/action-types'
+import { COMMIT_USER_PAIR_ORDERS, COMMIT_ADD_USER_OPEN_ORDER } from '@/store/mutation-types'
 import TOKENS from '@/core/tokens'
 import APIService from '@/core/api-service'
 import { getShortDate } from '@/utils/general';
@@ -54,20 +54,58 @@ const actions = {
       })
   },
 
-  [PAIR_ORDERS_ORDER_REMOVER] ({ commit, state }, args: any) {
-    let hash: string = args.orderHash
+  [PAIR_ORDERS_ORDER_REMOVER] ({ commit, state }, { orderHash }) {
+    let hash: string = orderHash
     let data = state.data.filter((order) => {
       return order.order_hash != hash
     })
 
     commit(COMMIT_USER_PAIR_ORDERS, data)
   },
+
+  [FILL_OPENORDER_ORDER] ({ commit, state, rootGetters }, order: any) {
+    let base = TOKENS.getBySymbol(rootGetters.pairInfo.base)
+    let decimal = base.decimal
+
+    let orders = JSON.parse(JSON.stringify(state.data))
+
+    let orderFound = false
+    for (let i = 0; i < orders.length; i++) {
+      if (orders[i].order_hash.toLowerCase() == order.order_hash.toLowerCase()) {
+        orderFound = true
+        orders[i].volume_filled = TOKENS.convertBigIntToFixed(order.volume_filled, decimal)
+      }
+    }
+
+    if (!orderFound) {
+      return
+    }
+
+    commit(COMMIT_USER_PAIR_ORDERS, orders)
+  },
+
+  [ADD_OPENORDER_ORDER] ({ commit, state, rootGetters }, order: any) {
+    let base = TOKENS.getBySymbol(rootGetters.pairInfo.base)
+    let decimal = base.decimal
+
+    let orderData = Object.assign({}, order)
+    orderData.created_at = getShortDate(new Date(orderData.created_at * 1000))
+    orderData.price = TOKENS.convertBigIntToFixed(orderData.price, decimal)
+    orderData.quantity = TOKENS.convertBigIntToFixed(orderData.quantity, decimal)
+    orderData.volume = TOKENS.convertBigIntToFixed(orderData.volume, decimal)
+    orderData.volume_filled = TOKENS.convertBigIntToFixed(orderData.volume_filled || '0', decimal)
+
+    commit(COMMIT_ADD_USER_OPEN_ORDER, orderData)
+  },
 }
 
 const mutations = {
   [COMMIT_USER_PAIR_ORDERS] (state: IMyOrdersState, value) {
     state.data = value
-  }
+  },
+  [COMMIT_ADD_USER_OPEN_ORDER] (state: IMyOrdersState, order) {
+    state.data.unshift(order)
+  },
 }
 
 const getters = {}

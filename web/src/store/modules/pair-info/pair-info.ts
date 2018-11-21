@@ -1,4 +1,4 @@
-import { TOKEN_PAIR_SETTER, OHLC_CHARTDATA_GETTER, TRADE_HISTORY_GETTER, PAIR_ORDERBOOK_GETTER, USER_PAIR_ORDERS_GETTER, SOCKET_SERVER_DIALER, SOCKET_SERVER_CLOSER, CONNECT_SOCKET_SERVER, DISCONNECT_SOCKET_SERVER, APPEND_TRADE_HISTORY, TRADE_HISTORY_APPENDER } from '@/store/action-types'
+import { TOKEN_PAIR_SETTER, OHLC_CHARTDATA_GETTER, TRADE_HISTORY_GETTER, PAIR_ORDERBOOK_GETTER, USER_PAIR_ORDERS_GETTER, SOCKET_SERVER_DIALER, SOCKET_SERVER_CLOSER, CONNECT_SOCKET_SERVER, DISCONNECT_SOCKET_SERVER, APPEND_TRADE_HISTORY, TRADE_HISTORY_APPENDER, ADD_ORDERBOOK_ORDER, CANCEL_ORDERBOOK_ORDER, FILL_ORDERBOOK_ORDER, PAIR_ORDERS_ORDER_REMOVER, ADD_OPENORDER_ORDER, FILL_OPENORDER_ORDER } from '@/store/action-types'
 import { COMMIT_TOKEN_PAIR, COMMIT_CONNECT_SOCKET_SERVER, COMMIT_DISCONNECT_SOCKET_SERVER } from '@/store/mutation-types'
 import tradeForm from './modules/trade-form'
 import chartData from './modules/chart-data'
@@ -45,6 +45,7 @@ const actions = {
 
 	  let token = TOKENS.getBySymbol(args.token)
     let base = TOKENS.getBySymbol(args.base)
+    let wallet = rootGetters.wallet;
     
     let socketInstance = new WebSocket(`ws://localhost:7424/ws/${token.address}/${base.address}`)
 
@@ -55,17 +56,32 @@ const actions = {
     socketInstance.onmessage = function (message) {
       let data = <ISocketMessage>JSON.parse(message.data)
       let content = data.messageContent
-      console.log(data.messageType, content)
+
       switch (data.messageType) {
         case "TRADE":
           dispatch(TRADE_HISTORY_APPENDER, { tradeMessage: content })
-          break;
+          break
+
         case "NEW_ORDER":
-          break;
+          dispatch(ADD_ORDERBOOK_ORDER, { order: content })
+          if (wallet.isConnected && wallet.current.address.toLowerCase() == content.created_by.toLowerCase()) {
+            dispatch(ADD_OPENORDER_ORDER, content)
+          }
+          break
+
         case "CANCEL_ORDER":
-          break;
+          dispatch(CANCEL_ORDERBOOK_ORDER, { order: content })
+          if (wallet.isConnected && wallet.current.address.toLowerCase() == content.created_by.toLowerCase()) {
+            dispatch(PAIR_ORDERS_ORDER_REMOVER, { orderHash: content.order_hash })
+          }
+          break
+
         case "ORDER_FILL":
-          break;
+          dispatch(FILL_ORDERBOOK_ORDER, { order: content })
+          if (wallet.isConnected && wallet.current.address.toLowerCase() == content.created_by.toLowerCase()) {
+            dispatch(FILL_OPENORDER_ORDER, content)
+          }
+          break
       }
     }
 
