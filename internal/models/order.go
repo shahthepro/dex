@@ -259,7 +259,7 @@ func GetOrderbook(store *store.DataStore, params *map[string]interface{}) (*Orde
 		return nil, errors.New("`base` parameter is required")
 	}
 
-	buyOrdersQuery := fmt.Sprintf(`SELECT price, sum(volume) - sum(volume_filled), sum(volume_filled) FROM orders 
+	buyOrdersQuery := fmt.Sprintf(`SELECT price, sum(volume), sum(volume_filled) FROM orders 
 		WHERE created_at > now() - interval '14 days' AND is_open=TRUE AND is_bid=TRUE AND token=LOWER($1) AND base=LOWER($2)
 		GROUP BY price ORDER BY price DESC LIMIT 20`)
 
@@ -268,7 +268,7 @@ func GetOrderbook(store *store.DataStore, params *map[string]interface{}) (*Orde
 		return nil, err
 	}
 
-	sellOrdersQuery := fmt.Sprintf(`SELECT price, sum(volume) - sum(volume_filled), sum(volume_filled) FROM orders 
+	sellOrdersQuery := fmt.Sprintf(`SELECT price, sum(volume), sum(volume_filled) FROM orders 
 		WHERE created_at > now() - interval '14 days' AND is_open=TRUE AND is_bid=FALSE AND token=LOWER($1) AND base=LOWER($2)
 		GROUP BY price ORDER BY price ASC LIMIT 20`)
 

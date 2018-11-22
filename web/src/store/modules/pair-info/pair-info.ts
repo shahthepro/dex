@@ -57,10 +57,12 @@ const actions = {
       let data = <ISocketMessage>JSON.parse(message.data)
       let content = data.messageContent
 
+      console.log(data.messageType, content)
+
       switch (data.messageType) {
         case "TRADE":
           dispatch(TRADE_HISTORY_APPENDER, { trade: content })
-          dispatch(FILL_ORDERBOOK_ORDER, { trade: content })
+          // dispatch(FILL_ORDERBOOK_ORDER, { trade: content })
           break
 
         case "NEW_ORDER":
@@ -78,6 +80,7 @@ const actions = {
           break
 
         case "ORDER_FILL":
+          dispatch(FILL_ORDERBOOK_ORDER, { order: content })
           if (wallet.isConnected && wallet.current.address.toLowerCase() == content.created_by.toLowerCase()) {
             dispatch(FILL_OPENORDER_ORDER, content)
           }

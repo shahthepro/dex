@@ -105,6 +105,7 @@ const actions = {
     let price = TOKENS.convertBigIntToFixed(order.price, decimal)
     let volume = TOKENS.convertBigIntToFixed(order.volume, decimal)
     let volumeFilled = TOKENS.convertBigIntToFixed(order.volume_filled, decimal)
+    let volumeUnfilled = parseFloat(volume) - parseFloat(volumeFilled)
     
     if (order.is_bid) {
       orders = JSON.parse(JSON.stringify(state.bids))
@@ -115,15 +116,54 @@ const actions = {
     let removeOrderAtIndex = -1
     for (let i = 0; i < orders.length; i++) {
       if (orders[i].price == price) {
-        let volumeLeft = parseFloat(volume) - parseFloat(volumeFilled)
-        let updatedVolume = parseFloat(orders[i].volume) - volumeLeft
-        let updatedVolumeFilled = parseFloat(orders[i].volume_filled) - parseFloat(volumeFilled)
+        let updatedVolume = parseFloat(orders[i].volume) - volumeUnfilled
+        let volumeFilled = parseFloat(orders[i].volume_filled)
+        // let updatedVolumeFilled = parseFloat(orders[i].volume_filled) - parseFloat(volumeFilled)
 
-        if (updatedVolume <= 0) {
+        if (updatedVolume <= 0 || updatedVolume == volumeFilled) {
           removeOrderAtIndex = i
           break
         }
         orders[i].volume = parseFloat(updatedVolume.toFixed(8)).toString()
+        break
+      }
+    }
+
+    if (removeOrderAtIndex >= 0) {
+      orders.splice(removeOrderAtIndex, 1)
+    }
+
+    if (order.is_bid) {
+      commit(COMMIT_ORDERBOOK_BIDS, orders)
+    } else {
+      commit(COMMIT_ORDERBOOK_ASKS, orders)
+    }
+  },
+
+  [FILL_ORDERBOOK_ORDER] ({ state, commit, rootGetters }, { order }) {
+	  let base = TOKENS.getBySymbol(rootGetters.pairInfo.base)
+    let decimal = base.decimal
+
+    let orders
+
+    let price = TOKENS.convertBigIntToFixed(order.price, decimal)
+    let volumeFilled = TOKENS.convertBigIntToFixed(order.volume_filled || '0', decimal)
+    
+    if (order.is_bid) {
+      orders = JSON.parse(JSON.stringify(state.bids))
+    } else {
+      orders = JSON.parse(JSON.stringify(state.asks))
+    }
+
+    let removeOrderAtIndex = -1
+    for (let i = 0; i < orders.length; i++) {
+      if (orders[i].price == price) {
+        let volume = parseFloat(orders[i].volume)
+        let updatedVolumeFilled = parseFloat(orders[i].volume_filled) + parseFloat(volumeFilled)
+        if (volume <= updatedVolumeFilled) {
+          removeOrderAtIndex = i
+          break
+        }
         orders[i].volume_filled = parseFloat(updatedVolumeFilled.toFixed(8)).toString()
         break
       }
@@ -140,57 +180,57 @@ const actions = {
     }
   },
 
-  [FILL_ORDERBOOK_ORDER] ({ state, commit, rootGetters }, { trade }) {
-	  let base = TOKENS.getBySymbol(rootGetters.pairInfo.base)
-    let decimal = base.decimal
+  // [FILL_ORDERBOOK_ORDER] ({ state, commit, rootGetters }, { trade }) {
+	//   let base = TOKENS.getBySymbol(rootGetters.pairInfo.base)
+  //   let decimal = base.decimal
 
-    let bids = JSON.parse(JSON.stringify(state.bids))
-    let asks = JSON.parse(JSON.stringify(state.asks))
+  //   let bids = JSON.parse(JSON.stringify(state.bids))
+  //   let asks = JSON.parse(JSON.stringify(state.asks))
     
-    let price = TOKENS.convertBigIntToFixed(trade.price, decimal)
-    let volumeFilled = TOKENS.convertBigIntToFixed(trade.volume, decimal)
+  //   let price = TOKENS.convertBigIntToFixed(trade.price, decimal)
+  //   let volumeFilled = TOKENS.convertBigIntToFixed(trade.volume, decimal)
 
-    let removeAskAtIndex = -1;
-    for (let i = 0; i < asks.length; i++) {
-      if (asks[i].price == price) {
-        let updatedVolume = parseFloat(asks[i].volume) - parseFloat(volumeFilled)
-        let updatedVolumeFilled = parseFloat(asks[i].volume_filled) + parseFloat(volumeFilled)
-        if (updatedVolume <= 0) {
-          removeAskAtIndex = i
-          break
-        }
-        asks[i].volume = parseFloat(updatedVolume.toFixed(8)).toString()
-        asks[i].volume_filled = parseFloat(updatedVolumeFilled.toFixed(8)).toString()
-        break
-      }
-    }
+  //   let removeAskAtIndex = -1;
+  //   for (let i = 0; i < asks.length; i++) {
+  //     if (asks[i].price == price) {
+  //       let updatedVolume = parseFloat(asks[i].volume) - parseFloat(volumeFilled)
+  //       let updatedVolumeFilled = parseFloat(asks[i].volume_filled) + parseFloat(volumeFilled)
+  //       if (updatedVolume <= 0) {
+  //         removeAskAtIndex = i
+  //         break
+  //       }
+  //       asks[i].volume = parseFloat(updatedVolume.toFixed(8)).toString()
+  //       asks[i].volume_filled = parseFloat(updatedVolumeFilled.toFixed(8)).toString()
+  //       break
+  //     }
+  //   }
 
-    if (removeAskAtIndex >= 0) {
-      asks.splice(removeAskAtIndex, 1)
-    }
+  //   if (removeAskAtIndex >= 0) {
+  //     asks.splice(removeAskAtIndex, 1)
+  //   }
 
-    let removeBidAtIndex = -1;
-    for (let i = 0; i < bids.length; i++) {
-      if (bids[i].price == price) {
-        let updatedVolume = parseFloat(bids[i].volume) - parseFloat(volumeFilled)
-        let updatedVolumeFilled = parseFloat(bids[i].volume_filled) + parseFloat(volumeFilled)
-        if (updatedVolume <= 0) {
-          removeBidAtIndex = i
-          break
-        }
-        bids[i].volume = parseFloat(updatedVolume.toFixed(8)).toString()
-        bids[i].volume_filled = parseFloat(updatedVolumeFilled.toFixed(8)).toString()
-        break
-      }
-    }
+  //   let removeBidAtIndex = -1;
+  //   for (let i = 0; i < bids.length; i++) {
+  //     if (bids[i].price == price) {
+  //       let updatedVolume = parseFloat(bids[i].volume) - parseFloat(volumeFilled)
+  //       let updatedVolumeFilled = parseFloat(bids[i].volume_filled) + parseFloat(volumeFilled)
+  //       if (updatedVolume <= 0) {
+  //         removeBidAtIndex = i
+  //         break
+  //       }
+  //       bids[i].volume = parseFloat(updatedVolume.toFixed(8)).toString()
+  //       bids[i].volume_filled = parseFloat(updatedVolumeFilled.toFixed(8)).toString()
+  //       break
+  //     }
+  //   }
 
-    if (removeBidAtIndex >= 0) {
-      bids.splice(removeBidAtIndex, 1)
-    }
+  //   if (removeBidAtIndex >= 0) {
+  //     bids.splice(removeBidAtIndex, 1)
+  //   }
 
-    commit(COMMIT_ORDERBOOK_BIDS, bids)
-    commit(COMMIT_ORDERBOOK_ASKS, asks)
-  },
+  //   commit(COMMIT_ORDERBOOK_BIDS, bids)
+  //   commit(COMMIT_ORDERBOOK_ASKS, asks)
+  // },
 }
 
 const mutations = {
