@@ -2,11 +2,22 @@
   <v-layout fill-height class="chart-layout">
     <div v-show="!isLoading && !noData" id="chartdiv" class="chart-container">
     </div>
-    <div v-show="!isLoading && noData" class="chart-container">
-      Not enough data
+    <div v-show="!isLoading && noData" class="no-data-container">
+
+      <div class="justify-content">
+        <v-alert :value="true" :outline="true" type="info">
+          No trade has happened for the pair {{ pairInfo.token }}/{{ pairInfo.base }} yet.
+        </v-alert>
+      </div>
+      
     </div>
-    <div v-show="isLoading" class="chart-container">
-      Loading...
+    <div v-show="isLoading" class="loading-container">
+      <div class="justify-content">
+        <v-progress-circular
+          indeterminate
+          color="red"
+        ></v-progress-circular>
+      </div>
     </div>
   </v-layout>
 </template>
@@ -19,7 +30,7 @@ export default {
   name: 'PVChart',
   data () {
     return {
-      isLoading: false,
+      isLoading: true,
       noData: false,
       chart: null,
       chartDataRef: []
@@ -39,31 +50,14 @@ export default {
   },
   watch: {
     chartData (newData) {
-    
-      // let token = TOKENS.getBySymbol(this.pairInfo.base)
-      // if (token == null) {
-      //   this.noData = true
-      //   this.isLoading = false
-      //   return
-      // }
-
-      // let decimal = token.decimal
       this.chartDataRef.length = 0
 
       for (let i = 0; i < newData.length; i++) {
         this.chartDataRef[i] = newData[i]
-        // this.chartDataRef[i] = {
-        //   date: newData[i].date,
-        //   open: TOKENS.convertBigIntToFixed(newData[i].open, decimal),
-        //   high: TOKENS.convertBigIntToFixed(newData[i].high, decimal),
-        //   low: TOKENS.convertBigIntToFixed(newData[i].low, decimal),
-        //   close: TOKENS.convertBigIntToFixed(newData[i].close, decimal),
-        //   volume: TOKENS.convertBigIntToFixed(newData[i].volume, decimal),
-        // }
       }
 
       this.isLoading = false
-      this.noData = this.chartDataRef.length == 0
+      this.noData = this.chartDataRef.length < 10
       if (this.noData) {
         return
       }
@@ -296,31 +290,29 @@ export default {
       } );
     }
   },
-  mounted () {
-    // this.$store.dispatch(FETCH_OHLC_CHARTDATA, {
-    //   token: this.$store.getters.pairInfo.token,
-    //   base: this.$store.getters.pairInfo.base,
-    // })
-    // this.initializeChart()
-    // this.generateChartData()
-  },
-  created () {
-  },
 }
 </script>
 
 <style lang="scss" scoped>
   .chart-layout {
     padding: 10px;
-    .chart-container {
+    .chart-container, .no-data-container, .loading-container {
       height: 100%;
       width: 100%;
+    }
+    .loading-container, .no-data-container {
+      position: relative;
+      > .justify-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate3d(-50%,-50%,0);
+      }
     }
   }
 </style>
 
 <style lang="scss">
-
   .amChartsButton.amcharts-period-input, .amChartsButtonSelected.amcharts-period-input-selected {
     font-size: 0.8rem;
     padding: 1px 3px;

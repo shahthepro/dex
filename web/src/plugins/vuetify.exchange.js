@@ -22,6 +22,7 @@ import {
   VCheckbox,
   VDialog,
   VDivider,
+  VProgressCircular,
   transitions
 } from 'vuetify'
 import 'vuetify/src/stylus/app.styl'
@@ -49,6 +50,7 @@ Vue.use(Vuetify, {
     VCheckbox,
     VDialog,
     VDivider,
+    VProgressCircular,
     transitions
   },
   theme: {

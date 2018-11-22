@@ -1,6 +1,6 @@
 <template>
-  <v-layout>
-    <table class="v-table">
+  <v-layout fill-height>
+    <table class="v-table" v-show="wallet.isConnected && openOrders.length > 0">
       <thead>
         <tr>
           <th>Date</th>
@@ -24,6 +24,20 @@
         </tr>
       </tbody>
     </table>
+    <div class="justify-container" v-show="wallet.isConnected && openOrders.length == 0">
+      <div class="justify-content">
+        <v-alert :value="true" :outline="true" type="info">
+          You have no open orders for the pair {{ pairInfo.token }}/{{ pairInfo.base }}.
+        </v-alert>
+      </div>
+    </div>
+    <div class="justify-container" v-show="!wallet.isConnected">
+      <div class="justify-content">
+        <v-alert :value="true" :outline="true" type="info">
+          Unlock your wallet to view your open orders.
+        </v-alert>
+      </div>
+    </div>
   </v-layout>
 </template>
 
@@ -36,7 +50,7 @@ export default {
   name: 'OpenOrders',
   data () {
     return {
-      isLoading: {}
+      isLoading: {},
     }
   },
   computed: {
@@ -44,7 +58,17 @@ export default {
       get () {
         return this.$store.getters.openOrders.data
       }
-    }
+    },
+    pairInfo: {
+      get () {
+        return this.$store.getters.pairInfo
+      }
+    },
+    wallet: {
+      get () {
+        return this.$store.getters.wallet
+      }
+    },
   },
   methods: {
     cancelOrder (orderHash) {
@@ -85,5 +109,16 @@ table.v-table thead td:not(:nth-child(1)), table.v-table tbody td:not(:nth-child
 }
 table.v-table thead tr, table.v-table tbody tr td {
   height: 25px;
+}
+.justify-container {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  > .justify-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%,-50%,0);
+  }
 }
 </style>
