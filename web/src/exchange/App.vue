@@ -27,10 +27,35 @@
       <v-spacer></v-spacer>
       <v-toolbar-items>
           <v-btn flat :to="{ name: `trade`, params: { token: ($route.params.token || 'CDX'), base: ($route.params.base || 'ETH') } }">Trade</v-btn>
-          <v-btn flat :to="{ name: `orders` }">Orders</v-btn>
-          <v-btn flat :to="{ name: `balances` }">Balances</v-btn>
+          <v-menu open-on-hover bottom offset-y>
+            <v-btn flat :to="{ name: `orders` }" slot="activator">
+              Orders
+            </v-btn>
+            <v-list>
+              <v-list-tile :to="{ name: `orders` }" exact>
+                <v-list-tile-title>My Open Orders</v-list-tile-title>
+              </v-list-tile>
+              <v-list-tile :to="{ name: `user-trades` }" exact>
+                <v-list-tile-title>My Trades</v-list-tile-title>
+              </v-list-tile>
+            </v-list>
+          </v-menu>
+          <v-menu open-on-hover bottom offset-y>
+            <v-btn flat :to="{ name: `balances` }" slot="activator">
+              Balances
+            </v-btn>
+            <v-list>
+              <v-list-tile :to="{ name: `balances` }" exact>
+                <v-list-tile-title>Wallet Balances</v-list-tile-title>
+              </v-list-tile>
+              <v-list-tile :to="{ name: `pending-balances` }" exact>
+                <v-list-tile-title>Pending Funds</v-list-tile-title>
+              </v-list-tile>
+            </v-list>
+          </v-menu>
           <v-btn flat :to="{ name: `help` }"><v-icon>help</v-icon></v-btn>
-          <v-btn class="error" flat @click.stop="accountDrawer = !accountDrawer">Unlock Wallet</v-btn>
+          <v-btn v-if="!wallet.isConnected" class="error" flat @click.stop="accountDrawer = !accountDrawer">Unlock Wallet</v-btn>
+          <v-btn v-if="wallet.isConnected" class="success" flat @click.stop="accountDrawer = !accountDrawer">Change Wallet</v-btn>
       </v-toolbar-items>
     </v-toolbar>
     <v-content>
@@ -62,17 +87,17 @@ export default {
       walletDialog: false,
       accountDrawer: false,
       title: 'ChilraDEX',
-      // tokenpair: 'CDX/ETH',
       marketsDrawer: false,
-      // pairs: [],
       pairs: TOKENS.getPairs('ETH'),
       searchText: ''
     }
   },
   computed: {
-    // pairs () {
-    //   return TOKENS.getPairs('ETH')
-    // }
+    wallet: {
+      get () {
+        return this.$store.getters.wallet
+      }
+    }
   },
   methods: {
     changeTradePair (pair) {

@@ -1,9 +1,12 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import About from '@/views/About.vue'
+import ExchangeHelp from '@/views/ExchangeHelp.vue'
 import Trade from '@/views/Trade.vue'
+import UserOrders from '@/views/UserOrders.vue'
+import UserTrades from '@/views/UserTrades.vue'
+import WalletBalances from '@/views/WalletBalances.vue'
+import PendingFunds from '@/views/PendingFunds.vue'
 import TOKENS from '@/core/tokens'
-import store from '@/store'
 
 Vue.use(Router)
 
@@ -50,23 +53,39 @@ let router = new Router({
     {
       path: '/orders',
       name: 'orders',
-      component: About,
+      component: UserOrders,
       meta: {
-        title: _ => 'My Orders'
+        title: _ => 'My Open Orders'
+      }
+    },
+    {
+      path: '/user-trades',
+      name: 'user-trades',
+      component: UserTrades,
+      meta: {
+        title: _ => 'My Trade History'
       }
     },
     {
       path: '/balances',
       name: 'balances',
-      component: About,
+      component: WalletBalances,
       meta: {
         title: _ => 'Balances'
       }
     },
     {
+      path: '/balances/pending',
+      name: 'pending-balances',
+      component: PendingFunds,
+      meta: {
+        title: _ => 'Pending Funds'
+      }
+    },
+    {
       path: '/help',
       name: 'help',
-      component: About,
+      component: ExchangeHelp,
       meta: {
         title: _ => 'Help'
       }

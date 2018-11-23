@@ -226,67 +226,67 @@ export default {
           offsetY: 10
         },
 
-        periodSelector: {
-          position: "top",
-          inputFieldsEnabled: false,
-          periods: [ 
-            // {
-            //   period: "mm",
-            //   count: 1,
-            //   label: "1m"
-            // },
-            {
-              period: "mm",
-              count: 5,
-              label: "5m"
-            },
-            {
-              period: "mm",
-              count: 15,
-              label: "15m"
-            },
-            {
-              period: "mm",
-              count: 30,
-              label: "30m"
-            },
-            {
-              period: "hh",
-              count: 1,
-              label: "1h"
-            },
-            {
-              period: "hh",
-              count: 6,
-              label: "6h"
-            },
-            {
-              period: "hh",
-              count: 12,
-              label: "12h"
-            },
-            {
-              period: "DD",
-              count: 1,
-              label: "1d"
-            },
-            {
-              period: "WW",
-              count: 1,
-              label: "1w"
-            },
-            {
-              period: "MM",
-              count: 1,
-              label: "1M"
-            },
-            {
-              period: "MAX",
-              count: 1,
-              label: "MAX"
-            }
-          ]
-        }
+        // periodSelector: {
+        //   position: "top",
+        //   inputFieldsEnabled: false,
+        //   periods: [ 
+        //     // {
+        //     //   period: "mm",
+        //     //   count: 1,
+        //     //   label: "1m"
+        //     // },
+        //     {
+        //       period: "mm",
+        //       count: 5,
+        //       label: "5m"
+        //     },
+        //     {
+        //       period: "mm",
+        //       count: 15,
+        //       label: "15m"
+        //     },
+        //     {
+        //       period: "mm",
+        //       count: 30,
+        //       label: "30m"
+        //     },
+        //     {
+        //       period: "hh",
+        //       count: 1,
+        //       label: "1h"
+        //     },
+        //     {
+        //       period: "hh",
+        //       count: 6,
+        //       label: "6h"
+        //     },
+        //     {
+        //       period: "hh",
+        //       count: 12,
+        //       label: "12h"
+        //     },
+        //     {
+        //       period: "DD",
+        //       count: 1,
+        //       label: "1d"
+        //     },
+        //     {
+        //       period: "WW",
+        //       count: 1,
+        //       label: "1w"
+        //     },
+        //     {
+        //       period: "MM",
+        //       count: 1,
+        //       label: "1M"
+        //     },
+        //     {
+        //       period: "MAX",
+        //       count: 1,
+        //       label: "MAX"
+        //     }
+        //   ]
+        // }
       } );
     }
   },
