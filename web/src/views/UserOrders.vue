@@ -40,7 +40,7 @@
 import store from '@/store'
 import { ALL_OPEN_ORDERS_NAMESPACE } from '@/core/constants'
 import ALL_PAIR_OPEN_ORDERS_MODULE from '@/store/modules/user-orders/user-orders'
-import { FETCH_ALL_OPEN_ORDERS } from '@/store/action-types'
+import { FETCH_ALL_OPEN_ORDERS, REMOVE_ORDER_FROM_ALL_OPEN_ORDERS } from '@/store/action-types'
 
 import Orderbook from '@/utils/orderbook'
 
@@ -90,7 +90,7 @@ export default {
           if (receipt.status == 1) {
             // remove hash from data
             console.log('Cancelled order')
-            this.$store.dispatch(REMOVE_ORDER_FROM_OPEN_ORDERS, { orderHash })
+            this.$store.dispatch(REMOVE_ORDER_FROM_ALL_OPEN_ORDERS, { orderHash })
           } else {
             this.lastTxError = `Something went wrong, Do you have sufficient funds?`
             console.log('Does the order exists? Are you owner?')

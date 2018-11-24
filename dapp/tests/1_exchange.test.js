@@ -146,15 +146,15 @@ describe('Deposits', () => {
 		done()
 	})
 
-	test('should cancel buy order', async (done) => {
-		expect(ORDER_HASHES.length).toBeGreaterThanOrEqual(1)
+	// test('should cancel buy order', async (done) => {
+	// 	expect(ORDER_HASHES.length).toBeGreaterThanOrEqual(1)
 
-		accounts = await getAccounts()
+	// 	accounts = await getAccounts()
 
-		await cancelOrder(accounts[3], TEST_VALUES.token2, ORDER_HASHES[0])
+	// 	await cancelOrder(accounts[3], TEST_VALUES.token2, ORDER_HASHES[0])
 
-		done()
-	})
+	// 	done()
+	// })
 })
 
 async function depositTokens(tokenAddress, toAccount, toDeposit) {
