@@ -1,4 +1,4 @@
-import { USER_PAIR_ORDERS_GETTER, PAIR_ORDERS_ORDER_REMOVER } from '@/store/action-types'
+import { USER_OPEN_ORDERS_GETTER, ALL_OPEN_ORDERS_REMOVER } from '@/store/action-types'
 import { COMMIT_USER_PAIR_ORDERS } from '@/store/mutation-types'
 import TOKENS from '@/core/tokens'
 import APIService from '@/core/api-service'
@@ -15,7 +15,7 @@ const state = <IMyOrdersState>{
 }
 
 const actions = {
-  [USER_PAIR_ORDERS_GETTER]({ commit }, args: any) {
+  [USER_OPEN_ORDERS_GETTER]({ commit }, args: any) {
     if (args.walletAddress == null) {
       commit(COMMIT_USER_PAIR_ORDERS, [])
       return
@@ -42,7 +42,7 @@ const actions = {
       })
   },
 
-  [PAIR_ORDERS_ORDER_REMOVER]({ commit, state }, { orderHash }) {
+  [ALL_OPEN_ORDERS_REMOVER]({ commit, state }, { orderHash }) {
     let hash: string = orderHash
     let data = state.data.filter((order) => {
       return order.order_hash != hash
@@ -61,6 +61,7 @@ const mutations = {
 const getters = {}
 
 export default {
+  namespaced: true,
   state,
   actions,
   mutations,
