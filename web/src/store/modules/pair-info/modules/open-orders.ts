@@ -1,22 +1,9 @@
-import { USER_PAIR_ORDERS_GETTER, PAIR_ORDERS_ORDER_REMOVER, FILL_OPENORDER_ORDER, ADD_OPENORDER_ORDER, CANCEL_OPENORDER_ORDER } from '@/store/action-types'
+import { USER_PAIR_ORDERS_GETTER, PAIR_ORDERS_ORDER_REMOVER, FILL_OPENORDER_ORDER, ADD_OPENORDER_ORDER } from '@/store/action-types'
 import { COMMIT_USER_PAIR_ORDERS, COMMIT_ADD_USER_OPEN_ORDER } from '@/store/mutation-types'
 import TOKENS from '@/core/tokens'
 import APIService from '@/core/api-service'
 import { getShortDate } from '@/utils/general';
-
-interface IOrder {
-  order_hash: string
-  token: string
-  base: string
-  price: string
-  quantity: string
-  is_bid: boolean
-  created_at: string
-  created_by: string
-  volume: string
-  volume_filled: string
-  is_open: boolean
-}
+import IOrder from '@/interfaces/IOrder'
 
 interface IMyOrdersState {
 	data: IOrder[]

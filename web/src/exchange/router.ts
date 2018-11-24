@@ -79,7 +79,7 @@ let router = new Router({
       name: 'pending-balances',
       component: PendingFunds,
       meta: {
-        title: _ => 'Pending Funds'
+        title: _ => 'Pending Deposits and Withdrawals'
       }
     },
     {

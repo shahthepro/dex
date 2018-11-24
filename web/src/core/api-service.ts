@@ -1,28 +1,28 @@
 import CONFIG from './config'
 
 const APIService = {
-	getOHLCData (token: string, base: string) {
+	getOHLCData(token: string, base: string) {
 		let url = getAbsoluteEndpoint('trades/ohlc')
 		url.searchParams.set('token', token)
 		url.searchParams.set('base', base)
 		return fetch(url.toJSON())
 			.then(resp => resp.json())
 	},
-	getTradeHistory (token: string, base: string) {
+	getTradeHistory(token: string, base: string) {
 		let url = getAbsoluteEndpoint('trades/history')
 		url.searchParams.set('token', token)
 		url.searchParams.set('base', base)
 		return fetch(url.toJSON())
 			.then(resp => resp.json())
 	},
-	getOrderbook (token: string, base: string) {
+	getOrderbook(token: string, base: string) {
 		let url = getAbsoluteEndpoint('orderbook')
 		url.searchParams.set('token', token)
 		url.searchParams.set('base', base)
 		return fetch(url.toJSON())
 			.then(resp => resp.json())
-  },
-  getOpenOrders (token: string, base: string, user: string) {
+	},
+	getOpenOrders(token: string, base: string, user: string) {
 		let url = getAbsoluteEndpoint('orders')
 		url.searchParams.set('token', token)
 		url.searchParams.set('base', base)
@@ -30,7 +30,14 @@ const APIService = {
 		url.searchParams.set('status', '0')
 		return fetch(url.toJSON())
 			.then(resp => resp.json())
-  },
+	},
+	getAllOpenOrders(user: string) {
+		let url = getAbsoluteEndpoint('orders')
+		url.searchParams.set('creator', user)
+		url.searchParams.set('status', '0')
+		return fetch(url.toJSON())
+			.then(resp => resp.json())
+	},
 }
 
 function getAbsoluteEndpoint(endpoint: string): URL {

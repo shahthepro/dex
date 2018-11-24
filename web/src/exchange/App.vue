@@ -36,7 +36,7 @@
                 <v-list-tile-title>My Open Orders</v-list-tile-title>
               </v-list-tile>
               <v-list-tile :to="{ name: `user-trades` }" exact>
-                <v-list-tile-title>My Trades</v-list-tile-title>
+                <v-list-tile-title>My Trade History</v-list-tile-title>
               </v-list-tile>
             </v-list>
           </v-menu>
@@ -49,7 +49,7 @@
                 <v-list-tile-title>Wallet Balances</v-list-tile-title>
               </v-list-tile>
               <v-list-tile :to="{ name: `pending-balances` }" exact>
-                <v-list-tile-title>Pending Funds</v-list-tile-title>
+                <v-list-tile-title>Pending Transactions</v-list-tile-title>
               </v-list-tile>
             </v-list>
           </v-menu>

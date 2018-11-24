@@ -2,6 +2,7 @@ import IToken from '@/interfaces/IToken'
 import BN from 'bn.js'
 
 let tokenIndexMap = {};
+let tokenAddressIndexMap = {};
 let tokensList = [];
 
 const TOKENS = {
@@ -15,7 +16,8 @@ const TOKENS = {
       .then(tokens => {
         tokenIndexMap = {}
         tokensList = tokens.map((token, index) => {
-          tokenIndexMap[token.s] = index
+          tokenIndexMap[token.s.toUpperCase()] = index
+          tokenAddressIndexMap[token.a.toLowerCase()] = index
           return <IToken> {
             symbol: token.s,
             address: token.a,
@@ -26,6 +28,9 @@ const TOKENS = {
   },
   getBySymbol (symbol): IToken {
     return tokensList[tokenIndexMap[symbol.toUpperCase()]]
+  },
+  getByAddress (tokenAddress): IToken {
+    return tokensList[tokenAddressIndexMap[tokenAddress.toLowerCase()]]
   },
   get (): IToken[] {
     return tokensList
@@ -76,38 +81,7 @@ const TOKENS = {
       return `${whole}${frac.padEnd(decimals, '0')}`
     }
     return ''
-    // let d = new BN(decimals, 10)
-    // let f = new BN(10, 10)
-    // f = f.pow(d)
-    // let t = new BN(amount, 10)
-    // console.log(f.toString(), t.toString())
-    // t = t.mul(f)
-    // return t
   },
-
-  // convertToSmallestTokenUnit (amount: string, symbol: string): string {
-  //   let token = this.getBySymbol(symbol)
-  //   if (token == null) {
-  //     throw new Error("Invalid symbol")
-  //   }
-  //   let decimal = new BN(token.decimal, 10)
-  //   let factor = decimal.pow(new BN(10, 10))
-  //   let units = new BN(amount, 10)
-    
-  //   return units.mul(factor).toString()
-  // },
-
-  // convertToNormalTokenUnit (units: string, symbol: string): string {
-  //   let token = this.getBySymbol(symbol)
-  //   if (token == null) {
-  //     throw new Error("Invalid symbol")
-  //   }
-  //   let decimal = new BN(token.decimal, 10)
-  //   let factor = decimal.pow(new BN(10, 10))
-  //   let amount = new BN(units, 10)
-    
-  //   return amount.div(factor).toString()
-  // },
 
 }
 

@@ -57,12 +57,9 @@ const actions = {
       let data = <ISocketMessage>JSON.parse(message.data)
       let content = data.messageContent
 
-      console.log(data.messageType, content)
-
       switch (data.messageType) {
         case "TRADE":
           dispatch(TRADE_HISTORY_APPENDER, { trade: content })
-          // dispatch(FILL_ORDERBOOK_ORDER, { trade: content })
           break
 
         case "NEW_ORDER":
