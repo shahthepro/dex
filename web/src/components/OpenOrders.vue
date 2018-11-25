@@ -1,10 +1,11 @@
 <template>
   <v-layout fill-height>
-    <table class="v-table" v-show="wallet.isConnected && openOrders.length > 0">
+    <table class="v-table" v-show="walletIsConnected && orders.length > 0">
       <thead>
         <tr>
           <th>Date</th>
-          <th>Side</th>
+          <th v-if="showMarket">Market</th>
+          <th>Type</th>
           <th>Price</th>
           <th>Amount</th>
           <th>Filled</th>
@@ -13,8 +14,9 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="order in openOrders">
+        <tr v-for="order in orders">
           <td class="text-xs-left">{{ order.created_at }}</td>
+          <td class="text-xs-left" v-if="showMarket">{{ getMarketDisplayName(order) }}</td>
           <td class="text-xs-left">{{ order.is_bid ? 'Buy' : 'Sell' }}</td>
           <td class="text-xs-right">{{ order.price }}</td>
           <td class="text-xs-right">{{ order.quantity }}</td>
@@ -24,19 +26,13 @@
         </tr>
       </tbody>
     </table>
-    <div class="justify-container" v-show="wallet.isConnected && openOrders.length == 0">
-      <div class="justify-content">
-        <v-alert :value="true" :outline="true" type="info">
-          You have no open orders for the pair {{ pairInfo.token }}/{{ pairInfo.base }}.
-        </v-alert>
-      </div>
-    </div>
-    <div class="justify-container" v-show="!wallet.isConnected">
-      <div class="justify-content">
-        <v-alert :value="true" :outline="true" type="info">
-          Unlock your wallet to view your open orders.
-        </v-alert>
-      </div>
+    <div class="alert-boxes">
+      <v-alert :value="walletIsConnected && orders.length == 0" outline type="info">
+        You have no open orders at the moment.
+      </v-alert>
+      <v-alert :value="!walletIsConnected" outline type="info">
+        Please unlock your wallet to see your open orders.
+      </v-alert>
     </div>
   </v-layout>
 </template>
@@ -45,40 +41,43 @@
 import { REMOVE_ORDER_FROM_OPEN_ORDERS } from '@/store/action-types'
 
 import Orderbook from '@/utils/orderbook'
+import TOKENS from '@/core/tokens'
 
 export default {
   name: 'OpenOrders',
+  props: {
+    showMarket: Boolean,
+    orders: Array,
+  },
   data () {
     return {
       isLoading: {},
     }
   },
   computed: {
-    openOrders: {
+    // openOrders: {
+    //   get () {
+    //     return this.$store.getters.openOrders.data
+    //   }
+    // },
+    walletIsConnected: {
       get () {
-        return this.$store.getters.openOrders.data
-      }
-    },
-    pairInfo: {
-      get () {
-        return this.$store.getters.pairInfo
-      }
-    },
-    wallet: {
-      get () {
-        return this.$store.getters.wallet
+        return this.$store.getters.wallet.isConnected
       }
     },
   },
   methods: {
+    getMarketDisplayName (order) {
+      let base = TOKENS.getByAddress(order.base).symbol
+      let token = TOKENS.getByAddress(order.token).symbol
+      return `${token}/${base}`
+    },
     cancelOrder (orderHash) {
       this.$set(this.isLoading, orderHash, true)
       Orderbook.cancelOrder(orderHash)
         .then(receipt => {
           if (receipt.status == 1) {
-            // remove hash from data
-            console.log('Cancelled order')
-            this.$store.dispatch(REMOVE_ORDER_FROM_OPEN_ORDERS, { orderHash })
+            this.$emit('order-cancelled', orderHash)
           } else {
             this.lastTxError = `Something went wrong, Do you have sufficient funds?`
             console.log('Does the order exists? Are you owner?')
@@ -105,20 +104,13 @@ table.v-table thead td:not(:nth-child(1)), table.v-table tbody td:not(:nth-child
 }
 .v-table tr td {
   white-space: nowrap;
-  font-size: 0.8rem;
 }
 table.v-table thead tr, table.v-table tbody tr td {
-  height: 25px;
+  height: 40px;
 }
-.justify-container {
-  position: relative;
-  height: 100%;
+.alert-boxes {
+  padding: 20px;
   width: 100%;
-  > .justify-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate3d(-50%,-50%,0);
-  }
+  max-height: 50px;
 }
 </style>

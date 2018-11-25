@@ -15,7 +15,7 @@
                 <v-card-title>Open Orders</v-card-title>
                 <div class="widget-content-wrapper">
                   <div class="widget-content">
-                    <OpenOrders/>
+                    <OpenOrders :showMarket="false" :orders="openOrders" v-on:orderCancelled="onOrderCancelled" />
                   </div>
                 </div>
             </v-card>
@@ -76,7 +76,7 @@ import PriceChart from '@/components/PVChart.vue'
 import store from '@/store'
 import { TOKEN_PAIR_NAMESPACE } from '@/core/constants'
 import TOKEN_PAIR_INFO_MODULE from '@/store/modules/pair-info/pair-info'
-import { SET_TOKEN_PAIR, FETCH_USER_PAIR_ORDERS } from '@/store/action-types'
+import { SET_TOKEN_PAIR, FETCH_USER_PAIR_ORDERS, REMOVE_ORDER_FROM_OPEN_ORDERS } from '@/store/action-types'
 
 if (!store.state[TOKEN_PAIR_NAMESPACE]) {
   store.registerModule(TOKEN_PAIR_NAMESPACE, TOKEN_PAIR_INFO_MODULE)
@@ -102,6 +102,11 @@ export default {
     wallet () {
       return store.getters.wallet.current
     },
+    openOrders: {
+      get () {
+        return store.getters.openOrders.data
+      }
+    },
   },
   watch: {
     wallet (newWallet) {
@@ -122,6 +127,9 @@ export default {
     next()
   },
   methods: {
+    onOrderCancelled (orderHash) {
+      store.dispatch(REMOVE_ORDER_FROM_OPEN_ORDERS, { orderHash })
+    },
   }
   
 }
