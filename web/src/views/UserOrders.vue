@@ -1,6 +1,6 @@
 <template>
   <v-container fluid>
-    <h2 class="orders-title">Open orders</h2>
+    <h2 class="page-subtitle">Open orders</h2>
     <OpenOrders :showMarket="true" :orders="orders" v-on:onOrderCancelled="cancelOrder" />
   </v-container>
 </template>
@@ -75,7 +75,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .orders-title {
+  .page-subtitle {
     margin-bottom: 20px
   }
 </style>

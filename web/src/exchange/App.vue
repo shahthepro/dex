@@ -35,7 +35,7 @@
               <v-list-tile :to="{ name: `orders` }" exact>
                 <v-list-tile-title>My Open Orders</v-list-tile-title>
               </v-list-tile>
-              <v-list-tile :to="{ name: `user-trades` }" exact>
+              <v-list-tile v-if="false" :to="{ name: `user-trades` }" exact>
                 <v-list-tile-title>My Trade History</v-list-tile-title>
               </v-list-tile>
             </v-list>
@@ -55,7 +55,7 @@
           </v-menu>
           <v-btn flat :to="{ name: `help` }"><v-icon>help</v-icon></v-btn>
           <v-btn v-if="!wallet.isConnected" class="error" flat @click.stop="accountDrawer = !accountDrawer">Unlock Wallet</v-btn>
-          <v-btn v-if="wallet.isConnected" class="success" flat @click.stop="accountDrawer = !accountDrawer">Change Wallet</v-btn>
+          <v-btn v-if="wallet.isConnected" class="success" flat @click.stop="accountDrawer = !accountDrawer">My Wallet</v-btn>
       </v-toolbar-items>
     </v-toolbar>
     <v-content>

@@ -29,8 +29,6 @@ const actions = {
           let base = TOKENS.getByAddress(data[i].base)
           let decimal = base.decimal
 
-          // data[i].token = token.symbol
-          // data[i].base = base.symbol
           data[i].created_at = getShortDate(new Date(data[i].created_at * 1000))
           data[i].price = TOKENS.convertBigIntToFixed(data[i].price, decimal)
           data[i].quantity = TOKENS.convertBigIntToFixed(data[i].quantity, decimal)

@@ -15,6 +15,14 @@ const APIService = {
 		return fetch(url.toJSON())
 			.then(resp => resp.json())
 	},
+	getUserTradeHistory(token: string, base: string, user: string) {
+		let url = getAbsoluteEndpoint('trades/history')
+		url.searchParams.set('token', token)
+		url.searchParams.set('base', base)
+		url.searchParams.set('user', user)
+		return fetch(url.toJSON())
+			.then(resp => resp.json())
+	},
 	getOrderbook(token: string, base: string) {
 		let url = getAbsoluteEndpoint('orderbook')
 		url.searchParams.set('token', token)
@@ -35,6 +43,11 @@ const APIService = {
 		let url = getAbsoluteEndpoint('orders')
 		url.searchParams.set('creator', user)
 		url.searchParams.set('status', '0')
+		return fetch(url.toJSON())
+			.then(resp => resp.json())
+	},
+	getWalletBalances(user: string) {
+		let url = getAbsoluteEndpoint(`wallets/${user}`)
 		return fetch(url.toJSON())
 			.then(resp => resp.json())
 	},

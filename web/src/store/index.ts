@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import wallet from '@/store/modules/wallet/wallet';
-import { TOKEN_PAIR_NAMESPACE, WALLET_NAMESPACE, DEPOSIT_FORM_NAMESPACE, ALL_OPEN_ORDERS_NAMESPACE } from '@/core/constants'
+import { TOKEN_PAIR_NAMESPACE, WALLET_NAMESPACE, DEPOSIT_FORM_NAMESPACE, ALL_OPEN_ORDERS_NAMESPACE, WALLET_BALANCES_NAMESPACE } from '@/core/constants'
 
 Vue.use(Vuex)
 
@@ -34,6 +34,9 @@ export default new Vuex.Store({
     },
     allOpenOrders (state) {
       return state[ALL_OPEN_ORDERS_NAMESPACE].data
+    },
+    walletBalances (state) {
+      return state[WALLET_BALANCES_NAMESPACE].data
     },
   },
   modules: {

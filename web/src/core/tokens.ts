@@ -67,7 +67,7 @@ const TOKENS = {
 
     let offset = amount.length - decimals
 
-    return `${amount.slice(0, offset)}.${amount.slice(offset, 8)}`
+    return `${amount.slice(0, offset)}.${amount.slice(offset, offset + 8)}`
   },
 
   convertFixedToBigInt (amount: string, decimals: number): string {
