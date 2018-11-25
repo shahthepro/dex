@@ -2,7 +2,7 @@ import store from '@/store'
 import BLOCKCHAIN_INFO from '@/core/blockchain'
 import TOKENS from '@/core/tokens'
 
-async function withdrawTokens(tokenSymbol: string, amount: string) {
+async function withdrawTokens(tokenAddress: string, amount: string) {
   const { isConnected, current: wallet } = store.getters.wallet
 
   if (!isConnected) {
@@ -14,14 +14,14 @@ async function withdrawTokens(tokenSymbol: string, amount: string) {
 
   const web3 = wallet.web3()
 
-  const token = TOKENS.getBySymbol(tokenSymbol)
+  const token = TOKENS.getByAddress(tokenAddress)
 
   let unitAmount = TOKENS.convertFixedToBigInt(amount, token.decimal)
 
   const DEXChainContract = new web3.eth.Contract(EXCHANGE_ABI, EXCHANGE_CONTRACT_ADDRESS)
 
   const data = DEXChainContract.methods.transferHomeViaRelay(
-    token,
+    tokenAddress,
     unitAmount
   ).encodeABI()
 

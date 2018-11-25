@@ -30,7 +30,7 @@
             <td class="text-xs-left">{{ tokenBalance.token }}</td>
             <td class="text-xs-right">{{ tokenBalance.balance }}</td>
             <td class="text-xs-right">{{ tokenBalance.escrow }}</td>
-            <td class="text-xs-center"><v-btn small flat color="success" @click="withdrawButtonClick(order.order_hash)">Request Withdraw</v-btn></td>
+            <td class="text-xs-center"><v-btn small flat color="success" @click="withdrawButtonClick(tokenBalance.token)">Request Withdraw</v-btn></td>
           </tr>
         </tbody>
       </table>
@@ -40,6 +40,7 @@
 
 <script>
 import TOKENS from '@/core/tokens'
+import DEXChain from '@/utils/dexchain'
 
 export default {
   name: 'BalanceList',
@@ -58,7 +59,18 @@ export default {
       return TOKENS.getByAddress(tokenAddress).symbol
     },
     withdrawButtonClick (tokenAddress) {
-        //
+      DEXChain.withdrawTokens(tokenAddress, "0.00234")
+        .then(receipt => {
+          if (receipt.status == 1) {
+            console.log('Done successfully')
+            this.$emit('withdraw-tokens', tokenAddress)
+          } else {
+            console.log('Not enough funds?')
+          }
+        })
+        .catch(err => {
+          console.log(err.message)
+        })
     },
   }
 }
