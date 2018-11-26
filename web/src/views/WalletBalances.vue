@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <h2 class="page-subtitle">Wallet Balances</h2>
-    <BalanceList :token-balances="tokenBalances" />
+    <BalanceList :token-balances="tokenBalances" v-on:withdrawTokens="onWithdrawal" />
   </v-container>
 </template>
 
@@ -50,7 +50,11 @@ export default {
       }
     },
   },
-  // methods: {},
+  methods: {
+    onWithdrawal (tokenAddress) {
+      updateWalletBalances()
+    }
+  },
   watch: {
     wallet (newWallet) {
       updateWalletBalances()
