@@ -30,15 +30,33 @@
             <td class="text-xs-left">{{ tokenBalance.token }}</td>
             <td class="text-xs-right">{{ tokenBalance.balance }}</td>
             <td class="text-xs-right">{{ tokenBalance.escrow }}</td>
-            <td class="text-xs-center"><v-btn small flat color="success" @click="withdrawButtonClick(tokenBalance.token)">Request Withdraw</v-btn></td>
+            <td class="text-xs-center"><v-btn small flat color="success" @click="withdrawButtonClick(tokenBalance.token, tokenBalance.balance)">Request Withdraw</v-btn></td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <v-dialog max-width="500" v-model="withdrawTokenDialog" persistent>
+      <v-card>
+        <v-card-title class="headline" primary-title>Keep your keystore file safe</v-card-title>
+        <v-card-text>
+          <v-form v-if="withdrawTokenDialog" ref="valid" v-model="valid">
+            <v-text-field v-model="amountToWithdraw" label="Amount" :suffix="this.tokenToWithdraw.symbol" required :rules="[rules.number]"></v-text-field>
+          </v-form>
+        </v-card-text>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-btn :disabled="withdrawInProgress" flat @click="closeWithdrawDialog()">Close</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" :loading="withdrawInProgress" :disabled="!valid || amountToWithdraw <= 0" @click="confirmWithdraw()">Submit Withdraw Request</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-layout>
 </template>
 
 <script>
+import FORM_RULES from '@/utils/form-rules'
 import TOKENS from '@/core/tokens'
 import DEXChain from '@/utils/dexchain'
 
@@ -46,6 +64,16 @@ export default {
   name: 'BalanceList',
   props: {
     tokenBalances: Array,
+  },
+  data () {
+    return {
+      withdrawTokenDialog: false,
+      tokenToWithdraw: null,
+      amountToWithdraw: 0,
+      withdrawInProgress: false,
+      rules: FORM_RULES,
+      valid: null
+    }
   },
   computed: {
     walletIsConnected: {
@@ -58,12 +86,23 @@ export default {
     getTokenSymbol (tokenAddress) {
       return TOKENS.getByAddress(tokenAddress).symbol
     },
-    withdrawButtonClick (tokenAddress) {
-      DEXChain.withdrawTokens(tokenAddress, "0.00234")
+    withdrawButtonClick (tokenAddress, tokenAvailable) {
+      this.tokenToWithdraw = TOKENS.getByAddress(tokenAddress)
+      if (this.tokenToWithdraw == null) {
+        throw new Error("Invalid token")
+      }
+      this.amountToWithdraw = tokenAvailable
+      this.withdrawTokenDialog = true
+    },
+    confirmWithdraw () {
+      this.withdrawInProgress = true
+      DEXChain.withdrawTokens(this.tokenToWithdraw.address, this.amountToWithdraw)
         .then(receipt => {
+          this.withdrawInProgress = false
           if (receipt.status == 1) {
             console.log('Done successfully')
-            this.$emit('withdraw-tokens', tokenAddress)
+            this.$emit('withdraw-tokens', this.tokenToWithdraw.address)
+            this.closeWithdrawDialog()
           } else {
             console.log('Not enough funds?')
           }
@@ -72,6 +111,11 @@ export default {
           console.log(err.message)
         })
     },
+    closeWithdrawDialog () {
+      this.withdrawTokenDialog = false
+      this.tokenToWithdraw = null
+      this.amountToWithdraw = 0
+    }
   }
 }
 </script>
