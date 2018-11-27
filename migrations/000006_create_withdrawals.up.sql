@@ -7,7 +7,7 @@ CREATE TABLE public.withdrawals
 	sign_count integer DEFAULT 0,
 	created_at TIMESTAMP without time zone,
 	last_signed_at TIMESTAMP without time zone,
-    completed boolean DEFAULT false
+    tx_status integer DEFAULT 0 -- 0 - Created, 1 - Signed, 2 - Completed
 );
 
 CREATE INDEX ON public.withdrawals USING brin (token, recipient);
