@@ -3,6 +3,7 @@ package wrappers
 import (
 	"database/sql/driver"
 	"fmt"
+	"time"
 )
 
 // Timestamp is a wrapper around float64 to be used with pq for timestampz
@@ -29,4 +30,9 @@ func (timestamp *Timestamp) MarshalJSON() ([]byte, error) {
 // WrapTimestamp wraps common.Hash
 func WrapTimestamp(timestamp uint64) *Timestamp {
 	return &Timestamp{t: timestamp}
+}
+
+// CreateTimestamp create Timestamp instance from Time object
+func CreateTimestamp(time *time.Time) *Timestamp {
+	return &Timestamp{t: uint64(time.Unix())}
 }
