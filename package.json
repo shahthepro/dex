@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test-contracts": "gulp deploy-contracts && jest",
+    "test-exchange": "gulp deploy-contracts && jest exchange",
+    "test-bridge": "gulp deploy-contracts && jest bridge",
+    "test-all": "gulp deploy-contracts && jest",
     "test": "jest"
   },
   "author": "Shahul Hameed",

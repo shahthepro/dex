@@ -195,11 +195,14 @@ func (v *Validator) RunOnExchangeNetwork() {
 					continue eventListenerLoop
 				}
 
-				serializedMessage, err := utils.SerializeWithdrawalMessage(withdrawEvent.Recipient, withdrawEvent.Token, withdrawEvent.Value, vLog.TxHash)
+				serializedMessage, err := utils.SerializeWithdrawalMessage(&withdrawEvent.Recipient, &withdrawEvent.Token, withdrawEvent.Value, &vLog.TxHash)
 				if err != nil {
 					log.Fatal("Cannot serialize message: ", err)
 					continue eventListenerLoop
 				}
+
+				// r, t, a, h := utils.DeserializeMessage(serializedMessage)
+				// fmt.Println(r.Hex(), t.Hex(), a.String(), h.Hex())
 
 				signature, err := utils.SignMessageWithPrivateKey(serializedMessage, v.privateKey)
 				if err != nil {

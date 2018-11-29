@@ -2,12 +2,12 @@
     "bridge": {
         "provider": "http://127.0.0.1:8501",
         "wsProvider": "ws://127.0.0.1:8601",
-        "requiredSignatures": 2
+        "requiredSignatures": 1
     },
     "exchange": {
         "provider": "http://127.0.0.1:8501",
         "wsProvider": "ws://127.0.0.1:8601",
-        "requiredSignatures": 2,
+        "requiredSignatures": 1,
         "makeFee": "2500000000000000",
         "takeFee": "2500000000000000",
         "cancelFee": "1000000000000000"

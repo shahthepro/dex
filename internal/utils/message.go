@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-func SerializeWithdrawalMessage(recepient common.Address, token common.Address, amount *big.Int, transactionHash common.Hash) ([]byte, error) {
+func SerializeWithdrawalMessage(recepient *common.Address, token *common.Address, amount *big.Int, transactionHash *common.Hash) ([]byte, error) {
 	byteSlice := make([]byte, 104)
 
 	paddedAmount, amountErr := leftPadByteSlice(amount.Bytes(), 32, 0)
@@ -29,6 +29,15 @@ func SerializeWithdrawalMessage(recepient common.Address, token common.Address, 
 	copy(byteSlice[72:104], transactionHash.Bytes()[:])
 
 	return byteSlice, nil
+}
+
+func DeserializeMessage(message []byte) (recepient *common.Address, token *common.Address, amount *big.Int, transactionHash *common.Hash) {
+	r := common.BytesToAddress(message[0:20])
+	t := common.BytesToAddress(message[20:40])
+	a := big.NewInt(0)
+	a.SetBytes(message[40:72])
+	h := common.BytesToHash(message[72:104])
+	return &r, &t, a, &h
 }
 
 func leftPadByteSlice(data []byte, blockLen int, padValue int) ([]byte, error) {
