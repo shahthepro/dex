@@ -11,7 +11,7 @@ import (
 )
 
 func SerializeWithdrawalMessage(recepient common.Address, token common.Address, amount *big.Int, transactionHash common.Hash) ([]byte, error) {
-	byteSlice := make([]byte, 136)
+	byteSlice := make([]byte, 104)
 
 	paddedAmount, amountErr := leftPadByteSlice(amount.Bytes(), 32, 0)
 	if amountErr != nil {
@@ -27,7 +27,8 @@ func SerializeWithdrawalMessage(recepient common.Address, token common.Address, 
 	copy(byteSlice[20:40], token.Bytes()[:])
 	copy(byteSlice[40:72], paddedAmount)
 	copy(byteSlice[72:104], transactionHash.Bytes()[:])
-	// copy(byteSlice[104:136], paddedGasPrice)
+
+	fmt.Println(len(byteSlice), common.Bytes2Hex(byteSlice))
 
 	return byteSlice, nil
 }

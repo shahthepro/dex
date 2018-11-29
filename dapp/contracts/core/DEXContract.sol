@@ -1,6 +1,6 @@
-pragma solidity ^0.4.3;
+pragma solidity ^0.4.24;
 
-import "openzeppelin-solidity/contracts/AddressUtils.sol";
+import "openzeppelin-solidity/contracts/utils/Address.sol";
 
 contract DEXContract {
     address public admin;
@@ -43,12 +43,12 @@ contract DEXContract {
     }
 
     function whitelistContract(address contractAddress) public onlyAdmin {
-        require(AddressUtils.isContract(contractAddress), "ERR_NOT_CONTRACT");
+        require(Address.isContract(contractAddress), "ERR_NOT_CONTRACT");
         allowedContracts[contractAddress] = true;
     }
 
     function blacklistContract(address contractAddress) public onlyAdmin {
-        require(AddressUtils.isContract(contractAddress), "ERR_NOT_CONTRACT");
+        require(Address.isContract(contractAddress), "ERR_NOT_CONTRACT");
         allowedContracts[contractAddress] = false;
     }
 

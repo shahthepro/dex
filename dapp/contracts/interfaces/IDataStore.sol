@@ -1,4 +1,4 @@
-pragma solidity ^0.4.3;
+pragma solidity ^0.4.24;
 
 interface IDataStore {
     function getUIntValue(bytes32 record) external view returns(uint);

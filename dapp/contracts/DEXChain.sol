@@ -1,4 +1,4 @@
-pragma solidity ^0.4.3;
+pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./interfaces/IDataStore.sol";
@@ -149,7 +149,7 @@ contract DEXChain is DEXContract {
         // ensure that `signature` is really `message` signed by `msg.sender`
         require(msg.sender == MessageSigning.recoverAddressFromSignedMessage(signature, message), "ERR_INVALID_SIGN");
 
-        require(message.length == 136, "ERR_INVALID_MESSAGE");
+        require(message.length == 104, "ERR_INVALID_MESSAGE");
         bytes32 messageHash = MessageSigning.hashMessage(message);
 
         // each authority can only provide one signature per message

@@ -1,7 +1,7 @@
-pragma solidity ^0.4.3;
+pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./lib/MessageSigning.sol";
 import "./lib/Helpers.sol";
@@ -62,7 +62,7 @@ contract HomeBridge is Ownable {
             emit Deposit(msg.sender, address(0), msg.value);
         } else {
             require(msg.value == 0 && amount > 0, "ERR_NO_FUNDS");
-            assert(StandardToken(token).transferFrom(msg.sender, this, amount));
+            assert(IERC20(token).transferFrom(msg.sender, this, amount));
             emit Deposit(msg.sender, token, amount);
         }
     }
@@ -70,7 +70,7 @@ contract HomeBridge is Ownable {
     function withdraw(uint8[] vs, bytes32[] rs, bytes32[] ss, bytes message) public {
         require(!isDepositDisabled);
         
-        require(message.length == 136);
+        require(message.length == 104);
 
         require(Helpers.hasEnoughValidSignatures(message, vs, rs, ss, authorities, requiredSignatures));
 
@@ -89,7 +89,7 @@ contract HomeBridge is Ownable {
         if (address(0) == token) {
             recipient.transfer(value);
         } else {
-            assert(StandardToken(token).transfer(recipient, value));
+            assert(IERC20(token).transfer(recipient, value));
         }
 
         emit Withdraw(recipient, token, value, hash);

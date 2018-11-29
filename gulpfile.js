@@ -398,6 +398,12 @@ function getWeb3Accounts(web3) {
     });
 }
 
+function delay(timeInMillis) {
+    return new Promise((resolve, _) => {
+        setTimeout(resolve, timeInMillis)
+    })
+}
+
 function deployContract({ web3, contractJSON, args, txOpts, libraries }) {
     // ABI description as JSON structure
     let abi = JSON.parse(contractJSON.abi);
@@ -415,7 +421,7 @@ function deployContract({ web3, contractJSON, args, txOpts, libraries }) {
     let MyContract = new web3.eth.Contract(abi);
 
     txOpts = Object.assign({}, {
-        gas: '18446744073709551',
+        gas: '10000000',
         // gas: '5000000000000000',
         gasPrice: 0
     }, txOpts)
@@ -425,25 +431,58 @@ function deployContract({ web3, contractJSON, args, txOpts, libraries }) {
             data: code,
             arguments: args
         })
-        .send(txOpts)
-        .on('error', function (error) {
-            reject(error);
+        .send(txOpts, async function (err, transactionHash) {
+            if (err) {
+                reject(err)
+                return
+            }
+
+            let txReceipt
+
+            while (true) {
+                if (txReceipt) {
+                    break
+                }
+                web3.eth.getTransactionReceipt(transactionHash, function (err, receipt) {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    if (receipt) {
+                        txReceipt = receipt
+                    }
+                })
+                await delay(500)
+            }
+
+            if (!txReceipt.status) {
+                reject(new Error(`Transaction reverted by EVM`))
+                return
+            }
+
+            console.log(`Deployed at ${txReceipt.contractAddress}.`)
+
+            let contractInstance = new web3.eth.Contract(abi, txReceipt.contractAddress)
+            resolve(contractInstance)
         })
-        .on('transactionHash', function (transactionHash) {
-            console.log(`Got transaction hash: ${transactionHash}`);
-        })
-        .on('receipt', function (receipt) {
-            console.log(`Deployed at ${receipt.contractAddress}. Waiting for confirmation...`);
-        })
+        // .on('error', function (error) {
+        //     reject(error);
+        // })
+        // .on('transactionHash', function (transactionHash) {
+        //     console.log(`Got transaction hash: ${transactionHash}`);
+        // })
+        // .on('receipt', function (receipt) {
+        //     console.log(`Deployed at ${receipt.contractAddress}. Waiting for confirmation...`);
+        // })
         // .on('confirmation', function(confirmationNumber, receipt){
         //     console.log(`Contract creation confirmed...`);
         // })
-        .then(function (newContractInstance) {
-            resolve(newContractInstance);
-        })
-        .catch(function (err) {
-            reject(err);
-        });
+        // .then(function (newContractInstance) {
+        //     resolve(newContractInstance);
+        // })
+        // .catch(function (err) {
+        //     reject(err);
+        // });
     });
     
 }

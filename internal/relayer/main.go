@@ -418,3 +418,54 @@ func (r *Relayer) updateFilledVolumeLogCallback(vLog types.Log) {
 
 	fmt.Printf("\n\nUpdate filled volume of order %s to %s\n", updateFilledVolumeEvent.OrderHash.Hex(), updateFilledVolumeEvent.Volume.String())
 }
+
+func (r *Relayer) signTxLogCallback(vLog types.Log, isDeposit bool) {
+	signedTxEvent := struct {
+		OrderHash common.Hash
+		Token     common.Address
+		Base      common.Address
+		Price     *big.Int
+		Quantity  *big.Int
+		// IsBid     bool
+		Owner     common.Address
+		Timestamp *big.Int
+	}{}
+	eventName := "PlaceBuyOrder"
+	if !isDeposit {
+		eventName = "PlaceSellOrder"
+	}
+	err := r.exchange.orderbookABI.Unpack(&signedTxEvent, eventName, vLog.Data)
+	if err != nil {
+		log.Fatal("Unpack: ", err)
+		return
+	}
+	order := models.Order{
+		Hash:      wrappers.WrapHash(&signedTxEvent.OrderHash),
+		Token:     wrappers.WrapAddress(&signedTxEvent.Token),
+		Base:      wrappers.WrapAddress(&signedTxEvent.Base),
+		Price:     wrappers.WrapBigInt(signedTxEvent.Price),
+		Quantity:  wrappers.WrapBigInt(signedTxEvent.Quantity),
+		IsBid:     isDeposit, // signedTxEvent.IsBid.Cmp(big.NewInt(1)) == 0,
+		CreatedBy: wrappers.WrapAddress(&signedTxEvent.Owner),
+		CreatedAt: wrappers.WrapTimestamp((*(signedTxEvent.Timestamp)).Uint64()),
+		Volume:    wrappers.WrapBigInt(big.NewInt(0).Mul(signedTxEvent.Price, signedTxEvent.Quantity)),
+		IsOpen:    true,
+	}
+	err = order.Save(r.store)
+	if err != nil {
+		log.Fatal("Commit: ", err)
+	}
+
+	channelKey := strings.ToLower(order.Token.Hex() + "/" + order.Base.Hex())
+	pubCache := &redisChannelMessage{
+		MessageType: "NEW_ORDER",
+		Payload:     order,
+	}
+	marshalledResp, err := json.Marshal(pubCache)
+	if err != nil {
+		fmt.Println("MARSHAL:", err)
+	}
+	r.redisClient.Publish(channelKey, marshalledResp)
+
+	fmt.Printf("\n\nReceived order at %s for pair %s/%s\n", signedTxEvent.Timestamp.String(), signedTxEvent.Token.Hex(), signedTxEvent.Base.Hex())
+}

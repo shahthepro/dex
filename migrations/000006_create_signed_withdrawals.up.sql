@@ -1,14 +1,14 @@
-CREATE TABLE public.signed_txs
+CREATE TABLE public.signed_withdrawals
 (
     token character varying(42) NOT NULL,
     recipient character varying(42) NOT NULL,
     amount numeric NOT NULL,
+    messageHash character varying(138) NOT NULL,
     tx_hash character varying(66) NOT NULL,
-    tx_type integer NOT NULL, -- 0 - Deposit, 1 - Withdraw
 	signer character varying(42) NOT NULL,
 	signed_at TIMESTAMP without time zone
 );
 
-CREATE INDEX ON public.signed_txs USING brin (token, recipient);
+CREATE INDEX ON public.signed_withdrawals USING brin (token, recipient);
 
-SELECT create_hypertable('public.signed_txs', 'signed_at');
+SELECT create_hypertable('public.signed_withdrawals', 'signed_at');

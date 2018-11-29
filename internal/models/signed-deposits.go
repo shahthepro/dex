@@ -5,8 +5,8 @@ import (
 	"hameid.net/cdex/dex/internal/wrappers"
 )
 
-// SignedTx record
-type SignedTx struct {
+// SignedDeposit record
+type SignedDeposit struct {
 	Token     *wrappers.Address   `json:"token"`
 	Recipient *wrappers.Address   `json:"recipient"`
 	Amount    *wrappers.BigInt    `json:"amount"`
@@ -16,8 +16,8 @@ type SignedTx struct {
 	SignedAt  *wrappers.Timestamp `json:"signed_at"`
 }
 
-// SignedTxResponse record
-type SignedTxResponse struct {
+// SignedDepositResponse record
+type SignedDepositResponse struct {
 	Token        *wrappers.Address   `json:"token"`
 	Recipient    *wrappers.Address   `json:"recipient"`
 	Amount       *wrappers.BigInt    `json:"amount"`
@@ -27,8 +27,8 @@ type SignedTxResponse struct {
 	LastSignedAt *wrappers.Timestamp `json:"last_signed_at"`
 }
 
-// Save upserts SignedTx
-func (tx *SignedTx) Save(store *store.DataStore) error {
+// Save upserts SignedDeposit
+func (tx *SignedDeposit) Save(store *store.DataStore) error {
 	query := `INSERT INTO signed_txs 
 		(token, recipient, amount, tx_hash, tx_type, signer, signed_at)
 		VALUES (LOWER($1), LOWER($2), $3, LOWER($4), $5, LOWER($6), to_timestamp($7))`
@@ -47,8 +47,8 @@ func (tx *SignedTx) Save(store *store.DataStore) error {
 	return err
 }
 
-// GetRecentSignedTxs returns recent token txs for a given address, if any.
-func GetRecentSignedTxs(store *store.DataStore, address *wrappers.Address) ([]SignedTxResponse, error) {
+// GetRecentSignedDeposits returns recent token txs for a given address, if any.
+func GetRecentSignedDeposits(store *store.DataStore, address *wrappers.Address) ([]SignedDepositResponse, error) {
 	rows, err := store.DB.Query(
 		`SELECT 
 			token, recipient, amount, tx_hash, tx_type, COUNT(signer), last(signed_at) as last_signed_at 
@@ -64,10 +64,10 @@ func GetRecentSignedTxs(store *store.DataStore, address *wrappers.Address) ([]Si
 
 	defer rows.Close()
 
-	txs := []SignedTxResponse{}
+	txs := []SignedDepositResponse{}
 
 	for rows.Next() {
-		var tx SignedTxResponse
+		var tx SignedDepositResponse
 
 		err := rows.Scan(
 			&tx.Recipient,
@@ -89,15 +89,15 @@ func GetRecentSignedTxs(store *store.DataStore, address *wrappers.Address) ([]Si
 }
 
 // NewSignedDepositTx creates new instance of signed deposit transaction
-func NewSignedDepositTx() *SignedTx {
-	return &SignedTx{
+func NewSignedDepositTx() *SignedDeposit {
+	return &SignedDeposit{
 		TxType: 0,
 	}
 }
 
 // NewSignedWithdrawTx creates new instance of signed withdraw transaction
-func NewSignedWithdrawTx() *SignedTx {
-	return &SignedTx{
+func NewSignedWithdrawTx() *SignedDeposit {
+	return &SignedDeposit{
 		TxType: 1,
 	}
 }

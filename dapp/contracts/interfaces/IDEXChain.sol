@@ -1,4 +1,4 @@
-pragma solidity ^0.4.3;
+pragma solidity ^0.4.24;
 
 interface IDEXChain {
     function setAuthorities(uint256 _requiredSignatures, address[] _authorities) external;

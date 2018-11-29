@@ -16,7 +16,7 @@
     "gulp": "^3.9.1",
     "gulp-watch": "^5.0.1",
     "jest": "^23.6.0",
-    "openzeppelin-solidity": "^1.12.0",
+    "openzeppelin-solidity": "^2.0.0",
     "run-sequence": "^2.2.1",
     "web3": "^1.0.0-beta.36",
     "web3-utils": "^1.0.0-beta.35"
