@@ -28,8 +28,6 @@ func SerializeWithdrawalMessage(recepient common.Address, token common.Address, 
 	copy(byteSlice[40:72], paddedAmount)
 	copy(byteSlice[72:104], transactionHash.Bytes()[:])
 
-	fmt.Println(len(byteSlice), common.Bytes2Hex(byteSlice))
-
 	return byteSlice, nil
 }
 

@@ -146,15 +146,23 @@ describe('Deposits', () => {
 		done()
 	})
 
-	// test('should cancel buy order', async (done) => {
-	// 	expect(ORDER_HASHES.length).toBeGreaterThanOrEqual(1)
+	test('should cancel buy order', async (done) => {
+		expect(ORDER_HASHES.length).toBeGreaterThanOrEqual(1)
 
-	// 	accounts = await getAccounts()
+		accounts = await getAccounts()
 
-	// 	await cancelOrder(accounts[3], TEST_VALUES.token2, ORDER_HASHES[0])
+		await cancelOrder(accounts[3], TEST_VALUES.token2, ORDER_HASHES[0])
 
-	// 	done()
-	// })
+		done()
+	})
+
+	test('should request withdraw for traded token', async (done) => {
+		accounts = await getAccounts()
+
+		await requestWithdrawToken(accounts[3], TEST_VALUES.token1, 1000)
+
+		done()
+	})
 })
 
 async function depositTokens(tokenAddress, toAccount, toDeposit) {
@@ -179,6 +187,22 @@ async function relayDepositTx(tokenAddress, targetAccount, balanceToDep, hash) {
 function signDepositTx(tokenAddress, targetAccount, balanceToDep, depositTransactionHash, authorityAddress) {
 	return DEXChain.methods.deposit(targetAccount, tokenAddress, balanceToDep, depositTransactionHash)
 		.send({ from: authorityAddress, gas: '9876543211234', gasPrice: 0 })
+}
+
+async function requestWithdrawToken(fromAddress, tokenAddress, toWithdraw) {
+	let beforeWithdraw = await DEXChain.methods.balanceOf(tokenAddress, fromAddress).call()
+	beforeWithdraw = new BN(beforeWithdraw, 10)
+	
+	let r = await DEXChain.methods.transferHomeViaRelay(tokenAddress, toWithdraw).send({
+		from: fromAddress,
+		gasPrice: 0,
+		gas: '100000000'
+	})
+
+	let afterWithdraw = await DEXChain.methods.balanceOf(tokenAddress, fromAddress).call()
+	afterWithdraw = new BN(afterWithdraw, 10)
+	
+	expect(afterWithdraw.sub(beforeWithdraw.sub(new BN(toWithdraw, 10))).toNumber()).toBe(0)
 }
 
 async function placeOrder(fromAddress, tokenAddress, baseAddress, price, quantity, isBid) {
