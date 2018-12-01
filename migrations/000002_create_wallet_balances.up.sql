@@ -7,6 +7,4 @@ CREATE TABLE public.wallet_balances
     UNIQUE (wallet, token)
 );
 
-CREATE INDEX idx_token_wallet
-    ON public.wallet_balances
-    USING brin ("token");
+CREATE INDEX ON public.wallet_balances USING hash (wallet);

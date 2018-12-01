@@ -26,11 +26,11 @@ import (
 	"hameid.net/cdex/dex/internal/utils"
 )
 
-// type bridgeRef struct {
-// 	client   *ethclient.Client
-// 	instance *HomeBridge.HomeBridge
-// 	abi      *abi.ABI
-// }
+type bridgeRef struct {
+	client   *ethclient.Client
+	instance *HomeBridge.HomeBridge
+	abi      *abi.ABI
+}
 
 type exchangeRef struct {
 	client          *ethclient.Client
@@ -41,9 +41,9 @@ type exchangeRef struct {
 
 // Relayer struct
 type Relayer struct {
-	networks  *utils.NetworksInfo
-	contracts *utils.ContractsInfo
-	// bridge    *bridgeRef
+	networks    *utils.NetworksInfo
+	contracts   *utils.ContractsInfo
+	bridge      *bridgeRef
 	exchange    *exchangeRef
 	store       *store.DataStore
 	redisClient *redis.Client
@@ -58,23 +58,23 @@ var channelSize = 10000
 
 // Initialize reads and decodes ABIs to be used for communicating with chain
 func (r *Relayer) Initialize() {
-	// fmt.Printf("\nConnecting to %s...\n", r.networks.Bridge.WebSocketProvider)
-	// homeClient, err := ethclient.Dial(r.networks.Bridge.WebSocketProvider)
-	// if err != nil {
-	// 	log.Panic(err)
-	// }
-	// bridge, err := HomeBridge.NewHomeBridge(r.contracts.Bridge.Address.Address, homeClient)
-	// if err != nil {
-	// 	log.Panic(err)
-	// }
-	// fmt.Printf("Decoding Bridge contract ABI...\n")
-	// bridgeABI, err := abi.JSON(strings.NewReader(string(HomeBridge.HomeBridgeABI)))
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// r.bridge.client = homeClient
-	// r.bridge.instance = bridge
-	// r.bridge.abi = &bridgeABI
+	fmt.Printf("\nConnecting to %s...\n", r.networks.Bridge.WebSocketProvider)
+	homeClient, err := ethclient.Dial(r.networks.Bridge.WebSocketProvider)
+	if err != nil {
+		log.Panic(err)
+	}
+	bridge, err := HomeBridge.NewHomeBridge(r.contracts.Bridge.Address.Address, homeClient)
+	if err != nil {
+		log.Panic(err)
+	}
+	fmt.Printf("Decoding Bridge contract ABI...\n")
+	bridgeABI, err := abi.JSON(strings.NewReader(string(HomeBridge.HomeBridgeABI)))
+	if err != nil {
+		log.Fatal(err)
+	}
+	r.bridge.client = homeClient
+	r.bridge.instance = bridge
+	r.bridge.abi = &bridgeABI
 
 	fmt.Printf("\nConnecting to %s...\n", r.networks.Exchange.WebSocketProvider)
 	exchangeClient, err := ethclient.Dial(r.networks.Exchange.WebSocketProvider)
@@ -112,6 +112,55 @@ func (r *Relayer) Initialize() {
 	fmt.Printf("\n\nRelayer initialization successful :)\n\n")
 }
 
+// RunOnBridgeNetwork runs relayer on the home network
+func (r *Relayer) RunOnBridgeNetwork() {
+	fmt.Printf("Trying to listen events on Bridge contract %s...\n", v.contracts.Bridge.Address.Address.String())
+	query := ethereum.FilterQuery{
+		Addresses: []common.Address{r.contracts.Bridge.Address.Address},
+		Topics:    [][]common.Hash{{r.contracts.Bridge.Topics.Withdraw.Hash}},
+	}
+
+	logs := make(chan types.Log, channelSize)
+
+	sub, err := v.bridge.client.SubscribeFilterLogs(context.Background(), query, logs)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	go func() {
+	eventListenerLoop:
+		for {
+			select {
+			case err := <-sub.Err():
+				log.Fatal("Home Network Subcription Error:", err)
+
+			case vLog := <-logs:
+				fmt.Println("--------------------")
+				// Unpack withdraw event
+				fmt.Println("Received `Withdraw` event from Home Network")
+				withdrawEvent := struct {
+					Recipient       common.Address
+					Token           common.Address
+					Value           *big.Int
+					TransactionHash common.Hash
+				}{}
+				err := v.bridge.abi.Unpack(&withdrawEvent, "Withdraw", vLog.Data)
+				if err != nil {
+					log.Fatal("Unpack: ", err)
+					continue eventListenerLoop
+				}
+
+				message := utils.SerializeWithdrawalMessage(withdrawEvent.Recipient, withdrawEvent.Token, withdrawEvent.Value, withdrawEvent.TransactionHash)
+
+				_ = message
+
+				fmt.Println("Withdraw processed:", tx.Hash().Hex())
+				fmt.Println("--------------------")
+			}
+		}
+	}()
+}
+
 // RunOnExchangeNetwork runs relayer on the exchange network
 func (r *Relayer) RunOnExchangeNetwork() {
 	fmt.Printf("Trying to listen events on Exchange contract %s...\n", r.contracts.Exchange.Address.Address.String())
@@ -129,6 +178,8 @@ func (r *Relayer) RunOnExchangeNetwork() {
 				r.contracts.Orderbook.Topics.CancelOrder.Hash,
 				r.contracts.OrderMatcher.Topics.Trade.Hash,
 				r.contracts.OrderMatcher.Topics.OrderFilledVolumeUpdate.Hash,
+				r.contracts.Exchange.Topics.CollectedSignatures.Hash,
+				r.contracts.Exchange.Topics.WithdrawSignatureSubmitted.Hash,
 			},
 		},
 	}
@@ -159,6 +210,8 @@ func (r *Relayer) RunOnExchangeNetwork() {
 						r.tradeLogCallback(vLog)
 					case r.contracts.OrderMatcher.Topics.OrderFilledVolumeUpdate.Hash:
 						r.updateFilledVolumeLogCallback(vLog)
+					case r.contracts.Exchange.Topics.WithdrawSignatureSubmitted.Hash:
+						r.withdrawSignSubmittedCallback(vLog)
 					}
 				}
 			}
@@ -419,53 +472,7 @@ func (r *Relayer) updateFilledVolumeLogCallback(vLog types.Log) {
 	fmt.Printf("\n\nUpdate filled volume of order %s to %s\n", updateFilledVolumeEvent.OrderHash.Hex(), updateFilledVolumeEvent.Volume.String())
 }
 
-func (r *Relayer) signTxLogCallback(vLog types.Log, isDeposit bool) {
-	signedTxEvent := struct {
-		OrderHash common.Hash
-		Token     common.Address
-		Base      common.Address
-		Price     *big.Int
-		Quantity  *big.Int
-		// IsBid     bool
-		Owner     common.Address
-		Timestamp *big.Int
-	}{}
-	eventName := "PlaceBuyOrder"
-	if !isDeposit {
-		eventName = "PlaceSellOrder"
-	}
-	err := r.exchange.orderbookABI.Unpack(&signedTxEvent, eventName, vLog.Data)
-	if err != nil {
-		log.Fatal("Unpack: ", err)
-		return
-	}
-	order := models.Order{
-		Hash:      wrappers.WrapHash(&signedTxEvent.OrderHash),
-		Token:     wrappers.WrapAddress(&signedTxEvent.Token),
-		Base:      wrappers.WrapAddress(&signedTxEvent.Base),
-		Price:     wrappers.WrapBigInt(signedTxEvent.Price),
-		Quantity:  wrappers.WrapBigInt(signedTxEvent.Quantity),
-		IsBid:     isDeposit, // signedTxEvent.IsBid.Cmp(big.NewInt(1)) == 0,
-		CreatedBy: wrappers.WrapAddress(&signedTxEvent.Owner),
-		CreatedAt: wrappers.WrapTimestamp((*(signedTxEvent.Timestamp)).Uint64()),
-		Volume:    wrappers.WrapBigInt(big.NewInt(0).Mul(signedTxEvent.Price, signedTxEvent.Quantity)),
-		IsOpen:    true,
-	}
-	err = order.Save(r.store)
-	if err != nil {
-		log.Fatal("Commit: ", err)
-	}
-
-	channelKey := strings.ToLower(order.Token.Hex() + "/" + order.Base.Hex())
-	pubCache := &redisChannelMessage{
-		MessageType: "NEW_ORDER",
-		Payload:     order,
-	}
-	marshalledResp, err := json.Marshal(pubCache)
-	if err != nil {
-		fmt.Println("MARSHAL:", err)
-	}
-	r.redisClient.Publish(channelKey, marshalledResp)
-
-	fmt.Printf("\n\nReceived order at %s for pair %s/%s\n", signedTxEvent.Timestamp.String(), signedTxEvent.Token.Hex(), signedTxEvent.Base.Hex())
+func (r *Relayer) withdrawSignSubmittedCallback(vLog types.Log) {
+	_ = vLog
+	// r.exchange.exchangeABI.Methods.
 }

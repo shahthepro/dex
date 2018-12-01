@@ -77,14 +77,14 @@ contract HomeBridge is Ownable {
         address recipient = Message.getRecipient(message);
         address token = Message.getToken(message);
         uint256 value = Message.getValue(message);
-        bytes32 hash = Message.getTransactionHash(message);
+        bytes32 txHash = Message.getTransactionHash(message);
 
         require(recipient == msg.sender);
 
         // The following two statements guard against reentry into this function.
         // Duplicated withdraw or reentry.
-        require(!withdraws[hash]);
-        withdraws[hash] = true;
+        require(!withdraws[txHash]);
+        withdraws[txHash] = true;
 
         if (address(0) == token) {
             recipient.transfer(value);
@@ -92,6 +92,6 @@ contract HomeBridge is Ownable {
             assert(IERC20(token).transfer(recipient, value));
         }
 
-        emit Withdraw(recipient, token, value, hash);
+        emit Withdraw(recipient, token, value, txHash);
     }
 }

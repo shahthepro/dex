@@ -13,6 +13,8 @@ CREATE TABLE public.orders
 	is_open boolean DEFAULT true
 );
 
+-- CREATE INDEX ON public.orders USING brin (base, token);
 CREATE INDEX ON public.orders USING brin (base, token);
+CREATE INDEX ON public.orders USING hash (created_by);
 
 SELECT create_hypertable('public.orders', 'created_at');
