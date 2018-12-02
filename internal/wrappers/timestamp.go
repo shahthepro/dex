@@ -27,7 +27,7 @@ func (timestamp *Timestamp) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`%d`, timestamp.t)), nil
 }
 
-// WrapTimestamp wraps common.Hash
+// WrapTimestamp wraps uint64
 func WrapTimestamp(timestamp uint64) *Timestamp {
 	return &Timestamp{t: timestamp}
 }

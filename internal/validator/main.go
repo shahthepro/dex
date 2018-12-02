@@ -201,9 +201,6 @@ func (v *Validator) RunOnExchangeNetwork() {
 					continue eventListenerLoop
 				}
 
-				// r, t, a, h := utils.DeserializeMessage(serializedMessage)
-				// fmt.Println(r.Hex(), t.Hex(), a.String(), h.Hex())
-
 				signature, err := utils.SignMessageWithPrivateKey(serializedMessage, v.privateKey)
 				if err != nil {
 					log.Fatal("Cannot sign message: ", err)
@@ -219,18 +216,18 @@ func (v *Validator) RunOnExchangeNetwork() {
 					continue eventListenerLoop
 				}
 
-				gasPrice, err := v.exchange.client.SuggestGasPrice(context.Background())
-				if err != nil {
-					log.Fatal(err)
-					continue eventListenerLoop
-				}
+				// gasPrice, err := v.exchange.client.SuggestGasPrice(context.Background())
+				// if err != nil {
+				// 	log.Fatal(err)
+				// 	continue eventListenerLoop
+				// }
 
 				auth := bind.NewKeyedTransactor(v.privateKey)
 
 				auth.Nonce = big.NewInt(int64(nonce))
 				auth.Value = big.NewInt(0)
 				auth.GasLimit = uint64(500000)
-				auth.GasPrice = gasPrice
+				auth.GasPrice = big.NewInt(0)
 
 				tx, err := v.exchange.instance.SubmitSignature(auth, signature.Raw[:65], serializedMessage)
 				if err != nil {

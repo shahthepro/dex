@@ -17,7 +17,7 @@ type WithdrawMeta struct {
 	Recipient *wrappers.Address `json:"recipient"`
 	Amount    *wrappers.BigInt  `json:"amount"`
 	TxHash    *wrappers.Hash    `json:"tx_hash"`
-	Message   *wrappers.Address `json:"message_data"`
+	Message   string            `json:"message_data"`
 	Status    int               `json:"withdraw_status"`
 }
 
@@ -50,6 +50,25 @@ func (withdrawMeta *WithdrawMeta) UpdateStatus(store *store.DataStore) error {
 		query,
 		withdrawMeta.Message,
 		withdrawMeta.Status,
+	)
+
+	return err
+}
+
+// Get returns withdraw meta
+func (withdrawMeta *WithdrawMeta) Get(store *store.DataStore) error {
+	row := store.DB.QueryRow(
+		`SELECT token, recipient, amount, tx_hash, message_data, withdraw_status 
+		FROM withdraw_meta 
+		WHERE message_data=$1`, withdrawMeta.Message)
+
+	err := row.Scan(
+		&withdrawMeta.Token,
+		&withdrawMeta.Recipient,
+		&withdrawMeta.Amount,
+		&withdrawMeta.TxHash,
+		&withdrawMeta.Message,
+		&withdrawMeta.Status,
 	)
 
 	return err

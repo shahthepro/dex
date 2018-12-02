@@ -7,7 +7,7 @@ import (
 
 // WithdrawSign record
 type WithdrawSign struct {
-	Message   *wrappers.Address   `json:"message_data"`
+	Message   string              `json:"message_data"`
 	Signature string              `json:"message_sign"`
 	Signer    *wrappers.Address   `json:"signer"`
 	SignedAt  *wrappers.Timestamp `json:"signed_at"`

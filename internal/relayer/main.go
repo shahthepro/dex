@@ -28,9 +28,9 @@ import (
 )
 
 type bridgeRef struct {
-	client   *ethclient.Client
-	instance *HomeBridge.HomeBridge
-	abi      *abi.ABI
+	client *ethclient.Client
+	abi    *abi.ABI
+	// instance *HomeBridge.HomeBridge
 }
 
 type exchangeRef struct {
@@ -64,17 +64,17 @@ func (r *Relayer) Initialize() {
 	if err != nil {
 		log.Panic(err)
 	}
-	bridge, err := HomeBridge.NewHomeBridge(r.contracts.Bridge.Address.Address, homeClient)
-	if err != nil {
-		log.Panic(err)
-	}
+	// bridge, err := HomeBridge.NewHomeBridge(r.contracts.Bridge.Address.Address, homeClient)
+	// if err != nil {
+	// 	log.Panic(err)
+	// }
 	fmt.Printf("Decoding Bridge contract ABI...\n")
 	bridgeABI, err := abi.JSON(strings.NewReader(string(HomeBridge.HomeBridgeABI)))
 	if err != nil {
 		log.Fatal(err)
 	}
 	r.bridge.client = homeClient
-	r.bridge.instance = bridge
+	// r.bridge.instance = bridge
 	r.bridge.abi = &bridgeABI
 
 	fmt.Printf("\nConnecting to %s...\n", r.networks.Exchange.WebSocketProvider)
@@ -230,11 +230,11 @@ func NewRelayer(contractsFilePath, networksFilePath, connectionString, redisHost
 	return &Relayer{
 		networks:  nwInfo,
 		contracts: contractsInfo,
-		// bridge: &bridgeRef{
-		// 	client:   nil,
-		// 	instance: nil,
-		// 	abi:      nil,
-		// },
+		bridge: &bridgeRef{
+			client: nil,
+			// instance: nil,
+			abi: nil,
+		},
 		exchange: &exchangeRef{
 			client: nil,
 			// exchangeInstance: nil,
@@ -458,15 +458,91 @@ func (r *Relayer) updateFilledVolumeLogCallback(vLog types.Log) {
 }
 
 func (r *Relayer) withdrawSignSubmittedCallback(vLog types.Log) {
-	_ = vLog
+	withdrawSignEvent := struct {
+		Authority common.Address
+		Message   []byte
+		Signature []byte
+		Timestamp *big.Int
+	}{}
+	err := r.exchange.exchangeABI.Unpack(&withdrawSignEvent, "WithdrawSignatureSubmitted", vLog.Data)
+	if err != nil {
+		log.Fatal("Unpack: ", err)
+		return
+	}
+
+	withdrawSign := models.NewWithdrawSign()
+	withdrawSign.Message = common.Bytes2Hex(withdrawSignEvent.Message)
+	withdrawSign.Signature = common.Bytes2Hex(withdrawSignEvent.Signature)
+	withdrawSign.Signer = wrappers.WrapAddress(&withdrawSignEvent.Authority)
+	withdrawSign.SignedAt = wrappers.WrapTimestamp((*withdrawSignEvent.Timestamp).Uint64())
+
+	if err := withdrawSign.Save(r.store); err != nil {
+		log.Fatal("COMMIT", err)
+		return
+	}
+
+	fmt.Printf("\n\nWithdraw request %s signed by authority %s \n", withdrawSign.Message, withdrawSign.Signer.Hex())
 }
 
 func (r *Relayer) readyToWithdrawCallback(vLog types.Log) {
-	_ = vLog
+	withdrawEvent := struct {
+		Message []byte
+	}{}
+	err := r.exchange.exchangeABI.Unpack(&withdrawEvent, "ReadyToWithdraw", vLog.Data)
+	if err != nil {
+		log.Fatal("Unpack: ", err)
+		return
+	}
+
+	withdraw := models.NewWithdrawMeta()
+	withdraw.Message = common.Bytes2Hex(withdrawEvent.Message)
+
+	if err := withdraw.Get(r.store); err != nil {
+		// HIGH ALERT
+		log.Fatal("HIGH ALERT: POSSIBLE HACK: ", err)
+		return
+	}
+
+	withdraw.Status = models.WITHDRAW_STATUS_SIGNED
+
+	withdraw.UpdateStatus(r.store)
+
+	fmt.Printf("\n\nWithdraw request %s is ready to be processed\n", withdraw.TxHash.Hex())
 }
 
 func (r *Relayer) dexWithdrawCallback(vLog types.Log) {
-	_ = vLog
+	withdrawEvent := struct {
+		Recipient common.Address
+		Token     common.Address
+		Value     *big.Int
+	}{}
+	err := r.exchange.exchangeABI.Unpack(&withdrawEvent, "Withdraw", vLog.Data)
+	if err != nil {
+		log.Fatal("Unpack: ", err)
+		return
+	}
+
+	message, err := utils.SerializeWithdrawalMessage(&withdrawEvent.Recipient, &withdrawEvent.Token, withdrawEvent.Value, &vLog.TxHash)
+
+	if err != nil {
+		log.Fatal("Serialize: ", err)
+		return
+	}
+
+	withdraw := models.NewWithdrawMeta()
+	withdraw.Recipient = wrappers.WrapAddress(&withdrawEvent.Recipient)
+	withdraw.Token = wrappers.WrapAddress(&withdrawEvent.Token)
+	withdraw.Amount = wrappers.WrapBigInt(withdrawEvent.Value)
+	withdraw.TxHash = wrappers.WrapHash(&vLog.TxHash)
+	withdraw.Message = common.Bytes2Hex(message)
+	withdraw.Status = models.WITHDRAW_STATUS_REQUESTED
+
+	if err := withdraw.Save(r.store); err != nil {
+		log.Fatal("COMMIT", err)
+		return
+	}
+
+	fmt.Printf("\n\nCreated new withdraw request for wallet %s from tx %s\n", withdraw.Recipient.Hex(), withdraw.TxHash.Hex())
 }
 
 func (r *Relayer) bridgeWithdrawCallback(vLog types.Log) {
@@ -491,7 +567,18 @@ func (r *Relayer) bridgeWithdrawCallback(vLog types.Log) {
 		log.Fatal("Serialize: ", err)
 		return
 	}
-	_ = message
+
+	withdraw := models.NewWithdrawMeta()
+	withdraw.Message = common.Bytes2Hex(message)
+
+	if err := withdraw.Get(r.store); err != nil {
+		// HIGH ALERT
+		log.Fatal("HIGH ALERT: POSSIBLE HACK: ", err)
+		return
+	}
+
+	withdraw.Status = models.WITHDRAW_STATUS_PROCESSED
+	withdraw.UpdateStatus(r.store)
 
 	fmt.Println("Withdraw processed: ", withdrawEvent.TransactionHash.Hex())
 	fmt.Println("--------------------")
