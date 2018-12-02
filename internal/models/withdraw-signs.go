@@ -7,6 +7,7 @@ import (
 
 // WithdrawSign record
 type WithdrawSign struct {
+	TxHash    string              `json:"tx_hash"`
 	Message   string              `json:"message_data"`
 	Signature string              `json:"message_sign"`
 	Signer    *wrappers.Address   `json:"signer"`
@@ -16,8 +17,8 @@ type WithdrawSign struct {
 // Save upserts WithdrawSign
 func (withdrawSign *WithdrawSign) Save(store *store.DataStore) error {
 	query := `INSERT INTO withdraw_signs 
-		(message_data, message_sign, signer, signed_at)
-		VALUES (LOWER($1), $2, LOWER($3), to_timestamp($4))`
+		(message_data, message_sign, signer, signed_at, tx_hash)
+		VALUES (LOWER($1), $2, LOWER($3), to_timestamp($4), LOWER($5))`
 
 	_, err := store.DB.Exec(
 		query,
@@ -25,17 +26,18 @@ func (withdrawSign *WithdrawSign) Save(store *store.DataStore) error {
 		withdrawSign.Signature,
 		withdrawSign.Signer,
 		withdrawSign.SignedAt,
+		withdrawSign.TxHash,
 	)
 
 	return err
 }
 
 // GetSignsOfWithdrawMessage returns signatures of authorities for the given message data
-func GetSignsOfWithdrawMessage(store *store.DataStore, messageData *string) ([]WithdrawSign, error) {
+func GetSignsOfWithdrawMessage(store *store.DataStore, txHash *wrappers.Hash) ([]WithdrawSign, error) {
 	rows, err := store.DB.Query(
-		`SELECT message_data, message_sign, signer, signed_at 
+		`SELECT tx_hash, message_data, message_sign, signer, signed_at 
 		FROM withdraw_signs
-		WHERE message_data=$1`, messageData)
+		WHERE tx_hash=$1`, txHash)
 
 	if err != nil {
 		return nil, err
@@ -49,6 +51,7 @@ func GetSignsOfWithdrawMessage(store *store.DataStore, messageData *string) ([]W
 		var sign WithdrawSign
 
 		err := rows.Scan(
+			&sign.TxHash,
 			&sign.Message,
 			&sign.Signature,
 			&sign.Signer,

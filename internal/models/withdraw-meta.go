@@ -17,15 +17,15 @@ type WithdrawMeta struct {
 	Recipient *wrappers.Address `json:"recipient"`
 	Amount    *wrappers.BigInt  `json:"amount"`
 	TxHash    *wrappers.Hash    `json:"tx_hash"`
-	Message   string            `json:"message_data"`
-	Status    int               `json:"withdraw_status"`
+	// Message   string            `json:"message_data"`
+	Status int `json:"withdraw_status"`
 }
 
 // Save inserts WithdrawMeta
 func (withdrawMeta *WithdrawMeta) Save(store *store.DataStore) error {
 	query := `INSERT INTO withdraw_meta 
-		(token, recipient, amount, tx_hash, message_data, withdraw_status)
-		VALUES (LOWER($1), LOWER($2), $3, LOWER($4), $5, $6)`
+		(token, recipient, amount, tx_hash, withdraw_status)
+		VALUES (LOWER($1), LOWER($2), $3, LOWER($4), $5)`
 
 	_, err := store.DB.Exec(
 		query,
@@ -33,7 +33,7 @@ func (withdrawMeta *WithdrawMeta) Save(store *store.DataStore) error {
 		withdrawMeta.Recipient,
 		withdrawMeta.Amount.String(),
 		withdrawMeta.TxHash,
-		withdrawMeta.Message,
+		// withdrawMeta.Message,
 		withdrawMeta.Status,
 	)
 
@@ -44,11 +44,11 @@ func (withdrawMeta *WithdrawMeta) Save(store *store.DataStore) error {
 func (withdrawMeta *WithdrawMeta) UpdateStatus(store *store.DataStore) error {
 	query := `UPDATE withdraw_meta 
 		SET withdraw_status=$2
-		WHERE message_data=$1`
+		WHERE tx_hash=LOWER($1)`
 
 	_, err := store.DB.Exec(
 		query,
-		withdrawMeta.Message,
+		withdrawMeta.TxHash,
 		withdrawMeta.Status,
 	)
 
@@ -58,16 +58,16 @@ func (withdrawMeta *WithdrawMeta) UpdateStatus(store *store.DataStore) error {
 // Get returns withdraw meta
 func (withdrawMeta *WithdrawMeta) Get(store *store.DataStore) error {
 	row := store.DB.QueryRow(
-		`SELECT token, recipient, amount, tx_hash, message_data, withdraw_status 
+		`SELECT token, recipient, amount, tx_hash, withdraw_status 
 		FROM withdraw_meta 
-		WHERE message_data=$1`, withdrawMeta.Message)
+		WHERE tx_hash=LOWER($1)`, withdrawMeta.TxHash)
 
 	err := row.Scan(
 		&withdrawMeta.Token,
 		&withdrawMeta.Recipient,
 		&withdrawMeta.Amount,
 		&withdrawMeta.TxHash,
-		&withdrawMeta.Message,
+		// &withdrawMeta.Message,
 		&withdrawMeta.Status,
 	)
 
@@ -77,7 +77,7 @@ func (withdrawMeta *WithdrawMeta) Get(store *store.DataStore) error {
 // GetUnprocessedWithdrawRequests returns open and signed withdraw requests
 func GetUnprocessedWithdrawRequests(store *store.DataStore, address *wrappers.Address) ([]WithdrawMeta, error) {
 	rows, err := store.DB.Query(
-		`SELECT token, recipient, amount, tx_hash, message_data, withdraw_status 
+		`SELECT token, recipient, amount, tx_hash, withdraw_status 
 		FROM withdraw_meta 
 		WHERE recipient=LOWER($1) AND withdraw_status <= $2`, address.Hex(), WITHDRAW_STATUS_PROCESSED)
 
@@ -97,7 +97,7 @@ func GetUnprocessedWithdrawRequests(store *store.DataStore, address *wrappers.Ad
 			&request.Recipient,
 			&request.Amount,
 			&request.TxHash,
-			&request.Message,
+			// &request.Message,
 			&request.Status,
 		)
 

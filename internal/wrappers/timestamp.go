@@ -13,7 +13,16 @@ type Timestamp struct {
 
 // Scan implements Scanner.Scan
 func (timestamp *Timestamp) Scan(value interface{}) error {
-	timestamp.t = uint64(value.(float64))
+	switch value.(type) {
+	case int:
+		timestamp.t = uint64(value.(int))
+	case uint:
+		timestamp.t = uint64(value.(uint))
+	case uint64:
+		timestamp.t = value.(uint64)
+	case time.Time:
+		timestamp.t = uint64((value.(time.Time)).Unix())
+	}
 	return nil
 }
 

@@ -494,8 +494,10 @@ func (r *Relayer) readyToWithdrawCallback(vLog types.Log) {
 		return
 	}
 
+	_, _, _, txHash := utils.DeserializeMessage(withdrawEvent.Message)
 	withdraw := models.NewWithdrawMeta()
-	withdraw.Message = common.Bytes2Hex(withdrawEvent.Message)
+	withdraw.TxHash = wrappers.WrapHash(txHash)
+	// withdraw.Message = common.Bytes2Hex(withdrawEvent.Message)
 
 	if err := withdraw.Get(r.store); err != nil {
 		// HIGH ALERT
@@ -522,19 +524,19 @@ func (r *Relayer) dexWithdrawCallback(vLog types.Log) {
 		return
 	}
 
-	message, err := utils.SerializeWithdrawalMessage(&withdrawEvent.Recipient, &withdrawEvent.Token, withdrawEvent.Value, &vLog.TxHash)
+	// message, err := utils.SerializeWithdrawalMessage(&withdrawEvent.Recipient, &withdrawEvent.Token, withdrawEvent.Value, &vLog.TxHash)
 
-	if err != nil {
-		log.Fatal("Serialize: ", err)
-		return
-	}
+	// if err != nil {
+	// 	log.Fatal("Serialize: ", err)
+	// 	return
+	// }
 
 	withdraw := models.NewWithdrawMeta()
 	withdraw.Recipient = wrappers.WrapAddress(&withdrawEvent.Recipient)
 	withdraw.Token = wrappers.WrapAddress(&withdrawEvent.Token)
 	withdraw.Amount = wrappers.WrapBigInt(withdrawEvent.Value)
 	withdraw.TxHash = wrappers.WrapHash(&vLog.TxHash)
-	withdraw.Message = common.Bytes2Hex(message)
+	// withdraw.Message = common.Bytes2Hex(message)
 	withdraw.Status = models.WITHDRAW_STATUS_REQUESTED
 
 	if err := withdraw.Save(r.store); err != nil {
@@ -561,15 +563,16 @@ func (r *Relayer) bridgeWithdrawCallback(vLog types.Log) {
 		return
 	}
 
-	message, err := utils.SerializeWithdrawalMessage(&withdrawEvent.Recipient, &withdrawEvent.Token, withdrawEvent.Value, &withdrawEvent.TransactionHash)
+	// message, err := utils.SerializeWithdrawalMessage(&withdrawEvent.Recipient, &withdrawEvent.Token, withdrawEvent.Value, &withdrawEvent.TransactionHash)
 
-	if err != nil {
-		log.Fatal("Serialize: ", err)
-		return
-	}
+	// if err != nil {
+	// 	log.Fatal("Serialize: ", err)
+	// 	return
+	// }
 
 	withdraw := models.NewWithdrawMeta()
-	withdraw.Message = common.Bytes2Hex(message)
+	withdraw.TxHash = wrappers.WrapHash(&withdrawEvent.TransactionHash)
+	// withdraw.Message = common.Bytes2Hex(message)
 
 	if err := withdraw.Get(r.store); err != nil {
 		// HIGH ALERT

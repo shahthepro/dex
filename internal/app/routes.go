@@ -23,6 +23,8 @@ func (app *App) InitializeRoutes() {
 	app.router.StrictSlash(true)
 	app.router.HandleFunc("/wallets/{address:0x[0-9A-Za-z]{40}}", app.getWalletBalancesHandler).Methods("GET")
 	app.router.HandleFunc("/wallets/{address:0x[0-9A-Za-z]{40}}/{token:0x[0-9A-Za-z]{40}}", app.getWalletBalanceByTokenHandler).Methods("GET")
+	app.router.HandleFunc("/wallets/{address:0x[0-9A-Za-z]{40}}/withdraw_requests", app.getUnprocessedWithdrawRequests).Methods("GET")
+	app.router.HandleFunc("/withdraw_requests/{tx_hash:0x[0-9A-Za-z]{64}}/signs", app.getSignsOfWithdrawRequests).Methods("GET")
 	app.router.HandleFunc("/orders", app.getOrdersHandler).Methods("GET")
 	app.router.HandleFunc("/orders/{hash:0x[0-9A-Za-z]{64}}", app.getOrderByHashHandler).Methods("GET")
 	app.router.HandleFunc("/trades", app.getTradesHandler).Methods("GET")
@@ -70,6 +72,39 @@ func (app *App) getWalletBalanceByTokenHandler(w http.ResponseWriter, r *http.Re
 		wallet.Balance = wrappers.WrapBigInt(big.NewInt(0))
 		wallet.EscrowBalance = wrappers.WrapBigInt(big.NewInt(0))
 		helpers.RespondWithJSON(w, http.StatusOK, wallet)
+	default:
+		helpers.RespondWithError(w, http.StatusInternalServerError, "internal error")
+	}
+}
+
+func (app *App) getUnprocessedWithdrawRequests(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	unwrappedAddress := common.HexToAddress(strings.TrimPrefix(vars["address"], "0x"))
+	requests, err := models.GetUnprocessedWithdrawRequests(app.store, wrappers.WrapAddress(&unwrappedAddress))
+
+	switch err {
+	case nil:
+		helpers.RespondWithJSON(w, http.StatusOK, requests)
+	case sql.ErrNoRows:
+		helpers.RespondWithJSON(w, http.StatusOK, requests)
+	default:
+		helpers.RespondWithError(w, http.StatusInternalServerError, "internal error")
+	}
+}
+
+func (app *App) getSignsOfWithdrawRequests(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	unwrappedTxHash := common.HexToHash(strings.TrimPrefix(vars["tx_hash"], "0x"))
+	signs, err := models.GetSignsOfWithdrawMessage(
+		app.store,
+		wrappers.WrapHash(&unwrappedTxHash),
+	)
+
+	switch err {
+	case nil:
+		helpers.RespondWithJSON(w, http.StatusOK, signs)
+	case sql.ErrNoRows:
+		helpers.RespondWithJSON(w, http.StatusOK, signs)
 	default:
 		helpers.RespondWithError(w, http.StatusInternalServerError, "internal error")
 	}
