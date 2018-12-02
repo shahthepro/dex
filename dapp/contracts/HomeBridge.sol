@@ -28,10 +28,11 @@ contract HomeBridge is Ownable {
         address[] authoritiesParam
     ) public
     {
-        require(requiredSignaturesParam != 0);
-        require(requiredSignaturesParam <= authoritiesParam.length);
-        requiredSignatures = requiredSignaturesParam;
-        authorities = authoritiesParam;
+        updateAuthorities(requiredSignaturesParam, authoritiesParam);
+        // require(requiredSignaturesParam != 0);
+        // require(requiredSignaturesParam <= authoritiesParam.length);
+        // requiredSignatures = requiredSignaturesParam;
+        // authorities = authoritiesParam;
         isWithdrawDisabled = false;
         isDepositDisabled = false;
     }
@@ -48,14 +49,14 @@ contract HomeBridge is Ownable {
         uint256 requiredSignaturesParam,
         address[] authoritiesParam
     ) public onlyOwner {
-        require(requiredSignaturesParam != 0);
-        require(requiredSignaturesParam <= authoritiesParam.length);
+        require(requiredSignaturesParam != 0, "ERR_ZERO_SIGNS");
+        require(requiredSignaturesParam <= authoritiesParam.length, "ERR_IMPOSSIBLE_SIGNS");
         requiredSignatures = requiredSignaturesParam;
         authorities = authoritiesParam;
     }
 
     function deposit(address token, uint256 amount) public payable {
-        require(!isWithdrawDisabled, "ERR_WITHDRAW_DISABLED");
+        require(!isDepositDisabled, "ERR_DEPOSIT_DISABLED");
 
         if (address(0) == token) {
             require(msg.value > 0, "ERR_NO_FUNDS");
@@ -68,22 +69,22 @@ contract HomeBridge is Ownable {
     }
 
     function withdraw(uint8[] vs, bytes32[] rs, bytes32[] ss, bytes message) public {
-        require(!isDepositDisabled);
+        require(!isWithdrawDisabled, "ERR_WITHDRAW_DISABLED");
         
-        require(message.length == 104);
+        // require(message.length == 104, "MESSAGE_LENGTH_MISMATCH");
 
-        require(Helpers.hasEnoughValidSignatures(message, vs, rs, ss, authorities, requiredSignatures));
+        require(Helpers.hasEnoughValidSignatures(message, vs, rs, ss, authorities, requiredSignatures), "ERR_INSUFFICIENT_SIGNS");
 
         address recipient = Message.getRecipient(message);
         address token = Message.getToken(message);
         uint256 value = Message.getValue(message);
         bytes32 txHash = Message.getTransactionHash(message);
 
-        require(recipient == msg.sender);
+        require(recipient == msg.sender, "ERR_NOT_BENEFICIARY");
 
         // The following two statements guard against reentry into this function.
         // Duplicated withdraw or reentry.
-        require(!withdraws[txHash]);
+        require(!withdraws[txHash], "ERR_ALREADY_WITHDRAWN");
         withdraws[txHash] = true;
 
         if (address(0) == token) {

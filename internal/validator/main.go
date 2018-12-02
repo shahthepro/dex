@@ -207,6 +207,8 @@ func (v *Validator) RunOnExchangeNetwork() {
 					continue eventListenerLoop
 				}
 
+				fmt.Println(common.Bytes2Hex(signature.R[:]), common.Bytes2Hex(signature.S[:]), signature.V)
+
 				fmt.Println("Message Hash", common.Bytes2Hex(signature.Hash))
 
 				// Forward event to Foreign bridge

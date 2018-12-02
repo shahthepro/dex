@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import wallet from '@/store/modules/wallet/wallet';
-import { TOKEN_PAIR_NAMESPACE, WALLET_NAMESPACE, DEPOSIT_FORM_NAMESPACE, ALL_OPEN_ORDERS_NAMESPACE, WALLET_BALANCES_NAMESPACE } from '@/core/constants'
+import { TOKEN_PAIR_NAMESPACE, WALLET_NAMESPACE, DEPOSIT_FORM_NAMESPACE, ALL_OPEN_ORDERS_NAMESPACE, WALLET_BALANCES_NAMESPACE, WITHDRAW_REQUESTS_NAMESPACE } from '@/core/constants'
 
 Vue.use(Vuex)
 
@@ -12,19 +12,34 @@ export default new Vuex.Store({
       return state[TOKEN_PAIR_NAMESPACE]
     },
     tradeForm (state) {
-      return state[TOKEN_PAIR_NAMESPACE].tradeForm
+      if (state[TOKEN_PAIR_NAMESPACE]) {
+        return state[TOKEN_PAIR_NAMESPACE].tradeForm
+      }
+      return null
     },
     chartData (state) {
-      return state[TOKEN_PAIR_NAMESPACE].chartData.data
+      if (state[TOKEN_PAIR_NAMESPACE]) {
+        return state[TOKEN_PAIR_NAMESPACE].chartData.data
+      }
+      return null
     },
     tradeHistory (state) {
-      return state[TOKEN_PAIR_NAMESPACE].tradeHistory.data
+      if (state[TOKEN_PAIR_NAMESPACE]) {
+        return state[TOKEN_PAIR_NAMESPACE].tradeHistory.data
+      }
+      return null
     },
     orderbook (state) {
-      return state[TOKEN_PAIR_NAMESPACE].orderbook
+      if (state[TOKEN_PAIR_NAMESPACE]) {
+        return state[TOKEN_PAIR_NAMESPACE].orderbook
+      }
+      return null
     },
     openOrders (state) {
-      return state[TOKEN_PAIR_NAMESPACE].myOrders
+      if (state[TOKEN_PAIR_NAMESPACE]) {
+        return state[TOKEN_PAIR_NAMESPACE].myOrders
+      }
+      return null
     },
     wallet (state) {
       return state[WALLET_NAMESPACE]
@@ -33,10 +48,22 @@ export default new Vuex.Store({
       return state[DEPOSIT_FORM_NAMESPACE]
     },
     allOpenOrders (state) {
-      return state[ALL_OPEN_ORDERS_NAMESPACE].data
+      if (state[ALL_OPEN_ORDERS_NAMESPACE]) {
+        return state[ALL_OPEN_ORDERS_NAMESPACE].data
+      }
+      return null
     },
     walletBalances (state) {
-      return state[WALLET_BALANCES_NAMESPACE].data
+      if (state[WALLET_BALANCES_NAMESPACE]) {
+        return state[WALLET_BALANCES_NAMESPACE].data
+      }
+      return null
+    },
+    withdrawRequests (state) {
+      if (state[WITHDRAW_REQUESTS_NAMESPACE]) {
+        return state[WITHDRAW_REQUESTS_NAMESPACE].data
+      }
+      return null
     },
   },
   modules: {

@@ -476,6 +476,9 @@ func (r *Relayer) withdrawSignSubmittedCallback(vLog types.Log) {
 	withdrawSign.Signer = wrappers.WrapAddress(&withdrawSignEvent.Authority)
 	withdrawSign.SignedAt = wrappers.WrapTimestamp((*withdrawSignEvent.Timestamp).Uint64())
 
+	_, _, _, txHash := utils.DeserializeMessage(withdrawSignEvent.Message)
+	withdrawSign.TxHash = txHash.Hex()
+
 	if err := withdrawSign.Save(r.store); err != nil {
 		log.Fatal("COMMIT", err)
 		return

@@ -51,6 +51,16 @@ const APIService = {
 		return fetch(url.toJSON())
 			.then(resp => resp.json())
 	},
+	getWithdrawRequests(user: string) {
+		let url = getAbsoluteEndpoint(`wallets/${user}/withdraw_requests`)
+		return fetch(url.toJSON())
+			.then(resp => resp.json())
+	},
+	getWithdrawSigns(tx_hash: string) {
+		let url = getAbsoluteEndpoint(`withdraw_requests/${tx_hash}/signs`)
+		return fetch(url.toJSON())
+			.then(resp => resp.json())
+	},
 }
 
 function getAbsoluteEndpoint(endpoint: string): URL {

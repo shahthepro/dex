@@ -145,7 +145,7 @@ gulp.task('copy-config', (done) => {
 });
 
 gulp.task('deploy-contracts', (done) => {
-    runSequence('clean-contracts', 'compile-contracts', 'deploy-bridge-contracts', 'deploy-exchange-contracts', 'clean-generated-abi', 'generate-abi', done);
+    runSequence('clean-contracts', 'compile-contracts', 'deploy-bridge-contracts', 'deploy-exchange-contracts', 'clean-generated-abi', 'generate-abi', 'copy-config', done);
 });
 
 gulp.task('compile-contracts', (done) => {
