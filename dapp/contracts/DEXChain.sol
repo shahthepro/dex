@@ -15,9 +15,9 @@ contract DEXChain is DEXContract {
     event DepositConfirmation(address recipient, address token, uint256 value, bytes32 transactionHash);
     event Deposit(address recipient, address token, uint256 value, bytes32 transactionHash);
     event Withdraw(address recipient, address token, uint256 value);
-    // event WithdrawSignatureSubmitted(bytes32 messageHash);
-    event WithdrawSignatureSubmitted(address authority, bytes message, bytes signature, bool hasEnoughSignatures);
-    event CollectedSignatures(address relayAuthority, bytes32 messageHash);
+    event WithdrawSignatureSubmitted(address authority, bytes message, bytes signature);
+    event ReadyToWithdraw(bytes message);
+    // event CollectedSignatures(address relayAuthority, bytes32 messageHash);
 
     uint16 constant GENERAL_VAULT = 0x1;
     uint16 constant ESCROW_VAULT = 0x2;
@@ -159,11 +159,11 @@ contract DEXChain is DEXContract {
         signatures[messageHash].signed.push(msg.sender);
         signatures[messageHash].signatures.push(signature);
 
-        if (signatures[messageHash].signed.length >= requiredSignatures) {
-            emit WithdrawSignatureSubmitted(msg.sender, message, signature, true);
-        } else {
-            emit WithdrawSignatureSubmitted(msg.sender, message, signature, false);
+        if (signatures[messageHash].signed.length == requiredSignatures) {
+            emit ReadyToWithdraw(message);
         }
+
+        emit WithdrawSignatureSubmitted(msg.sender, message, signature);
     }
 
     // Get signature

@@ -21,6 +21,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"hameid.net/cdex/dex/_abi/DEXChain"
+	"hameid.net/cdex/dex/_abi/HomeBridge"
 	"hameid.net/cdex/dex/_abi/OrderMatchContract"
 	"hameid.net/cdex/dex/_abi/Orderbook"
 	"hameid.net/cdex/dex/internal/utils"
@@ -114,7 +115,7 @@ func (r *Relayer) Initialize() {
 
 // RunOnBridgeNetwork runs relayer on the home network
 func (r *Relayer) RunOnBridgeNetwork() {
-	fmt.Printf("Trying to listen events on Bridge contract %s...\n", v.contracts.Bridge.Address.Address.String())
+	fmt.Printf("Trying to listen events on Bridge contract %s...\n", r.contracts.Bridge.Address.Address.String())
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{r.contracts.Bridge.Address.Address},
 		Topics:    [][]common.Hash{{r.contracts.Bridge.Topics.Withdraw.Hash}},
@@ -122,40 +123,19 @@ func (r *Relayer) RunOnBridgeNetwork() {
 
 	logs := make(chan types.Log, channelSize)
 
-	sub, err := v.bridge.client.SubscribeFilterLogs(context.Background(), query, logs)
+	sub, err := r.bridge.client.SubscribeFilterLogs(context.Background(), query, logs)
 	if err != nil {
 		log.Panic(err)
 	}
 
 	go func() {
-	eventListenerLoop:
 		for {
 			select {
 			case err := <-sub.Err():
 				log.Fatal("Home Network Subcription Error:", err)
 
 			case vLog := <-logs:
-				fmt.Println("--------------------")
-				// Unpack withdraw event
-				fmt.Println("Received `Withdraw` event from Home Network")
-				withdrawEvent := struct {
-					Recipient       common.Address
-					Token           common.Address
-					Value           *big.Int
-					TransactionHash common.Hash
-				}{}
-				err := v.bridge.abi.Unpack(&withdrawEvent, "Withdraw", vLog.Data)
-				if err != nil {
-					log.Fatal("Unpack: ", err)
-					continue eventListenerLoop
-				}
-
-				message := utils.SerializeWithdrawalMessage(withdrawEvent.Recipient, withdrawEvent.Token, withdrawEvent.Value, withdrawEvent.TransactionHash)
-
-				_ = message
-
-				fmt.Println("Withdraw processed:", tx.Hash().Hex())
-				fmt.Println("--------------------")
+				r.bridgeWithdrawCallback(vLog)
 			}
 		}
 	}()
@@ -178,7 +158,8 @@ func (r *Relayer) RunOnExchangeNetwork() {
 				r.contracts.Orderbook.Topics.CancelOrder.Hash,
 				r.contracts.OrderMatcher.Topics.Trade.Hash,
 				r.contracts.OrderMatcher.Topics.OrderFilledVolumeUpdate.Hash,
-				r.contracts.Exchange.Topics.CollectedSignatures.Hash,
+				r.contracts.Exchange.Topics.Withdraw.Hash,
+				r.contracts.Exchange.Topics.ReadyToWithdraw.Hash,
 				r.contracts.Exchange.Topics.WithdrawSignatureSubmitted.Hash,
 			},
 		},
@@ -212,6 +193,10 @@ func (r *Relayer) RunOnExchangeNetwork() {
 						r.updateFilledVolumeLogCallback(vLog)
 					case r.contracts.Exchange.Topics.WithdrawSignatureSubmitted.Hash:
 						r.withdrawSignSubmittedCallback(vLog)
+					case r.contracts.Exchange.Topics.ReadyToWithdraw.Hash:
+						r.readyToWithdrawCallback(vLog)
+					case r.contracts.Exchange.Topics.Withdraw.Hash:
+						r.dexWithdrawCallback(vLog)
 					}
 				}
 			}
@@ -474,5 +459,40 @@ func (r *Relayer) updateFilledVolumeLogCallback(vLog types.Log) {
 
 func (r *Relayer) withdrawSignSubmittedCallback(vLog types.Log) {
 	_ = vLog
-	// r.exchange.exchangeABI.Methods.
+}
+
+func (r *Relayer) readyToWithdrawCallback(vLog types.Log) {
+	_ = vLog
+}
+
+func (r *Relayer) dexWithdrawCallback(vLog types.Log) {
+	_ = vLog
+}
+
+func (r *Relayer) bridgeWithdrawCallback(vLog types.Log) {
+	fmt.Println("--------------------")
+	// Unpack withdraw event
+	fmt.Println("Received `Withdraw` event from Home Network")
+	withdrawEvent := struct {
+		Recipient       common.Address
+		Token           common.Address
+		Value           *big.Int
+		TransactionHash common.Hash
+	}{}
+	err := r.bridge.abi.Unpack(&withdrawEvent, "Withdraw", vLog.Data)
+	if err != nil {
+		log.Fatal("Unpack: ", err)
+		return
+	}
+
+	message, err := utils.SerializeWithdrawalMessage(&withdrawEvent.Recipient, &withdrawEvent.Token, withdrawEvent.Value, &withdrawEvent.TransactionHash)
+
+	if err != nil {
+		log.Fatal("Serialize: ", err)
+		return
+	}
+	_ = message
+
+	fmt.Println("Withdraw processed: ", withdrawEvent.TransactionHash.Hex())
+	fmt.Println("--------------------")
 }

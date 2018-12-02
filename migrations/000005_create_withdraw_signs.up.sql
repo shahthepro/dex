@@ -1,6 +1,6 @@
 CREATE TABLE public.withdraw_signs
 (
-    message_data character varying(106) NOT NULL,
+    message_data character varying(210) NOT NULL,
     message_sign character varying(66) NOT NULL,
 	signer character varying(42) NOT NULL,
 	signed_at TIMESTAMP without time zone

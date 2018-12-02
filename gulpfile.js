@@ -440,18 +440,19 @@ function deployContract({ web3, contractJSON, args, txOpts, libraries }) {
             let txReceipt
 
             while (true) {
-                if (txReceipt) {
+                r = await (new Promise(function (resolve, reject) {
+                    web3.eth.getTransactionReceipt(transactionHash, function (err, receipt) {
+                        if (err) {
+                            reject(err)
+                            return
+                        }
+                        resolve(receipt)
+                    })
+                }))
+                if (r != null) {
+                    txReceipt = r
                     break
                 }
-                web3.eth.getTransactionReceipt(transactionHash, function (err, receipt) {
-                    if (err) {
-                        reject(err)
-                        return
-                    }
-                    if (receipt) {
-                        txReceipt = receipt
-                    }
-                })
                 await delay(500)
             }
 

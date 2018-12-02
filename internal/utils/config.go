@@ -32,8 +32,8 @@ type ContractsInfo struct {
 			Withdraw                   wrappers.Hash `json:"Withdraw"`
 			DepositConfirmation        wrappers.Hash `json:"DepositConfirmation"`
 			WithdrawSignatureSubmitted wrappers.Hash `json:"WithdrawSignatureSubmitted"`
-			CollectedSignatures        wrappers.Hash `json:"CollectedSignatures"`
 			BalanceUpdate              wrappers.Hash `json:"BalanceUpdate"`
+			ReadyToWithdraw            wrappers.Hash `json:"ReadyToWithdraw"`
 		} `json:"topics"`
 	} `json:"exchange"`
 	Orderbook struct {
