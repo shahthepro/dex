@@ -84,7 +84,7 @@ export default {
       this.loading = true
       this.lastTxError = '';
       this.lastTxHash = '';
-      Bridge.withdraw(txHash, '0')
+      Bridge.withdraw(txHash, this.gasPriceForProcessing)
         .then(receipt => {
             console.log(receipt)
           if (receipt.status == 1) {
