@@ -93,7 +93,7 @@
     </v-expansion-panel>
     <v-dialog max-width="500" v-model="newWalletDialog" persistent>
       <v-card>
-        <v-card-title class="headline grey lighten-2" primary-title>Keep your keystore file safe</v-card-title>
+        <v-card-title class="headline" primary-title>Keep your keystore file safe</v-card-title>
         <v-card-text>Your wallet has been generated with the address <strong>{{ newWalletAddress }}</strong>.</v-card-text>
         <v-card-text>Download the keystore file and store it in a safe place. You'll need the <strong>keystore file</strong>
           and <strong>password</strong>, you entered while creating, to access your wallet.</v-card-text>

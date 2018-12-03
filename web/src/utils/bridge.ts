@@ -26,7 +26,7 @@ function deposit() {
   let amount = unitsToDeposit
   let value = '0'
 
-  const gasPriceInWei = web3.utils.toWei(gasPrice, 'shannon')
+  const gasPriceInWei = web3.utils.toWei(gasPrice.toString(), 'shannon')
 
   if (tokenSymbol == 'ETH') {
     amount = '0'
@@ -77,7 +77,7 @@ async function withdraw(tx_hash, gasPrice) {
 
   const BridgeContract = new web3.eth.Contract(BRIDGE_ABI, BRIDGE_CONTRACT_ADDRESS)
 
-  const gasPriceInWei = web3.utils.toWei(gasPrice, 'shannon')
+  const gasPriceInWei = web3.utils.toWei(gasPrice.toString(), 'shannon')
 
   console.log(vs, rs, ss, message)
 
