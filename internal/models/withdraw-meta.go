@@ -79,7 +79,7 @@ func GetUnprocessedWithdrawRequests(store *store.DataStore, address *wrappers.Ad
 	rows, err := store.DB.Query(
 		`SELECT token, recipient, amount, tx_hash, withdraw_status 
 		FROM withdraw_meta 
-		WHERE recipient=LOWER($1) AND withdraw_status <= $2`, address.Hex(), WITHDRAW_STATUS_PROCESSED)
+		WHERE recipient=LOWER($1) AND withdraw_status < $2`, address.Hex(), WITHDRAW_STATUS_PROCESSED)
 
 	if err != nil {
 		return nil, err

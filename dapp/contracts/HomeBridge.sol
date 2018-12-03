@@ -71,7 +71,7 @@ contract HomeBridge is Ownable {
     function withdraw(uint8[] vs, bytes32[] rs, bytes32[] ss, bytes message) public {
         require(!isWithdrawDisabled, "ERR_WITHDRAW_DISABLED");
         
-        // require(message.length == 104, "MESSAGE_LENGTH_MISMATCH");
+        require(message.length == 104, "MESSAGE_LENGTH_MISMATCH");
 
         require(Helpers.hasEnoughValidSignatures(message, vs, rs, ss, authorities, requiredSignatures), "ERR_INSUFFICIENT_SIGNS");
 

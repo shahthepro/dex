@@ -31,7 +31,7 @@ func main() {
 
 	done := make(chan bool)
 
-	// app.RunOnBridgeNetwork()
+	app.RunOnBridgeNetwork()
 	app.RunOnExchangeNetwork()
 
 	<-done

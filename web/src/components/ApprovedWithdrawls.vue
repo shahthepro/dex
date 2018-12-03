@@ -54,6 +54,7 @@ export default {
       this.lastTxHash = '';
       Bridge.withdraw(txHash, '0')
         .then(receipt => {
+            console.log(receipt)
           if (receipt.status == 1) {
             this.lastTxHash = receipt.transactionHash
           } else {
