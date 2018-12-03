@@ -26,6 +26,11 @@ type Order struct {
 	IsOpen       bool                `json:"is_open"`
 }
 
+type MatchingOrderResponseItem struct {
+	Hash       *wrappers.Hash   `json:"order_hash"`
+	VolumeLeft *wrappers.BigInt `json:"volume_left"`
+}
+
 type OrderbookResponseItem struct {
 	Price        *wrappers.BigInt `json:"price"`
 	Volume       *wrappers.BigInt `json:"volume"`
@@ -289,4 +294,50 @@ func GetOrderbook(store *store.DataStore, params *map[string]interface{}) (*Orde
 	}
 
 	return OrderbookResponse, nil
+}
+
+// GetMatchingOrders returns all matching orders for the given order
+func (order *Order) GetMatchingOrders(store *store.DataStore) ([]MatchingOrderResponseItem, error) {
+	query := ``
+
+	if order.IsBid {
+		query = `SELECT order_hash, (volume - volume_filled) as volume_left FROM orders 
+		WHERE created_at > now() - interval '14 days' 
+			AND token=LOWER($1) AND base=LOWER($2) 
+			AND price<=$3 AND is_bid=FALSE AND is_open=TRUE
+			ORDER BY price ASC`
+	} else {
+		query = `SELECT order_hash, (volume - volume_filled) as volume_left FROM orders 
+		WHERE created_at > now() - interval '14 days' 
+			AND token=LOWER($1) AND base=LOWER($2) 
+			AND price>=$3 AND is_bid=TRUE AND is_open=TRUE
+			ORDER BY price DESC`
+	}
+
+	rows, err := store.DB.Query(query, order.Token.Hex(), order.Base.Hex(), order.Price.String())
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	orders := []MatchingOrderResponseItem{}
+
+	for rows.Next() {
+		var order MatchingOrderResponseItem
+
+		err := rows.Scan(
+			&order.Hash,
+			&order.VolumeLeft,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		orders = append(orders, order)
+	}
+
+	return orders, nil
 }

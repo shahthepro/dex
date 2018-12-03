@@ -360,6 +360,10 @@ gulp.task('deploy-exchange-contracts', async (done) => {
         return DEXChain.methods.whitelistContract(OrderMatchContract.options.address).send(txOpts)
     })
     .then(function () {
+        console.log("Whitelisting OrderMatcher address for OrderMatchContract...")
+        return OrderMatchContract.methods.whitelistUser(networksConfig.orderMatcher).send(txOpts)
+    })
+    .then(function () {
         console.log("Whitelisting FeeContract contract for DataStore...")
         return DataStore.methods.whitelistContract(FeeContract.options.address).send(txOpts)
     })

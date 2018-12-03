@@ -17,5 +17,6 @@
         "0xcba46a07b311a87cefd88a382345037bed7b30e3",
         "0xb663baefe3d58c7879432a9378173dab3c9cbf8c"
     ],
-    "feeAccount": "0xee457955F8ee9BbFDf357B20c287A470ABB8012F"
+    "feeAccount": "0xee457955F8ee9BbFDf357B20c287A470ABB8012F",
+    "orderMatcher": "0x6a2afde0a78d818651faef53c65e73f77d596e2c"
 }

@@ -15,6 +15,8 @@ func main() {
 		os.Getenv("CDEX_DB_CONNECTION_STRING"),
 		os.Getenv("CDEX_REDIS_HOST"),
 		os.Getenv("CDEX_REDIS_PASSWORD"),
+		os.Getenv("DEX_ORDER_MATCHER_KEYSTORE_FILE"),
+		os.Getenv("DEX_ORDER_MATCHER_PASSWORD_FILE"),
 	)
 
 	c := make(chan os.Signal, 1)

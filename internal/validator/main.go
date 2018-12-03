@@ -146,6 +146,15 @@ func (v *Validator) RunOnBridgeNetwork() {
 				tx, err := v.exchange.instance.Deposit(auth, depositEvent.Recipient, depositEvent.Token, depositEvent.Value, vLog.TxHash)
 				if err != nil {
 					fmt.Println("Failed to forward transaction:", err)
+					continue eventListenerLoop
+				}
+
+				if receipt, err := v.exchange.client.TransactionReceipt(context.Background(), tx.Hash()); err != nil {
+					fmt.Println("Failed to get receipt...", err)
+					continue eventListenerLoop
+				} else if receipt.Status == 0 {
+					fmt.Println("Failed after submission...")
+					continue eventListenerLoop
 				}
 
 				fmt.Println("Transaction forwarded to foreign network:", tx.Hash().Hex())
@@ -234,8 +243,16 @@ func (v *Validator) RunOnExchangeNetwork() {
 				tx, err := v.exchange.instance.SubmitSignature(auth, signature.Raw[:65], serializedMessage)
 				if err != nil {
 					fmt.Println("Failed to sign & forward transaction:", err)
+					continue eventListenerLoop
 				}
 
+				if receipt, err := v.exchange.client.TransactionReceipt(context.Background(), tx.Hash()); err != nil {
+					fmt.Println("Failed to get receipt...", err)
+					continue eventListenerLoop
+				} else if receipt.Status == 0 {
+					fmt.Println("Failed after submission...")
+					continue eventListenerLoop
+				}
 				fmt.Println("Transaction signed and forwarded to foreign network:", tx.Hash().Hex())
 				fmt.Println("--------------------")
 			}

@@ -14,7 +14,8 @@ CREATE TABLE public.orders
 );
 
 -- CREATE INDEX ON public.orders USING brin (base, token);
-CREATE INDEX ON public.orders USING brin (base, token);
+CREATE INDEX ON public.orders USING brin (base, token, price);
 CREATE INDEX ON public.orders USING hash (created_by);
+CREATE INDEX ON public.orders USING hash (order_hash);
 
 SELECT create_hypertable('public.orders', 'created_at');

@@ -2,6 +2,7 @@ package relayer
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -17,8 +18,10 @@ import (
 
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"hameid.net/cdex/dex/_abi/DEXChain"
 	"hameid.net/cdex/dex/_abi/HomeBridge"
@@ -34,10 +37,11 @@ type bridgeRef struct {
 }
 
 type exchangeRef struct {
-	client          *ethclient.Client
-	exchangeABI     *abi.ABI
-	orderbookABI    *abi.ABI
-	ordermatcherABI *abi.ABI
+	client               *ethclient.Client
+	exchangeABI          *abi.ABI
+	orderbookABI         *abi.ABI
+	ordermatcherABI      *abi.ABI
+	ordermatcherInstance *OrderMatchContract.OrderMatchContract
 }
 
 // Relayer struct
@@ -48,6 +52,10 @@ type Relayer struct {
 	exchange    *exchangeRef
 	store       *store.DataStore
 	redisClient *redis.Client
+
+	matcherPrivateKey *ecdsa.PrivateKey
+	matcherPublicKey  *ecdsa.PublicKey
+	matcherAddress    *common.Address
 }
 
 type redisChannelMessage struct {
@@ -82,10 +90,6 @@ func (r *Relayer) Initialize() {
 	if err != nil {
 		log.Panic(err)
 	}
-	// exchange, err := DEXChain.NewDEXChain(r.contracts.Exchange.Address.Address, exchangeClient)
-	// if err != nil {
-	// 	log.Panic(err)
-	// }
 	fmt.Printf("Decoding Exchange contract ABI...\n")
 	exchangeABI, err := abi.JSON(strings.NewReader(string(DEXChain.DEXChainABI)))
 	if err != nil {
@@ -102,10 +106,16 @@ func (r *Relayer) Initialize() {
 		log.Fatal(err)
 	}
 
+	ordermatcherInstance, err := OrderMatchContract.NewOrderMatchContract(r.contracts.OrderMatcher.Address.Address, exchangeClient)
+	if err != nil {
+		log.Panic(err)
+	}
+
 	r.exchange.client = exchangeClient
 	r.exchange.exchangeABI = &exchangeABI
 	r.exchange.orderbookABI = &orderbookABI
 	r.exchange.ordermatcherABI = &ordermatcherABI
+	r.exchange.ordermatcherInstance = ordermatcherInstance
 
 	fmt.Printf("\n")
 	r.store.Initialize()
@@ -212,7 +222,7 @@ func (r *Relayer) Quit() {
 }
 
 // NewRelayer creates and populates a Relayer struct object
-func NewRelayer(contractsFilePath, networksFilePath, connectionString, redisHostAddress, redisPassword string) *Relayer {
+func NewRelayer(contractsFilePath, networksFilePath, connectionString, redisHostAddress, redisPassword, keystoreFilePath, passwordFilePath string) *Relayer {
 	fmt.Printf("Starting relayer...\n")
 	fmt.Printf("Reading config files...\n")
 	fmt.Printf("Reading %s...\n", contractsFilePath)
@@ -227,6 +237,26 @@ func NewRelayer(contractsFilePath, networksFilePath, connectionString, redisHost
 	if err != nil {
 		log.Panic(err)
 	}
+
+	fmt.Printf("Decrypting order matcher keystore %s...\n", keystoreFilePath)
+	// Decrypt keystore
+	accountKey, err := utils.DecryptPrivateKeyFromKeystoreWithPasswordFile(keystoreFilePath, passwordFilePath)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	privateKey := accountKey.PrivateKey
+	publicKey := privateKey.Public()
+
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("error casting public key to ECDSA")
+	}
+
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	fmt.Printf("Order matcher account address: %s\n\n", fromAddress.String())
+
 	return &Relayer{
 		networks:  nwInfo,
 		contracts: contractsInfo,
@@ -236,14 +266,17 @@ func NewRelayer(contractsFilePath, networksFilePath, connectionString, redisHost
 			abi: nil,
 		},
 		exchange: &exchangeRef{
-			client: nil,
-			// exchangeInstance: nil,
-			exchangeABI:     nil,
-			orderbookABI:    nil,
-			ordermatcherABI: nil,
+			client:               nil,
+			exchangeABI:          nil,
+			orderbookABI:         nil,
+			ordermatcherABI:      nil,
+			ordermatcherInstance: nil,
 		},
-		store:       store.NewDataStore(connectionString),
-		redisClient: store.NewRedisClient(redisHostAddress, redisPassword),
+		store:             store.NewDataStore(connectionString),
+		redisClient:       store.NewRedisClient(redisHostAddress, redisPassword),
+		matcherPrivateKey: privateKey,
+		matcherPublicKey:  publicKeyECDSA,
+		matcherAddress:    &fromAddress,
 	}
 }
 
@@ -304,6 +337,7 @@ func (r *Relayer) placeOrderLogCallback(vLog types.Log, isBid bool) {
 		Volume:    wrappers.WrapBigInt(big.NewInt(0).Mul(placeOrderEvent.Price, placeOrderEvent.Quantity)),
 		IsOpen:    true,
 	}
+
 	err = order.Save(r.store)
 	if err != nil {
 		log.Fatal("Commit: ", err)
@@ -321,6 +355,8 @@ func (r *Relayer) placeOrderLogCallback(vLog types.Log, isBid bool) {
 	r.redisClient.Publish(channelKey, marshalledResp)
 
 	fmt.Printf("\n\nReceived order at %s for pair %s/%s\n", placeOrderEvent.Timestamp.String(), placeOrderEvent.Token.Hex(), placeOrderEvent.Base.Hex())
+
+	r.tryOrderMatching(&order)
 }
 
 func (r *Relayer) cancelOrderLogCallback(vLog types.Log) {
@@ -588,4 +624,101 @@ func (r *Relayer) bridgeWithdrawCallback(vLog types.Log) {
 
 	fmt.Println("Withdraw processed: ", withdrawEvent.TransactionHash.Hex())
 	fmt.Println("--------------------")
+}
+
+func (r *Relayer) tryOrderMatching(order *models.Order) {
+	matchingOrders, err := order.GetMatchingOrders(r.store)
+	if err != nil {
+		fmt.Println("MATCH_ORDER", err)
+		return
+	}
+
+	orderHash := utils.ByteSliceToByte32(order.Hash.Bytes())
+	volumeOfOrder := wrappers.WrapBigInt(big.NewInt(0))
+	volumeOfOrder.SetBytes(order.Volume.Bytes())
+	zeroVolume := wrappers.WrapBigInt(big.NewInt(0))
+
+	for _, matchedOrder := range matchingOrders {
+		err = nil
+		if order.IsBid {
+			err = r.submitMatchedOrder(
+				orderHash,
+				utils.ByteSliceToByte32(matchedOrder.Hash.Bytes()),
+			)
+		} else {
+			err = r.submitMatchedOrder(
+				utils.ByteSliceToByte32(matchedOrder.Hash.Bytes()),
+				orderHash,
+			)
+		}
+
+		if err == nil {
+			fmt.Println("Some match")
+
+			tradedVolume := getMinVolume(order.Volume, matchedOrder.VolumeLeft)
+			volumeOfOrder.Sub(&volumeOfOrder.Int, &tradedVolume.Int)
+
+			if volumeOfOrder.Cmp(zeroVolume) == 0 {
+				fmt.Println("ORDER_FILLED")
+				return
+			}
+		} else {
+			fmt.Println(err)
+		}
+	}
+
+	fmt.Println("ORDER_NOT_FULFILLED")
+}
+
+func getMinVolume(a, b *wrappers.BigInt) *wrappers.BigInt {
+	if a.Cmp(b) >= 0 {
+		return b
+	}
+	return a
+}
+
+func (r *Relayer) submitMatchedOrder(buyOrderHash [32]byte, sellOrderHash [32]byte) error {
+	nonce, err := r.exchange.client.PendingNonceAt(context.Background(), *r.matcherAddress)
+	if err != nil {
+		log.Fatal("MATCHER_NONCE", err)
+		return err
+	}
+
+	auth := bind.NewKeyedTransactor(r.matcherPrivateKey)
+
+	auth.Nonce = big.NewInt(int64(nonce))
+	auth.Value = big.NewInt(0)
+	auth.GasLimit = uint64(500000)
+	auth.GasPrice = big.NewInt(0) // gasPrice
+
+	tx, err := r.exchange.ordermatcherInstance.MatchOrders(
+		auth,
+		buyOrderHash,
+		sellOrderHash,
+	)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("tx match:", tx.Hash().Hex())
+
+	// if receipt, err := r.exchange.client.TransactionReceipt(context.Background(), tx.Hash()); err != nil {
+	// 	return err
+	// } else if receipt.Status == 0 {
+	// 	return errors.New("Transaction failed")
+	// } else {
+	// 	for _, vLog := range receipt.Logs {
+	// 		for _, topic := range vLog.Topics {
+	// 			switch topic {
+	// 			case r.contracts.OrderMatcher.Topics.OrderFilledVolumeUpdate.Hash:
+	// 				r.updateFilledVolumeLogCallback(*vLog)
+
+	// 			case r.contracts.OrderMatcher.Topics.Trade.Hash:
+	// 				r.tradeLogCallback(*vLog)
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+	return nil
 }
