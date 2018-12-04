@@ -26,11 +26,22 @@
     <v-card-actions>
       <v-btn block large color="success" :disabled="loading" :loading="loading" v-on:click="transfer">DEPOSIT</v-btn>
     </v-card-actions>
-    <v-card-text v-if="lastTxError.length > 0" class="cb-error-text">{{ lastTxError }}</v-card-text>
-    </v-card-text>
-    <v-card-text v-if="lastTxHash.length > 0">
-      <code>Your transaction has been submitted with the hash: '{{ lastTxHash }}'</code></v-card-text>
-    </v-card-text>
+    <v-snackbar
+      v-model="snackbar"
+      :multi-line="true"
+      :timeout="lastToastType == 'error' ? 0 : 3500"
+      :top="true"
+      :color="lastToastType"
+    >
+      {{ lastToastMessage }}
+      <v-btn
+        color="white"
+        flat
+        @click="snackbar = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
   </v-card>
 </template>
 
@@ -65,6 +76,9 @@ export default {
       // amountToDeposit: null,
       // gasPrice: null,
       // gasLimit: null,
+      snackbar: false,
+      lastToastMessage: '',
+      lastToastType: 'success',
 
       lastTxHash: '',
       loading: false,
@@ -119,24 +133,30 @@ export default {
   },
   methods: {
     transfer() {
+      this.snackbar = false
       if (this.valid) {
         this.loading = true
-        this.lastTxError = '';
-        this.lastTxHash = '';
+        // this.lastTxError = '';
+        // this.lastTxHash = '';
         Bridge.deposit()
           .then(receipt => {
             if (receipt.status == 1) {
-              this.lastTxHash = receipt.transactionHash
-              // this.$refs.valid.reset()
+              this.lastToastMessage = 'Tokens have been securely transferred to CDEX blockchain'
+              this.lastToastType = 'success'
+              // this.lastTxHash = receipt.transactionHash
+              this.$refs.valid.reset()
             } else {
-              this.lastTxError = `Something went wrong, Do you have sufficient funds?`;
+              this.lastToastMessage = `Something went wrong, Do you have sufficient funds?`;
+              this.lastToastType = 'error'
             }
           })
           .catch(err => {
-            this.lastTxError = err.message
+            this.lastToastMessage = err.message
+            this.lastToastType = 'error'
           })
           .then(_ => {
             this.loading = false
+            this.snackbar = true
           })
       }
     }

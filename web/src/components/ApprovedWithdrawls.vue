@@ -8,7 +8,8 @@
           </v-list-tile-content>
 
           <v-list-tile-action>
-            <v-btn small flat outline @click="accept(request.tx_hash)" color="success">Accept</v-btn>
+            <v-btn v-if="request.withdraw_status == 1" small flat outline @click="accept(request.tx_hash)" color="success">Accept</v-btn>
+            <v-btn v-if="request.withdraw_status == 0" small flat outline color="success" :disabled="true">&nbsp;Signing...&nbsp;</v-btn>
           </v-list-tile-action>
         </v-list-tile>
       </v-list>
@@ -32,6 +33,22 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-snackbar
+      v-model="snackbar"
+      :multi-line="true"
+      :timeout="lastToastType == 'error' ? 0 : 3500"
+      :top="true"
+      :color="lastToastType"
+    >
+      {{ lastToastMessage }}
+      <v-btn
+        color="white"
+        flat
+        @click="snackbar = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
   </v-flex>
 </template>
 
@@ -47,6 +64,9 @@ export default {
   },
   data() {
     return {
+      snackbar: false,
+      lastToastMessage: '',
+      lastToastType: 'success',
       lastTxHash: '',
       loading: false,
       lastTxError: '',
@@ -81,26 +101,28 @@ export default {
     },
     process() {
       let txHash = this.txHashToProcess
+      this.snackbar = false
+      
       this.loading = true
-      this.lastTxError = '';
-      this.lastTxHash = '';
       Bridge.withdraw(txHash, this.gasPriceForProcessing)
         .then(receipt => {
-            console.log(receipt)
           if (receipt.status == 1) {
-            this.lastTxHash = receipt.transactionHash
+            this.lastToastMessage = 'The transaction has been submitted to the blockchain. Check your balance after the transaction has been mined.'
+            this.lastToastType = 'success'
           } else {
-            this.lastTxHash = receipt.transactionHash
-            this.lastTxError = `Something went wrong, Have you already processed this withdraw request?`;
+            this.lastToastMessage = 'Something went wrong, Have you already processed this withdraw request?'
+            this.lastToastType = 'error'
           }
           this.processWithdrawDialog = false
         })
         .catch(err => {
-          this.lastTxError = err.message
+          this.lastToastMessage = err.message
+          this.lastToastType = 'error'
         })
         .then(_ => {
           this.loading = false
           this.txHashToProcess = null
+          this.snackbar = true
         })
     }
   }

@@ -18,6 +18,22 @@
         {{ side == 0 ? "Buy" : "Sell" }} {{ pairInfo.token }}
       </v-btn>
     </v-form>
+    <v-snackbar
+      v-model="snackbar"
+      :multi-line="true"
+      :timeout="lastToastType == 'error' ? 0 : 3500"
+      :top="true"
+      :color="lastToastType"
+    >
+      {{ lastToastMessage }}
+      <v-btn
+        color="white"
+        flat
+        @click="snackbar = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
   </v-layout>
 </template>
 
@@ -36,7 +52,10 @@ export default {
       volume: 0,
       lastTxHash: '',
       lastTxError: '',
-      rules: FORM_RULES
+      rules: FORM_RULES,
+      snackbar: false,
+      lastToastMessage: '',
+      lastToastType: 'success',
     }
   },
   computed: {
@@ -90,22 +109,28 @@ export default {
     },
     placeOrder () {
       this.loading = true
-      this.lastTxError = '';
-      this.lastTxHash = '';
+      this.snackbar = false
+      // this.lastTxError = '';
+      // this.lastTxHash = '';
       if (this.valid) {
         Orderbook.placeOrder()
           .then(receipt => {
             if (receipt.status == 1) {
-              this.lastTxHash = receipt.transactionHash
+              // this.lastTxHash = receipt.transactionHash
+              this.lastToastMessage = `Your order has been placed successfully`
+              this.lastToastType = 'success'
             } else {
-              this.lastTxError = `Something went wrong, Do you have sufficient funds?`
+              this.lastToastMessage = `Something went wrong, Do you have sufficient funds?`
+              this.lastToastType = 'error'
             }
           })
           .catch(err => {
-            this.lastTxError = err.message
+            this.lastToastMessage = err.message
+            this.lastToastType = 'error'
           })
           .then(_ => {
             this.loading = false
+            this.snackbar = true
           })
       }
     },

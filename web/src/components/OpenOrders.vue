@@ -34,6 +34,22 @@
         Please unlock your wallet to see your open orders.
       </v-alert>
     </div>
+    <v-snackbar
+      v-model="snackbar"
+      :multi-line="true"
+      :timeout="lastToastType == 'error' ? 0 : 3500"
+      :top="true"
+      :color="lastToastType"
+    >
+      {{ lastToastMessage }}
+      <v-btn
+        color="white"
+        flat
+        @click="snackbar = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
   </v-layout>
 </template>
 
@@ -52,6 +68,9 @@ export default {
   data () {
     return {
       isLoading: {},
+      snackbar: false,
+      lastToastMessage: '',
+      lastToastType: 'success',
     }
   },
   computed: {
@@ -73,22 +92,26 @@ export default {
       return `${token}/${base}`
     },
     cancelOrder (orderHash) {
+      this.snackbar = false
       this.$set(this.isLoading, orderHash, true)
       Orderbook.cancelOrder(orderHash)
         .then(receipt => {
           if (receipt.status == 1) {
+            this.lastToastMessage = `Order ${orderHash.slice(0, 7)}...${orderHash.slice(orderHash.length - 5)} has been cancelled`
+            this.lastToastType = 'success'
             this.$emit('order-cancelled', orderHash)
           } else {
-            this.lastTxError = `Something went wrong, Do you have sufficient funds?`
-            console.log('Does the order exists? Are you owner?')
+            this.lastToastMessage = `Something went wrong, Does the order exists? Are you owner?`
+            this.lastToastType = 'error'
           }
         })
         .catch(err => {
-          this.lastTxError = err.message
-          console.log(err.message)
+          this.lastToastMessage = err.message
+          this.lastToastType = 'error'
         })
         .then(_ => {
           delete this.isLoading[orderHash]
+          this.snackbar = true
         })
     }
   }

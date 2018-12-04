@@ -21,6 +21,7 @@ import {
     VTextarea,
     VDialog,
     VDivider,
+    VSnackbar,
     VCheckbox,
     VAutocomplete,
     transitions
@@ -49,6 +50,7 @@ Vue.use(Vuetify, {
         VTextarea,
         VDialog,
         VDivider,
+        VSnackbar,
         VCheckbox,
         VAutocomplete,
         transitions

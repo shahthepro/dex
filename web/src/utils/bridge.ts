@@ -79,8 +79,6 @@ async function withdraw(tx_hash, gasPrice) {
 
   const gasPriceInWei = web3.utils.toWei(gasPrice.toString(), 'shannon')
 
-  console.log(vs, rs, ss, message)
-
   const data = BridgeContract.methods.withdraw(
     vs,
     rs,

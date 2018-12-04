@@ -149,13 +149,13 @@ func (v *Validator) RunOnBridgeNetwork() {
 					continue eventListenerLoop
 				}
 
-				if receipt, err := v.exchange.client.TransactionReceipt(context.Background(), tx.Hash()); err != nil {
-					fmt.Println("Failed to get receipt...", err)
-					continue eventListenerLoop
-				} else if receipt.Status == 0 {
-					fmt.Println("Failed after submission...")
-					continue eventListenerLoop
-				}
+				// if receipt, err := v.exchange.client.TransactionReceipt(context.Background(), tx.Hash()); err != nil {
+				// 	fmt.Println("Failed to get receipt...", err)
+				// 	continue eventListenerLoop
+				// } else if receipt.Status == 0 {
+				// 	fmt.Println("Failed after submission...")
+				// 	continue eventListenerLoop
+				// }
 
 				fmt.Println("Transaction forwarded to foreign network:", tx.Hash().Hex())
 				fmt.Println("--------------------")
@@ -246,13 +246,13 @@ func (v *Validator) RunOnExchangeNetwork() {
 					continue eventListenerLoop
 				}
 
-				if receipt, err := v.exchange.client.TransactionReceipt(context.Background(), tx.Hash()); err != nil {
-					fmt.Println("Failed to get receipt...", err)
-					continue eventListenerLoop
-				} else if receipt.Status == 0 {
-					fmt.Println("Failed after submission...")
-					continue eventListenerLoop
-				}
+				// if receipt, err := v.exchange.client.TransactionReceipt(context.Background(), tx.Hash()); err != nil {
+				// 	fmt.Println("Failed to get receipt...", err)
+				// 	continue eventListenerLoop
+				// } else if receipt.Status == 0 {
+				// 	fmt.Println("Failed after submission...")
+				// 	continue eventListenerLoop
+				// }
 				fmt.Println("Transaction signed and forwarded to foreign network:", tx.Hash().Hex())
 				fmt.Println("--------------------")
 			}

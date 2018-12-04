@@ -52,6 +52,22 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-snackbar
+      v-model="snackbar"
+      :multi-line="true"
+      :timeout="lastToastType == 'error' ? 0 : 3500"
+      :top="true"
+      :color="lastToastType"
+    >
+      {{ lastToastMessage }}
+      <v-btn
+        color="white"
+        flat
+        @click="snackbar = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
   </v-layout>
 </template>
 
@@ -67,6 +83,9 @@ export default {
   },
   data () {
     return {
+      snackbar: false,
+      lastToastMessage: '',
+      lastToastType: 'success',
       withdrawTokenDialog: false,
       tokenToWithdraw: null,
       amountToWithdraw: 0,
@@ -95,21 +114,29 @@ export default {
       this.withdrawTokenDialog = true
     },
     confirmWithdraw () {
+      this.snackbar = false
       this.withdrawInProgress = true
       DEXChain.withdrawTokens(this.tokenToWithdraw.address, this.amountToWithdraw)
         .then(receipt => {
           this.withdrawInProgress = false
           if (receipt.status == 1) {
-            console.log('Done successfully')
+            this.lastToastMessage = 'Your withdraw request has been forwarded to Bridge and awaiting confirmatitons'
+            this.lastToastType = 'success'
             this.$emit('withdraw-tokens', this.tokenToWithdraw.address)
             this.closeWithdrawDialog()
           } else {
-            console.log('Not enough funds?')
+            this.lastToastMessage = 'We couldn\'t process your withdraw request. Do you have sufficient balance?'
+            this.lastToastType = 'error'
           }
         })
         .catch(err => {
-          console.log(err.message)
+            this.lastToastMessage = err.message
+            this.lastToastType = 'error'
         })
+        .then(_ => {
+          this.snackbar = true
+        })
+
     },
     closeWithdrawDialog () {
       this.withdrawTokenDialog = false
