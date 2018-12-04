@@ -636,10 +636,15 @@ func (r *Relayer) tryOrderMatching(order *models.Order) {
 	orderHash := utils.ByteSliceToByte32(order.Hash.Bytes())
 	volumeOfOrder := wrappers.WrapBigInt(big.NewInt(0))
 	volumeOfOrder.SetBytes(order.Volume.Bytes())
-	zeroVolume := wrappers.WrapBigInt(big.NewInt(0))
+	// zeroVolume := wrappers.WrapBigInt(big.NewInt(0))
 
 	for _, matchedOrder := range matchingOrders {
 		err = nil
+		if orderClosed, err := r.redisClient.GetBit(matchedOrder.Hash.Hex(), 127).Result(); err == nil {
+			if orderClosed == 1 {
+				continue
+			}
+		}
 		if order.IsBid {
 			err = r.submitMatchedOrder(
 				orderHash,
@@ -653,15 +658,23 @@ func (r *Relayer) tryOrderMatching(order *models.Order) {
 		}
 
 		if err == nil {
-			fmt.Println("Some match")
-
-			tradedVolume := getMinVolume(order.Volume, matchedOrder.VolumeLeft)
-			volumeOfOrder.Sub(&volumeOfOrder.Int, &tradedVolume.Int)
-
-			if volumeOfOrder.Cmp(zeroVolume) == 0 {
+			if order.Volume.Cmp(matchedOrder.VolumeLeft) >= 0 {
+				r.redisClient.SetBit(matchedOrder.Hash.Hex(), 127, 1)
+				volumeOfOrder.Sub(&volumeOfOrder.Int, &matchedOrder.VolumeLeft.Int)
+			} else {
+				r.redisClient.SetBit(order.Hash.Hex(), 127, 1)
+				// volumeOfOrder.Sub(&volumeOfOrder.Int, &order.Volume.Int)
 				fmt.Println("ORDER_FILLED")
 				return
 			}
+
+			// tradedVolume := getMinVolume(order.Volume, matchedOrder.VolumeLeft)
+			// volumeOfOrder.Sub(&volumeOfOrder.Int, &tradedVolume.Int)
+
+			// if volumeOfOrder.Cmp(zeroVolume) == 0 {
+			// 	fmt.Println("ORDER_FILLED")
+			// 	return
+			// }
 		} else {
 			fmt.Println(err)
 		}
@@ -670,12 +683,12 @@ func (r *Relayer) tryOrderMatching(order *models.Order) {
 	fmt.Println("ORDER_NOT_FULFILLED")
 }
 
-func getMinVolume(a, b *wrappers.BigInt) *wrappers.BigInt {
-	if a.Cmp(b) >= 0 {
-		return b
-	}
-	return a
-}
+// func getMinVolume(a, b *wrappers.BigInt) *wrappers.BigInt {
+// 	if a.Cmp(b) >= 0 {
+// 		return b
+// 	}
+// 	return a
+// }
 
 func (r *Relayer) submitMatchedOrder(buyOrderHash [32]byte, sellOrderHash [32]byte) error {
 	nonce, err := r.exchange.client.PendingNonceAt(context.Background(), *r.matcherAddress)

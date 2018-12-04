@@ -48,9 +48,6 @@
               <v-list-tile :to="{ name: `balances` }" exact>
                 <v-list-tile-title>Wallet Balances</v-list-tile-title>
               </v-list-tile>
-              <v-list-tile :to="{ name: `pending-balances` }" exact>
-                <v-list-tile-title>Pending Transactions</v-list-tile-title>
-              </v-list-tile>
             </v-list>
           </v-menu>
           <v-btn flat :to="{ name: `help` }"><v-icon>help</v-icon></v-btn>
