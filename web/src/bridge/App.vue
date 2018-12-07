@@ -4,7 +4,7 @@
       <v-toolbar-title v-text="title"></v-toolbar-title>
       <v-spacer></v-spacer>
       <v-toolbar-items>
-          <v-btn flat href="https://chilra.com/trade">Trade</v-btn>
+          <v-btn flat href="https://kirukku.com/trade">Trade</v-btn>
           <v-btn flat :to="{ name: `deposit` }">Deposit</v-btn>
           <v-btn flat :to="{ name: `withdraw` }">Withdraw</v-btn>
           <v-btn flat :to="{ name: `help` }"><v-icon>help</v-icon></v-btn>
@@ -22,7 +22,7 @@ export default {
   data () {
     return {
       accountDrawer: false,
-      title: 'CDEX Bridge'
+      title: 'KirukkuDEX Bridge'
     }
   }
 }

@@ -2,7 +2,7 @@
     <v-layout fill-height align-center class="cb-hero-layout">
         <v-flex>
             <v-container justify-center>
-                <h1>Transfer your tokens from and to CDEX blockchain securely</h1>
+                <h1>Transfer your tokens from and to KirukkuDEX blockchain securely</h1>
 
                 <v-flex class="cb-hero-primary-actions">
                     <v-btn dark large outline :to="{ name: `deposit` }">Deposit</v-btn>
@@ -10,7 +10,7 @@
                 </v-flex>
 
                 <v-flex>
-                    <v-btn dark flat small :to="{ name: `help` }">Know More about CDEX Bridge</v-btn>
+                    <v-btn dark flat small :to="{ name: `help` }">Know More about KirukkuDEX Bridge</v-btn>
                 </v-flex>
 
                 <v-flex class="cb-hero-social-links">

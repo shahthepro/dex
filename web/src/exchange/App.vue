@@ -83,7 +83,7 @@ export default {
     return {
       walletDialog: false,
       accountDrawer: false,
-      title: 'ChilraDEX',
+      title: 'KirukkuDEX',
       marketsDrawer: false,
       pairs: TOKENS.getPairs('ETH'),
       searchText: ''

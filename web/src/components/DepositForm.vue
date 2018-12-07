@@ -141,7 +141,7 @@ export default {
         Bridge.deposit()
           .then(receipt => {
             if (receipt.status == 1) {
-              this.lastToastMessage = 'Tokens have been securely transferred to CDEX blockchain'
+              this.lastToastMessage = 'Tokens have been securely transferred to KirukkuDEX blockchain'
               this.lastToastType = 'success'
               // this.lastTxHash = receipt.transactionHash
               this.$refs.valid.reset()

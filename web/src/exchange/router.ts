@@ -18,7 +18,7 @@ let router = new Router({
       path: '/',
       name: 'home',
       meta: {
-        title: _ => 'ChilraDEX'
+        title: _ => 'KirukkuDEX'
       },
       beforeEnter (to, from, next) {
         next({
@@ -94,7 +94,7 @@ let router = new Router({
 })
 
 router.beforeEach((to, from, next) => {
-  let SITE_NAME = 'ChilraDEX'
+  let SITE_NAME = 'KirukkuDEX'
 
   if (to.meta) {
     switch (typeof to.meta.title) {

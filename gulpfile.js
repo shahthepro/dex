@@ -441,9 +441,15 @@ function deployContract({ web3, contractJSON, args, txOpts, libraries }) {
                 return
             }
 
+            console.log("Got TxHash", transactionHash)
+
             let txReceipt
 
+            let n = 0
+
             while (true) {
+                n++
+                console.log(`(${n}) Trying for receipt...`)
                 r = await (new Promise(function (resolve, reject) {
                     web3.eth.getTransactionReceipt(transactionHash, function (err, receipt) {
                         if (err) {

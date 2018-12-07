@@ -18,7 +18,7 @@ func DecryptPrivateKeyFromKeystoreWithPasswordFile(filePath string, passwordFile
 		return nil, err
 	}
 
-	password := string(passwordFile)
+	password := strings.TrimSpace(string(passwordFile))
 
 	return DecryptPrivateKeyFromKeystoreWithPassword(filePath, password)
 }

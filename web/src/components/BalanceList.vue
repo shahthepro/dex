@@ -2,10 +2,10 @@
   <v-layout column wrap>
     <v-flex class="alert-boxes" v-show="walletIsConnected">
       <v-alert outline type="info" :value="true">
-        Head over to <a href="https://bridge.chilra.com">Bridge</a> to load funds to your ChilraDEX Wallet.
+        Head over to <a href="https://bridge.kirukku.com">Bridge</a> to load funds to your KirukkuDEX Wallet.
       </v-alert>
       <v-flex class="text-xs-center">
-        <v-btn href="https://bridge.chilra.com" large color="primary">Go to Bridge</v-btn>
+        <v-btn href="https://bridge.kirukku.com" large color="primary">Go to Bridge</v-btn>
       </v-flex>
     </v-flex>
     <v-flex class="alert-boxes" v-show="!walletIsConnected">
