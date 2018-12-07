@@ -7,24 +7,20 @@ const Web3 = require('web3');
 const web3Utils = require('web3-utils');
 const watch = require('gulp-watch');
 
+const DEX_BUILD_ENV = process.env.DEX_BUILD_ENV || 'development'
+
 const HOMEBRIDGE_CONTRACT_NAME = 'HomeBridge';
-const EXCHANGE_CONTRACT_NAME = 'Exchange';
 const DEXCHAIN_CONTRACT_NAME = 'DEXChain';
 const DATASTORE_CONTRACT_NAME = 'DataStore';
 const ORDERBOOK_CONTRACT_NAME = 'Orderbook';
 const FEE_CONTRACT_NAME = 'FeeContract';
 const ORDERSDB_CONTRACT_NAME = 'OrdersDB';
-const NEWORDER_CONTRACT_NAME = 'NewOrderContract';
-// const CANCELORDER_CONTRACT_NAME = 'CancelOrderContract';
 const ORDERMATCH_CONTRACT_NAME = 'OrderMatchContract';
 
 const GENERATED_CONFIG_FILE_NAME = 'contracts.g';
-const NETWORKS_CONFIG_FILE_NAME = 'network';
-const TOKENS_CONFIG_FILE_NAME = 'tokens';
+const NETWORKS_CONFIG_FILE_NAME = (DEX_BUILD_ENV == 'production') ? 'network.prod' : 'network';
+const TOKENS_CONFIG_FILE_NAME = (DEX_BUILD_ENV == 'production') ? 'tokens.prod' : 'tokens';
 
-const MAINNET_NETWORK_ID = 1;
-const SIDECHAIN_NETWORK_ID = 6454;
-const DEVELOPMENT_NETWORK_ID = 5777;
 
 function runCommand (command, args, opts, done) {
     const cmd = spawn(command, args, opts);
@@ -429,6 +425,11 @@ function deployContract({ web3, contractJSON, args, txOpts, libraries }) {
         // gas: '5000000000000000',
         gasPrice: 0
     }, txOpts)
+
+    console.log(MyContract.deploy({
+        data: code,
+        arguments: args
+    }).encodeABI())
 
     return new Promise(function (resolve, reject) {
         MyContract.deploy({

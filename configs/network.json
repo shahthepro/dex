@@ -1,12 +1,12 @@
 {
     "bridge": {
-        "provider": "http://35.237.206.172:8501",
-        "wsProvider": "ws://35.237.206.172:8601",
+        "provider": "http://localhost:8501",
+        "wsProvider": "ws://localhost:8601",
         "requiredSignatures": 1
     },
     "exchange": {
-        "provider": "http://35.237.206.172:8501",
-        "wsProvider": "ws://35.237.206.172:8601",
+        "provider": "http://localhost:8501",
+        "wsProvider": "ws://localhost:8601",
         "requiredSignatures": 1,
         "makeFee": "2500000000000000",
         "takeFee": "2500000000000000",

@@ -6,6 +6,7 @@ import tradeHistory from './modules/trade-history'
 import orderbook from './modules/orderbook'
 import myOrders from '@/store/modules/pair-info/modules/open-orders'
 import TOKENS from '@/core/tokens';
+import CONFIG from '@/core/config';
 
 interface ITradePairInfo {
   token: string
@@ -47,7 +48,9 @@ const actions = {
     let base = TOKENS.getBySymbol(args.base)
     let wallet = rootGetters.wallet;
     
-    let socketInstance = new WebSocket(`ws://localhost:7424/ws/${token.address}/${base.address}`)
+    let wsUrl = new URL(`${token.address}/${base.address}`, CONFIG.getSocketServerHost())
+
+    let socketInstance = new WebSocket(wsUrl.toJSON())
 
     socketInstance.onopen = function () {
       commit(COMMIT_CONNECT_SOCKET_SERVER, { socketInstance })

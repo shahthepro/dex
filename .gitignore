@@ -3,5 +3,6 @@ _tmp
 _dist
 node_modules
 configs/*.g.json
+configs/*.prod.json
 vendor/*
 build/
