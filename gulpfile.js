@@ -426,11 +426,6 @@ function deployContract({ web3, contractJSON, args, txOpts, libraries }) {
         gasPrice: 0
     }, txOpts)
 
-    console.log(MyContract.deploy({
-        data: code,
-        arguments: args
-    }).encodeABI())
-
     return new Promise(function (resolve, reject) {
         MyContract.deploy({
             data: code,
