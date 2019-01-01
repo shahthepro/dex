@@ -1,6 +1,8 @@
 # dex
 A decentralized exchange that runs on a private blockchain network
 
+[Watch video preview on YouTube](https://www.youtube.com/watch?v=oqIiRlr7veA)
+
 # Build Instructions
 TODO
 
