@@ -18,5 +18,5 @@ ETH - 0x901e42a61acaAC163D2cB4B92E81f0a29509b1A8
 
 # Hire Me
 Twitter - [@shahthepro](http://twitter.com/shahthepro)  
-LinkedIn - [@shahthepro](https://www.linkedin.com/in/shahthepro/)
+LinkedIn - [@shahthepro](https://www.linkedin.com/in/shahthepro/)  
 Telegram - [@shahthepro](https://web.telegram.org/#/im?p=@shahthepro)
