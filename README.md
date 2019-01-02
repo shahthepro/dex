@@ -4,7 +4,7 @@ A decentralized exchange that runs on a private blockchain network
 [Watch video preview on YouTube](https://www.youtube.com/watch?v=oqIiRlr7veA)
 
 # Build Instructions
-TODO
+[Refer the Wiki](https://github.com/shahthepro/dex/wiki/Build-Instructions)
 
 # Deploying Instructions
 TODO
