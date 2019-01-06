@@ -20,8 +20,8 @@ Any kind of donation, that'll encourage, motivate and help me with the developme
 
 If you are willing to donate cryptocurrencies, I accept BTC, ETH and all ERC20 tokens.
 
-ETH - [0x901e42a61acaAC163D2cB4B92E81f0a29509b1A8](https://etherscan.io/address/0x901e42a61acaAC163D2cB4B92E81f0a29509b1A8)
-BTC - bc1qc6afvmdyl2zlqm6w2y3yzzen3gkq57l57qheuq  
+ETH - [0x901e42a61acaAC163D2cB4B92E81f0a29509b1A8](https://etherscan.io/address/0x901e42a61acaAC163D2cB4B92E81f0a29509b1A8)  
+BTC - bc1qc6afvmdyl2zlqm6w2y3yzzen3gkq57l57qheuq
 
 # Hire Me
 Looking for a Solidity, DApp, Golang or Javascript developer, Let's connect.
