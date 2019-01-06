@@ -26,6 +26,6 @@ BTC - bc1qc6afvmdyl2zlqm6w2y3yzzen3gkq57l57qheuq
 # Hire Me
 Looking for a Solidity, DApp, Golang or Javascript developer, Let's connect.
 
-Telegram - [@shahthepro](https://web.telegram.org/#/im?p=@shahthepro)
+Telegram - [@shahthepro](https://web.telegram.org/#/im?p=@shahthepro)  
 Twitter - [@shahthepro](http://twitter.com/shahthepro)  
-LinkedIn - [@shahthepro](https://www.linkedin.com/in/shahthepro/)  
+LinkedIn - [@shahthepro](https://www.linkedin.com/in/shahthepro/)
